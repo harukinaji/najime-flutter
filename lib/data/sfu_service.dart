@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../config.dart';
 import 'api_service.dart';
-import 'e2e_encryption.dart';
 import 'websocket_service.dart';
 
 class SFUParticipantInfo {
@@ -69,11 +67,9 @@ class SFUService {
     WebSocketService.on('sfu_consumer_created', _onConsumerCreated);
     WebSocketService.on('sfu_producer_paused', _onProducerPaused);
     WebSocketService.on('sfu_producer_resumed', _onProducerResumed);
-    WebSocketService.on('sfu_key_exchange', _onKeyExchange);
     WebSocketService.on('sfu_connection_issue', _onConnectionIssue);
     WebSocketService.on('sfu_error', _onSFUError);
 
-    await E2EEncryptionService.initialize();
     _isInitialized = true;
   }
 
@@ -97,15 +93,6 @@ class SFUService {
       'video': video,
     });
 
-    final keyPayload = E2EEncryptionService.getKeyExchangePayload();
-    if (keyPayload.isNotEmpty) {
-      WebSocketService.sendSignal('sfu_key_exchange', {
-        'contact_id': '',
-        'room_id': roomId,
-        'public_key': keyPayload['public_key'],
-        'key_id': keyPayload['key_id'],
-      });
-    }
   }
 
   static Future<MediaStream> _getLocalStream(bool video) async {
@@ -294,7 +281,6 @@ class SFUService {
     _remoteRenderers[userId]?.dispose();
     _remoteRenderers.remove(userId);
 
-    E2EEncryptionService.removePeer(userId);
     _onParticipantLeftController.add(userId);
     _onStreamRemovedController.add(userId);
   }
@@ -323,20 +309,6 @@ class SFUService {
     if (data is! Map) return;
     final producerId = data['producer_id'] as String?;
     if (kDebugMode) debugPrint('[SFU] Producer resumed: $producerId');
-  }
-
-  static void _onKeyExchange(dynamic data) {
-    if (data is! Map) return;
-    final roomId = data['room_id'] as String?;
-    final userId = data['user_id'] as String?;
-    final publicKeyStr = data['public_key'] as String?;
-
-    if (roomId != _currentRoomId || userId == null || publicKeyStr == null) return;
-
-    final publicKey = base64Decode(publicKeyStr);
-    E2EEncryptionService.registerPeerKey(userId, publicKey);
-
-    if (kDebugMode) debugPrint('[SFU] E2E key registered for peer: $userId');
   }
 
   static void _onConnectionIssue(dynamic data) {
@@ -436,7 +408,6 @@ class SFUService {
     }
     _participants.clear();
 
-    E2EEncryptionService.reset();
     _isMuted = false;
     _isVideoOff = false;
 
@@ -462,16 +433,4 @@ class SFUService {
     return _participants.values.toList();
   }
 
-  static Future<void> sendEncryptedMessage(String peerId, String content) async {
-    final encrypted = E2EEncryptionService.encryptSignalingData({
-      'content': content,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
-
-    WebSocketService.sendSignal('sfu_key_exchange', {
-      'contact_id': peerId,
-      'room_id': _currentRoomId,
-      'encrypted_data': encrypted,
-    });
-  }
 }

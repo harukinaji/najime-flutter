@@ -176,7 +176,6 @@ class _ChatsScreenState extends State<ChatsScreen> {
           unreadCount: (c['unread_count'] as num?)?.toInt() ?? 0,
           isOnline: c['is_online'] as bool? ?? false,
           isGroup: c['is_group'] as bool? ?? false,
-          isProtected: c['is_protected'] as bool? ?? false,
           participantIds: (c['participant_ids'] as List?)?.cast<String>() ?? [],
           lastActivity: DateTime.tryParse(c['last_activity'] as String? ?? '') ?? DateTime.now(),
           hasPublishedStory: c['has_story'] as bool? ?? false,
@@ -1107,8 +1106,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           onTap: () => openChat(context,
               chatId: chat.id,
               contactId: chat.contactId,
-              isGroup: chat.isGroup,
-              isProtected: chat.isProtected),
+              isGroup: chat.isGroup),
           onLongPress: () => _showChatOptions(chat),
         );
       },

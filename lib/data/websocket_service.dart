@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import '../config.dart';
 import 'app_attestation.dart';
 import 'api_service.dart';
-import 'protected_chat_service.dart';
 import 'webrtc_service.dart';
 
 class WebSocketService {
@@ -124,19 +123,13 @@ class WebSocketService {
 
           if (event == null) return;
 
-          if (event == 'new_message' || event == 'protected_message') {
+          if (event == 'new_message') {
             final ev = _listeners[event];
             if (ev != null) {
               for (final cb in ev) {
                 cb(msgData);
               }
             }
-            return;
-          }
-
-          if (event == 'e2e_key_exchange') {
-            msgData['_from'] = msg['from'];
-            ProtectedChatService.instance.handleKeyExchange(msgData);
             return;
           }
 
@@ -248,19 +241,6 @@ class WebSocketService {
 
   static void off(String event, Function(dynamic) callback) {
     _listeners[event]?.remove(callback);
-  }
-
-  static void sendProtectedMessage(String to, Map<String, dynamic> payload) {
-    final msg = {
-      'event': 'protected_message',
-      'to': to,
-      'data': payload,
-    };
-    if (_socket != null) {
-      _send(msg);
-    } else {
-      _pending.add(msg);
-    }
   }
 
   static void sendStatus(bool isOnline) {

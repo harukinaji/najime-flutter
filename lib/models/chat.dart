@@ -13,7 +13,6 @@ class ChatModel {
   final DateTime lastActivity;
   final bool hasPublishedStory;
   final bool isMuted;
-  final bool isProtected;
 
   const ChatModel({
     required this.id,
@@ -24,7 +23,6 @@ class ChatModel {
     this.unreadCount = 0,
     this.isOnline = false,
     this.isGroup = false,
-    this.isProtected = false,
     this.participantIds = const [],
     required this.lastActivity,
     this.hasPublishedStory = false,

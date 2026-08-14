@@ -43,13 +43,12 @@ class _DesktopChatsSplitState extends State<DesktopChatsSplit> {
             Expanded(
               child: selection == null
                   ? _EmptyChatPane(cs: cs)
-                  : ChatDetailScreen(
-                      key: ValueKey(selection.chatId),
-                      chatId: selection.chatId,
-                      contactId: selection.contactId,
-                      isGroup: selection.isGroup,
-                      isProtected: selection.isProtected,
-                    ),
+                   : ChatDetailScreen(
+                       key: ValueKey(selection.chatId),
+                       chatId: selection.chatId,
+                       contactId: selection.contactId,
+                       isGroup: selection.isGroup,
+                     ),
             ),
           ],
         );

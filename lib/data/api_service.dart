@@ -914,7 +914,7 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> findOrCreateChat(String userId, {bool isProtected = false}) async {
+  static Future<Map<String, dynamic>?> findOrCreateChat(String userId) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/chats/find-or-create'),
@@ -922,7 +922,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-        body: jsonEncode({'user_id': userId, 'is_protected': isProtected}),
+        body: jsonEncode({'user_id': userId}),
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {

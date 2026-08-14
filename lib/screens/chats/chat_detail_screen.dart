@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/api_service.dart';
 import '../../data/chat_read_service.dart';
-import '../../data/protected_chat_service.dart';
 import '../../data/voice_recording_service.dart';
 import '../../data/websocket_service.dart';
 import '../../models/message.dart';
@@ -33,14 +32,12 @@ class ChatDetailScreen extends StatefulWidget {
   final String chatId;
   final String? contactId;
   final bool isGroup;
-  final bool isProtected;
 
   const ChatDetailScreen({
     super.key,
     required this.chatId,
     this.contactId,
     this.isGroup = false,
-    this.isProtected = false,
   });
 
   @override
@@ -75,7 +72,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   int _currentMatchIndex = -1;
 
   bool _isMuted = false;
-  late bool _isProtected;
   List<Map<String, dynamic>> _pinnedMessages = [];
   List<Map<String, dynamic>> _scheduledMessages = [];
 
@@ -103,7 +99,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _isProtected = widget.isProtected;
     _lockHintController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -131,15 +126,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     WebSocketService.on('callback_answer', _onCallbackAnswer);
     // Reload messages when WebSocket reconnects (handles offline->online)
     WebSocketService.onConnected = _onWsReconnected;
-
-    // Auto-initiate E2EE for protected chat
-    if (_isProtected) {
-      WebSocketService.on('protected_message', _onProtectedMessage);
-      final contactId = widget.contactId;
-      if (contactId != null) {
-        ProtectedChatService.instance.initiateKeyExchange(widget.chatId, contactId);
-      }
-    }
   }
 
   Future<void> _loadCurrentUser() async {
@@ -176,9 +162,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     _searchController.dispose();
     _searchFocusNode.dispose();
     WebSocketService.onConnected = null;
-    ProtectedChatService.instance.endSession(widget.chatId);
     WebSocketService.off('new_message', _onWsMessage);
-    WebSocketService.off('protected_message', _onProtectedMessage);
     WebSocketService.off('status', _onStatus);
     WebSocketService.off('reaction_added', _onReactionAdded);
     WebSocketService.off('reaction_removed', _onReactionRemoved);
@@ -878,10 +862,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (t == 'invoice') type = MessageType.invoice;
 
       String content = data['content'] as String? ?? '';
-      if (_isProtected && content.isNotEmpty && type == MessageType.text) {
-        final decrypted = await _decryptMessageContent(content);
-        if (decrypted != null) content = decrypted;
-      }
 
       final msg = MessageModel(
         id: data['id'] as String,
@@ -907,37 +887,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           'contact_id': msg.senderId,
         });
       }
-    }
-  }
-
-  void _onProtectedMessage(dynamic data) {
-    if (data is Map && data['chat_id'] == widget.chatId && mounted) {
-      final encrypted = data['encrypted'] as Map<String, dynamic>?;
-      if (encrypted == null) return;
-
-      final senderId = data['sender_id'] as String? ?? '';
-      ProtectedChatService.instance.decryptMessage(widget.chatId, encrypted).then((plaintext) {
-        if (plaintext == null || !mounted) return;
-        final msg = MessageModel(
-          id: 'protected_${DateTime.now().millisecondsSinceEpoch}',
-          senderId: senderId,
-          content: plaintext,
-          type: MessageType.text,
-          timestamp: DateTime.now(),
-          isMe: false,
-        );
-        setState(() => _messages.add(msg));
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-      });
-    }
-  }
-
-  Future<String?> _decryptMessageContent(String ciphertext) async {
-    if (!_isProtected || ciphertext.isEmpty) return null;
-    try {
-      return await ProtectedChatService.instance.decryptContent(widget.chatId, ciphertext);
-    } catch (_) {
-      return null;
     }
   }
 
@@ -995,10 +944,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           break;
       }
       String content = msg['content'] as String? ?? '';
-      if (_isProtected && content.isNotEmpty && type == MessageType.text) {
-        final decrypted = await _decryptMessageContent(content);
-        if (decrypted != null) content = decrypted;
-      }
       _messages.add(MessageModel(
         id: msg['id'] as String,
         senderId: msg['sender_id'] as String,
@@ -1104,69 +1049,33 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     setState(() => _messages.add(optimisticMsg));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    if (_isProtected) {
-      // Encrypt with E2EE, store ciphertext in DB via REST
-      final encryptedJson = await ProtectedChatService.instance.encryptContent(widget.chatId, text);
-      final result = await ApiService.sendMessage(
-        widget.chatId,
-        encryptedJson,
-        replyToId: replyTo?.id,
-      );
-      if (!mounted) return;
-      if (result != null) {
-        setState(() {
-          _messages.removeWhere((m) => m.id == tempId);
-          _messages.add(
-            MessageModel(
-              id: result['id'] as String,
-              senderId: result['sender_id'] as String,
-              content: text,
-              type: MessageType.text,
-              timestamp: DateTime.parse(result['timestamp'] as String),
-              isMe: true,
-              deliveryStatus: _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
-              replyToId: replyTo?.id,
-              replyToContent: replyTo?.content,
-              replyToSenderName: replyTo?.isMe == true ? 'You' : null,
-            ),
-          );
-        });
-      } else {
-        setState(() => _messages.removeWhere((m) => m.id == tempId));
-      }
-    } else {
-      final result = await ApiService.sendMessage(
-        widget.chatId,
-        text,
-        replyToId: replyTo?.id,
-      );
-      if (!mounted) return;
+    final result = await ApiService.sendMessage(
+      widget.chatId,
+      text,
+      replyToId: replyTo?.id,
+    );
+    if (!mounted) return;
 
-      if (result != null) {
-        // Replace optimistic message with real one
-        setState(() {
-          _messages.removeWhere((m) => m.id == tempId);
-          _messages.add(
-            MessageModel(
-              id: result['id'] as String,
-              senderId: result['sender_id'] as String,
-              content: result['content'] as String? ?? '',
-              type: MessageType.text,
-              timestamp: DateTime.parse(result['timestamp'] as String),
-              isMe: true,
-              deliveryStatus: _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
-              replyToId: replyTo?.id,
-              replyToContent: replyTo?.content,
-              replyToSenderName: replyTo?.isMe == true ? 'You' : null,
-            ),
-          );
-        });
-      } else {
-        // API failed - remove optimistic message
-        setState(() {
-          _messages.removeWhere((m) => m.id == tempId);
-        });
-      }
+    if (result != null) {
+      setState(() {
+        _messages.removeWhere((m) => m.id == tempId);
+        _messages.add(
+          MessageModel(
+            id: result['id'] as String,
+            senderId: result['sender_id'] as String,
+            content: result['content'] as String? ?? '',
+            type: MessageType.text,
+            timestamp: DateTime.parse(result['timestamp'] as String),
+            isMe: true,
+            deliveryStatus: _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
+            replyToId: replyTo?.id,
+            replyToContent: replyTo?.content,
+            replyToSenderName: replyTo?.isMe == true ? 'You' : null,
+          ),
+        );
+      });
+    } else {
+      setState(() => _messages.removeWhere((m) => m.id == tempId));
     }
     _sending = false;
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -2049,19 +1958,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
   }
 
-  Future<void> _openProtectedChat() async {
-    final contactId = widget.contactId;
-    if (contactId == null || widget.isGroup) return;
-
-    final result = await ApiService.findOrCreateChat(contactId, isProtected: true);
-    if (!mounted || result == null) return;
-
-    openChat(context,
-        chatId: result['chat_id'],
-        contactId: contactId,
-        isProtected: true);
-  }
-
   void _onSearchQueryChanged(String q) {
     final query = q.trim().toLowerCase();
     setState(() {
@@ -2318,10 +2214,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (_isProtected) ...[
-                        const SizedBox(width: 6),
-                        Icon(Icons.lock, size: 14, color: _isProtected ? Colors.green : null),
-                      ],
                     ],
                   ),
                   if (widget.contactId != null)
@@ -2377,7 +2269,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               if (value == 'mute') _toggleMute();
               if (value == 'pinned') _showPinnedMessagesSheet(Theme.of(context).colorScheme);
               if (value == 'scheduled') _showScheduledMessagesSheet(Theme.of(context).colorScheme);
-              if (value == 'protected') _openProtectedChat();
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'search', child: Text('Search')),
@@ -2417,17 +2308,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                   ],
                 ),
               ),
-              if (!_isProtected && !widget.isGroup && widget.contactId != null)
-                PopupMenuItem(
-                  value: 'protected',
-                  child: const Row(
-                    children: [
-                      Icon(Icons.lock, size: 20),
-                      SizedBox(width: 12),
-                      Text('Open protected chat'),
-                    ],
-                  ),
-                ),
             ],
           ),
         ],

@@ -158,7 +158,6 @@ class AppRouter {
                         chatId: state.pathParameters['chatId']!,
                         contactId: extras?['contactId'] as String?,
                         isGroup: extras?['isGroup'] as bool? ?? false,
-                        isProtected: extras?['isProtected'] as bool? ?? false,
                       );
                     },
                   ),
