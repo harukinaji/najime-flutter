@@ -114,7 +114,7 @@ class AuthState {
     avatarUrl = null;
     WebSocketService.disconnect();
     ApiService.logout();
-    ApiService.setToken(null);
+    ApiService.setToken('');
 
     await _storage.delete(key: _keyToken);
     await _storage.delete(key: _keyUsername);

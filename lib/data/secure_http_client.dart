@@ -102,8 +102,8 @@ class SignedHttpClient extends http.BaseClient {
       _inner.put(url, headers: headers, body: body, encoding: encoding);
 
   @override
-  Future<http.Response> delete(Uri url, {Map<String, String>? headers}) =>
-      _inner.delete(url, headers: headers);
+  Future<http.Response> delete(Uri url, {Object? body, Encoding? encoding, Map<String, String>? headers}) =>
+      _inner.delete(url, body: body, encoding: encoding, headers: headers);
 
   @override
   void close() => _inner.close();

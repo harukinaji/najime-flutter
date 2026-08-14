@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../config.dart';
-import 'app_attestation.dart';
 import 'secure_http_client.dart';
 
 class ApiService {
