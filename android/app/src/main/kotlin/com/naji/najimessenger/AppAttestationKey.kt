@@ -75,7 +75,7 @@ object AppAttestationKey {
 
             // Use the IV + ciphertext to derive HMAC
             val mac = Mac.getInstance("HmacSHA256")
-            val hmacKey = javax.crypto.SecretKeySpec(
+            val hmacKey = SecretKeySpec(
                 key.encoded ?: ByteArray(32),
                 "HmacSHA256"
             )
