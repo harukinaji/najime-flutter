@@ -1,5 +1,5 @@
 name: najime
-description: "Najime — an open-source, end-to-end encrypted messenger with bots, stickers, stories and WebRTC voice/video calls."
+description: "NajiMe — an open-source messenger with bots, stickers, stories, WebRTC voice/video calls, and an embedded Solana wallet."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev

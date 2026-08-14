@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.naji" "\0"
-            VALUE "FileDescription", "najimessenger" "\0"
+            VALUE "FileDescription", "NajiMe" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "najimessenger" "\0"
+            VALUE "InternalName", "NajiMe" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.naji. All rights reserved." "\0"
-            VALUE "OriginalFilename", "najimessenger.exe" "\0"
-            VALUE "ProductName", "najimessenger" "\0"
+            VALUE "OriginalFilename", "NajiMe.exe" "\0"
+            VALUE "ProductName", "NajiMe" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
