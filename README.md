@@ -55,14 +55,34 @@ Open-source messenger with bots, stickers, stories, WebRTC voice/video calls, an
 - **Bot creation** — username, display name, description, avatar, start button
 - **Inline keyboards** — callback data, URL links, send_message actions
 - **Mini Apps** — in-app WebView hosting for bot web apps
-- **JavaScript bridge** (`NajiBridge`) exposed to mini apps:
-  - `naji.getUser()` / `naji.getContact()` / `naji.getChats()`
-  - `naji.sendMessage()` — send messages from mini app
-  - `naji.getWallet()` / `naji.signTransaction()` — wallet access
-  - `naji.getStickers()` — sticker pack access
-  - `naji.createRoom()` / `naji.joinRoom()` — multiplayer room management
-  - `naji.sendGameEvent()` — real-time game events via data channels
-  - `naji.vibrate()` / `naji.scanQR()` / `naji.playSound()` — device APIs
+
+#### Naji Mini Apps SDK (`NajiMiniApp`)
+
+Full JavaScript SDK available via [NMASDK](https://github.com/harukinaji/NMASDK).
+
+| Module | Methods |
+|---|---|
+| **Core** | `init()`, `ready()`, `close()`, `expand()`, `collapse()`, `setHeaderColor()`, `requestContext()`, `ping()`, `on()` / `off()` |
+| **Back Button** | `show()`, `hide()`, `onClick()` |
+| **Storage** | `get(key)`, `set(key, value)`, `remove(key)`, `keys()` |
+| **API** | `request(path, {method, headers, body})` — authorized REST calls (whitelisted paths) |
+| **Contacts** | `list()`, `get()`, `share()`, `invite()`, `inviteRoom()` |
+| **UI** | `alert()`, `toast()`, `openLink()`, `copy()` |
+| **Wallet** | `getState()`, `getAddress()`, `view()`, `refresh()`, `onChange()`, `signMessage()`, `signTransaction()`, `signAndSendTransaction()` |
+| **Payments** | `invoice()`, `crypto()`, `solana()`, `requestPayment()` — Solana SPL / EVM routing |
+| **Multiplayer** | `createRoom()`, `joinRoom()`, `leaveRoom()`, `joinMatchmaking()`, `leaveMatchmaking()`, `updateState()`, `send()`, `onChange()`, `onEvent()` |
+| **Voice** | `join()`, `leave()`, `setMuted()`, `toggleMuted()`, `onChange()`, `onParticipantsChange()` |
+| **Gamepad** | `getState()`, `refresh()`, `onChange()`, `onConnect()`, `onDisconnect()` |
+| **Orientation** | `getState()`, `refresh()`, `onChange()` |
+| **Gyroscope** | `start()`, `stop()`, `getState()`, `onChange()` |
+| **Accelerometer** | `start()`, `stop()`, `getState()`, `onChange()` |
+| **Vibrator** | `vibrate(duration)` |
+| **NFC** | `isAvailable()`, `isEnabled()`, `read()`, `write()`, `sharePayload()`, `stopShare()`, `connectIsoDep()`, `transceive()`, `disconnect()` |
+| **Bluetooth** | `startScan()`, `stopScan()`, `connect()`, `sendRaw()`, `discoverServices()`, `subscribe()`, `unsubscribe()`, `readRaw()` |
+| **Camera** | `takePhoto()`, `getUserMedia()` |
+
+**Events:** `init`, `themeChanged`, `walletChanged`, `orientationChanged`, `multiplayerStateChanged`, `multiplayerMatchFound`, `multiplayerEvent`, `voiceStateChanged`, `voiceParticipantsChanged`, `voiceParticipantJoined`, `voiceParticipantLeft`, `gamepadsChanged`, `gamepadConnected`, `gamepadDisconnected`, `backButtonClicked`, `gyroscopeChanged`, `accelerometerChanged`, `nfcTagRead`, `bluetoothDeviceFound`, `bluetoothDataReceived`, `bluetoothConnectionStateChanged`
+
 - **Security** — HTTPS-only, URL allowlist, no localhost/private IP access
 
 ### Stickers
