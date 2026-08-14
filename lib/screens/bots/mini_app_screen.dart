@@ -439,19 +439,9 @@ const _bridgeScript = '''
     },
     payments: {
       invoice: function(o) { return _makeReq('CREATE_INVOICE_SPARKS', o || {}); },
-      crypto: function(o) { return _makeReq('CRYPTO_REQUEST', o || {}); },
       solana: function(o) { return _makeReq('MINIAPP_SOLANA_PAYMENT', o || {}); },
-      // Routes the request to the right native handler based on `currency`:
-      //   - 'SOL' or any 'SPL-*' symbol -> MINIAPP_SOLANA_PAYMENT
-      //   - everything else             -> CRYPTO_REQUEST (EVM/off-Solana)
-      // Options:
-      //   amount    number  required (>0)
-      //   currency  string  default 'SOL' (alias: symbol)
-      //   recipient string  required wallet address (alias: address)
-      //   label     string  optional memo/title shown by host UI
       requestPayment: function(options) {
         var o = options || {};
-        var currency = String(o.currency || o.symbol || 'SOL').toUpperCase();
         var amount = Number(o.amount);
         var recipient = String(o.recipient || o.address || '').trim();
         if (!isFinite(amount) || amount <= 0) {
@@ -460,18 +450,10 @@ const _bridgeScript = '''
         if (!recipient) {
           return Promise.reject(new Error('payments.requestPayment: recipient is required'));
         }
-        if (currency === 'SOL' || currency.indexOf('SPL-') === 0) {
-          return _makeReq('MINIAPP_SOLANA_PAYMENT', Object.assign({
-            amount: amount,
-            recipient: recipient,
-            symbol: currency,
-            label: o.label || o.memo || o.title || ''
-          }, o));
-        }
-        return _makeReq('CRYPTO_REQUEST', Object.assign({
-          symbol: currency,
+        return _makeReq('MINIAPP_SOLANA_PAYMENT', Object.assign({
           amount: amount,
           recipient: recipient,
+          symbol: String(o.currency || o.symbol || 'SOL').toUpperCase(),
           label: o.label || o.memo || o.title || ''
         }, o));
       }
@@ -803,9 +785,6 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         _handleSolanaPayment(payload);
         break;
       case 'CREATE_INVOICE_SPARKS':
-      case 'CRYPTO_REQUEST':
-        // Not implemented natively yet — fail fast instead of letting the
-        // mini-app's request hang until the 15s bridge timeout.
         _respondError(payload, 'This payment method is not available on this platform');
         break;
       case 'MINIAPP_WALLET_GET_BINDING':
