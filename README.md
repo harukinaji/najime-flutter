@@ -69,7 +69,7 @@ Full JavaScript SDK available via [NMASDK](https://github.com/harukinaji/NMASDK)
 | **Contacts** | `list()`, `get()`, `share()`, `invite()`, `inviteRoom()` |
 | **UI** | `alert()`, `toast()`, `openLink()`, `copy()` |
 | **Wallet** | `getState()`, `getAddress()`, `view()`, `refresh()`, `onChange()`, `signMessage()`, `signTransaction()`, `signAndSendTransaction()` |
-| **Payments** | `invoice()`, `crypto()`, `solana()`, `requestPayment()` — Solana SPL / EVM routing |
+| **Payments** | `invoice()`, `solana()`, `requestPayment()` — Solana SPL payments |
 | **Multiplayer** | `createRoom()`, `joinRoom()`, `leaveRoom()`, `joinMatchmaking()`, `leaveMatchmaking()`, `updateState()`, `send()`, `onChange()`, `onEvent()` |
 | **Voice** | `join()`, `leave()`, `setMuted()`, `toggleMuted()`, `onChange()`, `onParticipantsChange()` |
 | **Gamepad** | `getState()`, `refresh()`, `onChange()`, `onConnect()`, `onDisconnect()` |
