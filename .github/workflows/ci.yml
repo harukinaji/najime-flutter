@@ -41,4 +41,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Create dummy google-services.json
+        run: |
+          echo '{"project_info":{"project_id":"ci-placeholder","project_number":"000000000000","storage_bucket":"ci-placeholder.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.naji.najimessenger"}},"api_key":[{"current_key":"AIzaSyDummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
       - run: flutter build apk --debug
