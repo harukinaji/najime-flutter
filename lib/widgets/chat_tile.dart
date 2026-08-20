@@ -289,8 +289,8 @@ class ChatTile extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               chk != null
-                  ? 'Чек: ${chk.amount} ${chk.currency}'
-                  : 'Чек',
+                  ? 'Check: ${chk.amount} ${chk.currency}'
+                  : 'Check',
               style: textStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -33,7 +33,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
       if (mounted) {
         setState(() => _creating = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось создать кошелёк')),
+          const SnackBar(content: Text('Failed to create wallet')),
         );
       }
     }
@@ -43,7 +43,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Новый кошелёк')),
+      appBar: AppBar(title: const Text('New wallet')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -54,8 +54,8 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                 const Icon(Icons.shield_outlined, size: 56, color: Colors.amber),
                 const SizedBox(height: 16),
                 Text(
-                  'Ваша seed-фраза — это единственный способ восстановить кошелёк. '
-                  'Запишите её и храните в безопасном месте. Никогда никому не сообщайте.',
+                  'Your seed phrase is the only way to recover your wallet. '
+                  'Write it down and keep it in a safe place. Never share it with anyone.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -75,12 +75,12 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2.5),
                         )
-                      : const Text('Сгенерировать seed-фразу', style: TextStyle(fontSize: 16)),
+                      : const Text('Generate seed phrase', style: TextStyle(fontSize: 16)),
                 ),
               ] else ...[
                 if (!_confirmed) ...[
                   Text(
-                    'Скопируйте и сохраните вашу seed-фразу:',
+                    'Copy and save your seed phrase:',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -113,7 +113,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Запишите seed-фразу на бумаге и храните в безопасном месте. Не делайте скриншоты и не копируйте в буфер обмена.',
+                    'Write down your seed phrase on paper and keep it in a safe place. Do not take screenshots and do not copy it to the clipboard.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.amber.shade700,
@@ -133,13 +133,13 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       }
                     },
                     icon: const Icon(Icons.verified_outlined, size: 18),
-                    label: const Text('Подтвердить'),
+                    label: const Text('Confirm'),
                   ),
                 ] else ...[
                   const Icon(Icons.check_circle, size: 72, color: Colors.green),
                   const SizedBox(height: 16),
                   const Text(
-                    'Кошелёк успешно создан!',
+                    'Wallet created successfully!',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -152,7 +152,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                     onPressed: () {
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
-                    child: const Text('Перейти к кошельку', style: TextStyle(fontSize: 16)),
+                    child: const Text('Go to wallet', style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ],
@@ -217,14 +217,14 @@ class _MnemonicConfirmDialogState extends State<_MnemonicConfirmDialog> {
               maxLines: 3,
               minLines: 3,
               decoration: InputDecoration(
-                hintText: 'Введите все 12 слов по порядку',
-                errorText: _error ? 'Seed-фраза не совпадает' : null,
+                hintText: 'Enter all 12 words in order',
+                errorText: _error ? 'Seed phrase doesn\'t match' : null,
               ),
             ),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _verify,
-              child: const Text('Проверить'),
+              child: const Text('Check'),
             ),
           ],
         ),

@@ -4,10 +4,12 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config.dart';
+import 'secure_http_client.dart';
 
 /// Per-device app attestation service.
 ///
@@ -29,27 +31,60 @@ class AppAttestation {
   static const _keyRegistered = 'najime_app_key_registered';
   static const _storage = FlutterSecureStorage();
 
-  static const _attestChannel = MethodChannel('com.naji.najimessenger/attestation');
+  static const _attestChannel = MethodChannel('com.najime.attestation');
 
   Uint8List? _hmacKey;
   bool _initialized = false;
+  String? _authToken;
 
   bool get isInitialized => _initialized;
+
+  /// Stores the auth token for re-registration on 403.
+  void setAuthToken(String token) => _authToken = token;
+
+  /// Returns the stored auth token (for SignedHttpClient retry on 403).
+  String? get authToken => _authToken;
 
   /// Initializes the attestation service. Call once at app startup.
   Future<void> init() async {
     if (_initialized) return;
     _hmacKey = await _loadOrCreateKey();
     _initialized = true;
+    // Key registration requires an auth token.  It will be attempted
+    // in [ensureRegistered] once the user logs in.
+  }
 
-    // Register key with server on first launch (fire-and-forget)
-    if (!await isKeyRegistered()) {
-      _registerWithServer().then((_) => markKeyRegistered()).catchError((_) {});
+  /// Ensures the device key is registered with the server. Must be called
+  /// after the user logs in (the registration endpoint requires auth).
+  /// Always attempts registration — the endpoint is idempotent (INSERT OR
+  /// REPLACE) and the local "registered" flag can become stale when the
+  /// server database is reset or recreated.
+  Future<void> ensureRegistered(String token) async {
+    if (_hmacKey == null) {
+      debugPrint('[Attestation] HMAC key is null, cannot register');
+      return;
+    }
+    _authToken = token;
+    debugPrint('[Attestation] Registering key for device: $deviceId');
+    try {
+      await _registerWithServer(authToken: token);
+      await markKeyRegistered();
+      debugPrint('[Attestation] Key registered successfully');
+    } catch (e) {
+      debugPrint('[Attestation] Registration failed: $e');
     }
   }
 
+  /// Clears the local "registered" flag so the next [ensureRegistered] call
+  /// will re-register with the server.  Called when the server rejects
+  /// attestation headers (403) despite the local flag being set.
+  void invalidateRegistration() {
+    debugPrint('[Attestation] Clearing stale registration flag');
+    _storage.write(key: _keyRegistered, value: 'false');
+  }
+
   /// Registers this device's attestation key with the server.
-  Future<void> _registerWithServer() async {
+  Future<void> _registerWithServer({String? authToken}) async {
     if (_hmacKey == null) return;
     final hexKey = _hexEncode(_hmacKey!);
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/attestation/register');
@@ -57,14 +92,25 @@ class AppAttestation {
     try {
       final request = await client.postUrl(uri);
       request.headers.contentType = ContentType.json;
+      if (authToken != null) {
+        request.headers.set('Authorization', 'Bearer $authToken');
+      }
+      final appKey = appKeyValue();
+      if (appKey.isNotEmpty) {
+        request.headers.set(appKeyHeaderName, appKey);
+      }
       request.write(jsonEncode({
         'device_id': deviceId,
         'key_hex': hexKey,
       }));
       final response = await request.close();
       await response.drain();
+      if (response.statusCode != 200) {
+        throw Exception('Registration failed: HTTP ${response.statusCode}');
+      }
     } catch (_) {
-      // Registration failed — will retry on next launch
+      // Registration failed — will retry on next call to ensureRegistered
+      rethrow;
     } finally {
       client.close(force: true);
     }

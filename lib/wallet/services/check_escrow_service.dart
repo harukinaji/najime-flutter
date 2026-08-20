@@ -88,6 +88,7 @@ class CheckEscrowService {
     WalletConnectClient? wcClient,
     required String feePayerAddress,
     required String pdaAddress,
+    required String creatorAddress,
   }) async {
     final programId = await getProgramId();
     if (programId == null) throw Exception('Program ID not configured');
@@ -95,6 +96,7 @@ class CheckEscrowService {
     final pda = Ed25519HDPublicKey.fromBase58(pdaAddress);
     final programKey = Ed25519HDPublicKey.fromBase58(programId);
     final feePayer = Ed25519HDPublicKey.fromBase58(feePayerAddress);
+    final creator = Ed25519HDPublicKey.fromBase58(creatorAddress);
 
     final data = ByteArray(_instructionDiscriminator('redeem_check'));
 
@@ -102,6 +104,7 @@ class CheckEscrowService {
       programId: programKey,
       accounts: [
         AccountMeta.writeable(pubKey: pda, isSigner: false),
+        AccountMeta.writeable(pubKey: creator, isSigner: false),
         AccountMeta.writeable(pubKey: feePayer, isSigner: true),
         AccountMeta.readonly(pubKey: SystemProgram.id, isSigner: false),
       ],

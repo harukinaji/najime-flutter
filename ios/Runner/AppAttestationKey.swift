@@ -27,7 +27,8 @@ class AppAttestationKey {
         // Generate new 32-byte random key
         var keyData = Data(count: 32)
         let status = keyData.withUnsafeMutableBytes { bytes in
-            SecRandomCopyBytes(kSecRandomDefault, 32, bytes.baseAddress!)
+            guard let baseAddress = bytes.baseAddress else { return errSecAllocate }
+            return SecRandomCopyBytes(kSecRandomDefault, 32, baseAddress)
         }
         guard status == errSecSuccess else { return nil }
         

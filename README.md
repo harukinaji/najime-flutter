@@ -244,10 +244,11 @@ flutter run
 ### Custom Backend
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://api.your-server.com
+flutter run --dart-define=API_BASE_URL=https://api.your-server.com \
+            --dart-define=APP_KEY=your-shared-app-key
 ```
 
-This sets the API, WebSocket and STUN/TURN host. See `lib/config.dart`.
+This sets the API, WebSocket and STUN/TURN host (see `lib/config.dart`) and the shared application key. The `APP_KEY` value must match the one configured on the backend (`APP_KEY` in its `.env`); it can also be placed in the local `.env` as `APP_KEY=...`.
 
 ### Build
 
@@ -287,6 +288,7 @@ flutter test
 
 | Variable | Description |
 |---|---|
+| `APP_KEY` | Shared application key sent as `X-App-Key` on every request. Must match the backend's `APP_KEY`. Can also be provided with `--dart-define=APP_KEY=...` |
 | `WALLETCONNECT_PROJECT_ID` | WalletConnect / Reown project ID for Phantom/Solflare integration |
 
 ### OAuth
@@ -311,11 +313,11 @@ frontend/
       sfu_service.dart       ← SFU group call orchestration
       notification_service.dart   ← FCM push notifications
       cache_service.dart     ← AES-256-SIC encrypted cache
-      lock_service.dart      ← PIN/biometric app lock
+      lock_service.dart      ← PIN (PBKDF2 + per-install pepper) / biometric app lock
       sticker_cache.dart     ← sticker memory + file cache
       story_service.dart     ← story CRUD
       contacts_service.dart  ← device contact sync
-      secure_http_client.dart ← certificate pinning
+      secure_http_client.dart ← certificate pinning + shared app key injection
       app_attestation.dart   ← per-device HMAC request signing
       password_crypto.dart   ← PBKDF2-SHA256 password hashing
       token_cipher.dart      ← token encryption via native keystore
@@ -360,11 +362,12 @@ frontend/
 NajiMe implements defense-in-depth security across multiple layers:
 
 - **Transport encryption** — TLS 1.2+ with SHA-256 certificate pinning; WSS for WebSockets
+- **Application key** — every request carries a shared app key (`X-App-Key`, from `APP_KEY`) alongside the per-account session token, so the backend only serves requests from an official app instance
 - **Request attestation** — every API request is signed with a per-device HMAC-SHA256 key stored in Android Keystore / iOS Keychain, with nonce + timestamp anti-replay
 - **Wallet security** — NaCl crypto_box for deep-link signing; seed phrases in secure storage; Android Keystore encryption for session tokens
 - **Password hashing** — PBKDF2-SHA256 with 600,000 iterations and random salt; constant-time comparison to prevent timing attacks
 - **Cache encryption** — all cached chat data and images encrypted at rest with AES-256-SIC
-- **App lock** — PIN (HMAC-SHA256 hashed) + biometric with rate limiting (30s lockout after 5 failures, 5min after 10)
+- **App lock** — PIN hashed with PBKDF2-SHA256 (600k iterations) + a random per-install pepper stored in secure storage; biometric unlock; persisted, restart-resistant rate limiting (30s lockout after 5 failures, 5min after 10)
 
 If you find a security vulnerability, please report it via [GitHub Security Advisories](https://github.com/security/advisories).
 

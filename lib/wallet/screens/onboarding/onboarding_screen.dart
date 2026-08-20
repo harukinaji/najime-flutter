@@ -31,13 +31,13 @@ class OnboardingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               const Text(
-                'Добро пожаловать в\nNaji Wallet',
+                'Welcome to\nNaji Wallet',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, height: 1.2),
               ),
               const SizedBox(height: 12),
               Text(
-                'Кошелёк для тестирования на Solana Devnet. Средства не имеют реальной ценности.',
+                'A testing wallet on Solana Devnet. Funds have no real value.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: scheme.onSurfaceVariant, height: 1.5),
               ),
@@ -51,7 +51,7 @@ class OnboardingScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (_) => const CreateWalletScreen()),
                 ),
-                child: const Text('Создать новый кошелёк', style: TextStyle(fontSize: 16)),
+                child: const Text('Create new wallet', style: TextStyle(fontSize: 16)),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
@@ -64,7 +64,7 @@ class OnboardingScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (_) => const ImportWalletScreen()),
                 ),
-                child: const Text('Импортировать кошелёк', style: TextStyle(fontSize: 16)),
+                child: const Text('Import wallet', style: TextStyle(fontSize: 16)),
               ),
               const SizedBox(height: 12),
               TextButton(
@@ -76,7 +76,7 @@ class OnboardingScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (_) => const ConnectWalletScreen()),
                 ),
-                child: const Text('Подключить внешний кошелёк', style: TextStyle(fontSize: 16)),
+                child: const Text('Connect external wallet', style: TextStyle(fontSize: 16)),
               ),
               const SizedBox(height: 32),
             ],

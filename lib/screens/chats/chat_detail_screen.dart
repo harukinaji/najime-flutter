@@ -1177,7 +1177,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             ),
             ListTile(
               leading: const Icon(Icons.receipt_long),
-              title: const Text('Инвойс'),
+              title: const Text('Invoice'),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _showInvoiceComposer();
@@ -1185,7 +1185,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             ),
             ListTile(
               leading: const Icon(Icons.card_giftcard),
-              title: const Text('Чек'),
+              title: const Text('Check'),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _showCheckComposer();
@@ -1284,7 +1284,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         return StatefulBuilder(
           builder: (ctx, setSheet) {
             return AlertDialog(
-              title: const Text('Новый инвойс'),
+              title: const Text('New invoice'),
               content: SizedBox(
                 width: 320,
                 child: SingleChildScrollView(
@@ -1296,7 +1296,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         keyboardType:
                             const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(
-                          labelText: 'Сумма',
+                          labelText: 'Amount',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -1304,7 +1304,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       DropdownButtonFormField<String>(
                         value: currency,
                         decoration: const InputDecoration(
-                          labelText: 'Монета',
+                          labelText: 'Currency',
                           border: OutlineInputBorder(),
                         ),
                         items: const [
@@ -1321,14 +1321,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       DropdownButtonFormField<String>(
                         value: recipientMode,
                         decoration: const InputDecoration(
-                          labelText: 'Получатель',
+                          labelText: 'Recipient',
                           border: OutlineInputBorder(),
                         ),
                         items: const [
                           DropdownMenuItem(
-                              value: 'self', child: Text('Мой кошелёк')),
+                              value: 'self', child: Text('My wallet')),
                           DropdownMenuItem(
-                              value: 'custom', child: Text('Свой адрес')),
+                              value: 'custom', child: Text('Custom address')),
                         ],
                         onChanged: (v) {
                           if (v != null) setSheet(() => recipientMode = v);
@@ -1339,7 +1339,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         TextField(
                           controller: recipientCtrl,
                           decoration: const InputDecoration(
-                            labelText: 'Адрес получателя (base58)',
+                            labelText: 'Recipient address (base58)',
                             border: OutlineInputBorder(),
                           ),
                           style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
@@ -1349,7 +1349,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       TextField(
                         controller: memoCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Комментарий (необязательно)',
+                          labelText: 'Memo (optional)',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -1360,7 +1360,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, null),
-                  child: const Text('Отмена'),
+                  child: const Text('Cancel'),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -1372,7 +1372,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       'memo': memoCtrl.text.trim(),
                     });
                   },
-                  child: const Text('Отправить'),
+                  child: const Text('Send'),
                 ),
               ],
             );
@@ -1386,7 +1386,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final coin = (result['currency'] as String?) ?? 'SOL';
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Введите корректную сумму')),
+        const SnackBar(content: Text('Enter a valid amount')),
       );
       return;
     }
@@ -1396,7 +1396,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final binding = await const WalletAccessProxy().getBinding();
       if (!binding.bound || binding.publicKey == null) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Кошелёк не подключён')),
+          const SnackBar(content: Text('Wallet not connected')),
         );
         return;
       }
@@ -1405,7 +1405,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final r = (result['recipient'] as String?)?.trim() ?? '';
       if (r.isEmpty || r.length < 16) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Укажите корректный адрес получателя')),
+          const SnackBar(content: Text('Enter a valid recipient address')),
         );
         return;
       }
@@ -1487,7 +1487,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         return StatefulBuilder(
           builder: (ctx, setSheet) {
             return AlertDialog(
-              title: const Text('Создать чек'),
+              title: const Text('Create check'),
               content: SizedBox(
                 width: 320,
                 child: SingleChildScrollView(
@@ -1499,7 +1499,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         keyboardType:
                             const TextInputType.numberWithOptions(decimal: true),
                         decoration: const InputDecoration(
-                          labelText: 'Сумма (SOL)',
+                          labelText: 'Amount (SOL)',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -1511,8 +1511,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
-                          'Сумма будет переведена на escrow-кошелёк сервера. '
-                          'Любой участник чата сможет обналичить чек.',
+                          'The amount will be transferred to the server\'s escrow wallet. '
+                          'Any chat participant will be able to cash the check.',
                           style: TextStyle(fontSize: 12),
                         ),
                       ),
@@ -1523,7 +1523,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, null),
-                  child: const Text('Отмена'),
+                  child: const Text('Cancel'),
                 ),
                 FilledButton(
                   onPressed: () {
@@ -1531,7 +1531,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       'amount': amountCtrl.text.trim(),
                     });
                   },
-                  child: const Text('Создать'),
+                  child: const Text('Create'),
                 ),
               ],
             );
@@ -1544,7 +1544,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final amount = double.tryParse(result['amount'] as String? ?? '');
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Введите корректную сумму')),
+        const SnackBar(content: Text('Enter a valid amount')),
       );
       return;
     }
@@ -1556,11 +1556,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (_sending) return;
 
     final state = AppState.instance;
-    final binding = await const WalletAccessProxy().getBinding();
-    if (!binding.bound || binding.publicKey == null) {
+    if (state.wallet == null) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Кошелёк не подключён')),
+        const SnackBar(content: Text('Wallet not connected')),
       );
       return;
     }
@@ -1581,7 +1580,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final (pda, tx) = await escrowService.createCheck(
         wallet: state.wallet,
         wcClient: state.walletConnectClient,
-        feePayerAddress: binding.publicKey!,
+        feePayerAddress: state.wallet!.address,
         checkId: checkId,
         lamports: lamports,
       );
@@ -1591,7 +1590,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (!mounted) return;
       setState(() => _sending = false);
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка создания чека: $e')),
+        SnackBar(content: Text('Failed to create check: $e')),
       );
       return;
     }
@@ -1612,6 +1611,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       status: 'active',
       txSignature: txSig,
       checkId: pdaAddress,
+      creatorAddress: state.wallet!.address,
     );
 
     final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
@@ -3148,7 +3148,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 ),
                 child: isPreparing
                     ? Text(
-                        'Включаем микрофон…',
+                        'Starting microphone…',
                         key: const ValueKey('preparing'),
                         style: TextStyle(
                           fontSize: 12,
@@ -3249,7 +3249,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             ),
             const SizedBox(width: 3),
             Text(
-              locked ? 'Запись зафиксирована' : 'Вверх — зафиксировать',
+              locked ? 'Recording locked' : 'Swipe up — to lock',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

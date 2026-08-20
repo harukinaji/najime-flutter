@@ -129,7 +129,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
       if (mounted) {
         setState(() {
           _loadingMedia = false;
-          _error = 'Не удалось воспроизвести: ${e.toString().split('\n').first}';
+          _error = 'Failed to play: ${e.toString().split('\n').first}';
         });
       }
     }
@@ -161,7 +161,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$label скопирован')),
+        SnackBar(content: Text('$label copied')),
       );
     }
   }
@@ -172,18 +172,18 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
     final confirmed = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Передать NFT'),
+        title: const Text('Transfer NFT'),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
-            labelText: 'Адрес получателя',
-            hintText: 'Solana-адрес (base58)',
+            labelText: 'Recipient address',
+            hintText: 'Solana address (base58)',
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Отмена'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () {
@@ -191,13 +191,13 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               if (address.length < 32 ||
                   !RegExp(r'^[1-9A-HJ-NP-Za-km-z]+$').hasMatch(address)) {
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(content: Text('Некорректный адрес Solana')),
+                  const SnackBar(content: Text('Invalid Solana address')),
                 );
                 return;
               }
               Navigator.of(dialogContext).pop(address);
             },
-            child: const Text('Передать'),
+            child: const Text('Transfer'),
           ),
         ],
       ),
@@ -225,7 +225,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
           context: context,
           builder: (_) => AlertDialog(
             icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-            title: const Text('NFT передан!'),
+            title: const Text('NFT transferred!'),
             content: SelectableText(
               signature,
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
@@ -233,7 +233,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
             actions: [
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('ОК'),
+                child: const Text('OK'),
               ),
             ],
           ),
@@ -244,15 +244,15 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
       if (mounted) {
         setState(() {
           _transferring = false;
-          _error =
-              'У получателя нет счёта для этого NFT. Отправьте ему немного SOL.';
+              _error =
+              'Recipient doesn\'t have an account for this NFT. Send them some SOL first.';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _transferring = false;
-          _error = 'Ошибка отправки: ${e.toString().split('\n').first}';
+          _error = 'Send error: ${e.toString().split('\n').first}';
         });
       }
     }
@@ -312,7 +312,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
         const SizedBox(height: 20),
         if (nft.attributes.isNotEmpty) ...[
           const Text(
-            'Атрибуты',
+            'Attributes',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -329,16 +329,16 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
         _DetailRow(
           label: 'Mint',
           value: nft.mint,
-          onCopy: () => _copy(nft.mint, 'Mint-адрес'),
+          onCopy: () => _copy(nft.mint, 'Mint address'),
         ),
         _DetailRow(
           label: 'Token Account',
           value: nft.tokenAccount,
-          onCopy: () => _copy(nft.tokenAccount, 'Адрес аккаунта'),
+          onCopy: () => _copy(nft.tokenAccount, 'Account address'),
         ),
         if (nft.hasMedia && nft.mediaFile != null)
           _DetailRow(
-            label: 'Категория',
+            label: 'Category',
             value:
                 '${nft.isAudio ? 'Audio' : nft.isVideo ? 'Video' : '—'} · ${nft.mediaFile!.type}',
             onCopy: () => _copy(nft.mediaFile!.uri, 'Media URI'),
@@ -362,7 +362,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
                   height: 22,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : const Text('Передать NFT', style: TextStyle(fontSize: 16)),
+              : const Text('Transfer NFT', style: TextStyle(fontSize: 16)),
         ),
       ],
     );
@@ -408,7 +408,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               const SizedBox(height: 20),
               if (nft.attributes.isNotEmpty) ...[
                 const Text(
-                  'Атрибуты',
+                  'Attributes',
                   style:
                       TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
@@ -427,16 +427,16 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               _DetailRow(
                 label: 'Mint',
                 value: nft.mint,
-                onCopy: () => _copy(nft.mint, 'Mint-адрес'),
+                onCopy: () => _copy(nft.mint, 'Mint address'),
               ),
               _DetailRow(
                 label: 'Token Account',
                 value: nft.tokenAccount,
-                onCopy: () => _copy(nft.tokenAccount, 'Адрес аккаунта'),
+                onCopy: () => _copy(nft.tokenAccount, 'Account address'),
               ),
               if (nft.hasMedia && nft.mediaFile != null)
                 _DetailRow(
-                  label: 'Категория',
+                  label: 'Category',
                   value: '${nft.isAudio ? 'Audio' : nft.isVideo ? 'Video' : '—'} · ${nft.mediaFile!.type}',
                   onCopy: () => _copy(nft.mediaFile!.uri, 'Media URI'),
                 ),
@@ -460,7 +460,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
                     : const Icon(Icons.send_rounded),
-                label: const Text('Передать NFT',
+                label: const Text('Transfer NFT',
                     style: TextStyle(fontSize: 16)),
               ),
             ],
@@ -508,7 +508,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
-                label: Text(_isPlaying ? 'Стоп' : 'Воспроизвести'),
+                label: Text(_isPlaying ? 'Stop' : 'Play'),
               ),
             ],
           ),

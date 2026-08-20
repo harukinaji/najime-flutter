@@ -59,7 +59,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
         _signaturePreview = result.publicKey;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Сообщение подписано')),
+        const SnackBar(content: Text('Message signed')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -86,7 +86,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
     final session = state.walletConnectSession;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Подключить кошелёк')),
+      appBar: AppBar(title: const Text('Connect wallet')),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -124,7 +124,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
           ),
         ],
         Text(
-          'Подключите внешний кошелёк (Phantom, Solflare).',
+          'Connect an external wallet (Phantom, Solflare).',
           textAlign: TextAlign.center,
           style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
         ),
@@ -152,8 +152,8 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
         ),
         const SizedBox(height: 20),
         Text(
-          'Подключение безопасно: секретные ключи не покидают ваш кошелёк, '
-          'все подписи подтверждаются в приложении кошелька.',
+          'The connection is secure: secret keys never leave your wallet, '
+          'all signatures are confirmed in the wallet app.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
         ),
@@ -185,7 +185,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
               const Icon(Icons.link, color: Colors.white, size: 32),
               const SizedBox(height: 8),
               const Text(
-                'Кошелёк подключён',
+                'Wallet connected',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -208,12 +208,12 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Подключённый аккаунт',
+                  'Connected account',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  session.primaryAccount ?? 'Аккаунты не предоставлены',
+                  session.primaryAccount ?? 'Accounts not provided',
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 13,
@@ -227,8 +227,8 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Подписание происходит в вашем кошельке — '
-                        'приватный ключ не передаётся.',
+                        'Signing happens in your wallet — '
+                        'the private key is not transmitted.',
                         style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                       ),
                     ),
@@ -247,7 +247,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Сообщение подписано',
+                    'Message signed',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 6),
@@ -286,13 +286,13 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.edit_note),
-          label: Text(_signing ? 'Ожидание подписи…' : 'Подписать тестовое сообщение'),
+          label: Text(_signing ? 'Waiting for signature…' : 'Sign test message'),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: _disconnect,
           icon: const Icon(Icons.link_off, size: 18),
-          label: const Text('Отключить кошелёк'),
+          label: const Text('Disconnect wallet'),
         ),
       ],
     );

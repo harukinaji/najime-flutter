@@ -757,7 +757,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     final invoice = InvoiceData.tryParse(widget.message.content);
     if (invoice == null) {
       return Text(
-        'Некорректный инвойс',
+        'Invalid invoice',
         style: TextStyle(color: cs.error, fontSize: 14),
       );
     }
@@ -788,7 +788,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                     color: isMe ? Colors.white : cs.primary),
                 const SizedBox(width: 6),
                 Text(
-                  'Инвойс',
+                  'Invoice',
                   style: TextStyle(
                     color: isMe ? Colors.white70 : cs.onSurfaceVariant,
                     fontSize: 11,
@@ -838,7 +838,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                       color: isMe ? Colors.white : Colors.green),
                   const SizedBox(width: 6),
                   Text(
-                    'Оплачено',
+                    'Paid',
                     style: TextStyle(
                       color: isMe ? Colors.white : Colors.green,
                       fontSize: 13,
@@ -873,7 +873,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        'Devnet — токены не имеют реальной стоимости',
+                        'Devnet — tokens have no real value',
                         style: TextStyle(
                           color: Colors.orange.shade700,
                           fontSize: 10,
@@ -897,7 +897,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Отправка…',
+                    'Sending…',
                     style: TextStyle(
                       color: isMe ? Colors.white70 : cs.onSurfaceVariant,
                       fontSize: 13,
@@ -909,14 +909,14 @@ class _MessageBubbleState extends State<MessageBubble> {
               FilledButton.icon(
                 onPressed: _payInvoice,
                 icon: const Icon(Icons.account_balance_wallet, size: 18),
-                label: const Text('Оплатить'),
+                label: const Text('Pay'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(38),
                 ),
               )
             else if (payable)
               Text(
-                'Ожидает оплаты',
+                'Awaiting payment',
                 style: TextStyle(
                   color: isMe ? Colors.white70 : cs.onSurfaceVariant,
                   fontSize: 13,
@@ -924,7 +924,7 @@ class _MessageBubbleState extends State<MessageBubble> {
               )
             else
               Text(
-                'Оплата ${invoice.currency} пока не поддерживается',
+                'Payment in ${invoice.currency} is not supported yet',
                 style: TextStyle(
                   color: isMe ? Colors.white60 : cs.onSurfaceVariant,
                   fontSize: 12,
@@ -996,7 +996,7 @@ class _MessageBubbleState extends State<MessageBubble> {
       }
       if (mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Оплачено: $txSig')),
+          SnackBar(content: Text('Paid: $txSig')),
         );
       }
     } catch (e) {
@@ -1004,9 +1004,9 @@ class _MessageBubbleState extends State<MessageBubble> {
         setState(() => _invoicePaying = false);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
-            content: const Text('Ошибка оплаты. Если вы уже оплатили, нажмите «Синхронизировать»'),
+            content: const Text('Payment error. If you already paid, press \"Sync\"'),
             action: SnackBarAction(
-              label: 'Синхронизировать',
+              label: 'Sync',
               onPressed: () => _syncInvoicePaid(),
             ),
             duration: const Duration(seconds: 10),
@@ -1038,18 +1038,18 @@ class _MessageBubbleState extends State<MessageBubble> {
           widget.onInvoicePaid?.call(widget.message.id, updated.encode());
         }
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Статус синхронизирован')),
+          const SnackBar(content: Text('Status synced')),
         );
       } else {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Сервер не подтвердил оплату. Проверьте статус позже.')),
+          const SnackBar(content: Text('Server did not confirm payment. Check the status later.')),
         );
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _invoicePaying = false);
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка синхронизации: $e')),
+        SnackBar(content: Text('Sync error: $e')),
       );
     }
   }
@@ -1068,7 +1068,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     final check = CheckData.tryParse(widget.message.content);
     if (check == null) {
       return Text(
-        'Некорректный чек',
+        'Invalid check',
         style: TextStyle(color: cs.error, fontSize: 14),
       );
     }
@@ -1100,7 +1100,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                     size: 18, color: Colors.white),
                 const SizedBox(width: 6),
                 Text(
-                  redeemed ? 'Чек обналичен' : 'Чек',
+                  redeemed ? 'Check redeemed' : 'Check',
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 11,
@@ -1139,7 +1139,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   const Icon(Icons.check_circle, size: 16, color: Colors.white70),
                   const SizedBox(width: 6),
                   Text(
-                    isCreator ? 'Ваш чек обналичен' : 'Обналичен',
+                    isCreator ? 'Your check has been redeemed' : 'Redeemed',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -1168,7 +1168,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                       Expanded(
                         child: Text(
                           _hasBuiltInWallet
-                              ? 'На: ${_myWalletAddress!.substring(0, 4)}...${_myWalletAddress!.substring(_myWalletAddress!.length - 4)}'
+                              ? 'To: ${_myWalletAddress!.substring(0, 4)}...${_myWalletAddress!.substring(_myWalletAddress!.length - 4)}'
                               : 'Phantom — limitations on-chain. Create built-in wallet.',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
@@ -1189,8 +1189,8 @@ class _MessageBubbleState extends State<MessageBubble> {
                   icon: const Icon(Icons.redeem, size: 18),
                   label: Text(
                     _hasBuiltInWallet
-                        ? 'Обналичить'
-                        : 'Нужен встроенный кошелёк',
+                        ? 'Redeem'
+                        : 'Built-in wallet required',
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -1203,7 +1203,7 @@ class _MessageBubbleState extends State<MessageBubble> {
             ]
             else
               const Text(
-                'Ожидает обналичивания',
+                'Awaiting redemption',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
@@ -1222,7 +1222,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'Devnet — токены не имеют реальной стоимости',
+                      'Devnet — tokens have no real value',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 10,
@@ -1245,7 +1245,7 @@ class _MessageBubbleState extends State<MessageBubble> {
     final binding = await const WalletAccessProxy().getBinding();
     if (!binding.bound || binding.publicKey == null) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Сначала подключите кошелёк')),
+        const SnackBar(content: Text('Connect a wallet first')),
       );
       return;
     }
@@ -1253,32 +1253,35 @@ class _MessageBubbleState extends State<MessageBubble> {
     if (!_hasBuiltInWallet) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(
-          content: Text('Для on-chain чеков нужен встроенный кошелёк. Phantom не поддерживает кастомные программы через deep link.'),
+          content: Text('On-chain checks require a built-in wallet. Phantom does not support custom programs via deep link.'),
           duration: Duration(seconds: 4),
         ),
       );
       return;
     }
 
-    final walletAddress = binding.publicKey!;
+    // Use the built-in wallet address as fee payer since we sign with its
+    // keypair.  getBinding() may return a WalletConnect address when Phantom
+    // is also connected, which would cause an AccountNotSigner error.
+    final walletAddress = appState.wallet!.address;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Обналичить чек'),
+        title: const Text('Redeem Check'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Сумма: ${check.amount} ${check.currency}'),
+            Text('Amount: ${check.amount} ${check.currency}'),
             const SizedBox(height: 8),
-            const Text('Получатель:', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const Text('Recipient:', style: TextStyle(fontSize: 12, color: Colors.grey)),
             Text(walletAddress, style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Подтвердить')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm')),
         ],
       ),
     );
@@ -1289,12 +1292,18 @@ class _MessageBubbleState extends State<MessageBubble> {
       final pdaAddress = check.checkId ?? widget.message.id;
       if (pdaAddress.isEmpty) throw Exception('No PDA address for this check');
 
+      final creatorAddr = check.creatorAddress;
+      if (creatorAddr == null || creatorAddr.isEmpty) {
+        throw Exception('Creator wallet address unknown — cannot redeem legacy check');
+      }
+
       final escrowService = CheckEscrowService(appState.solana.client);
       final txSig = await escrowService.redeemCheck(
         wallet: appState.wallet,
         wcClient: appState.walletConnectClient,
         feePayerAddress: walletAddress,
         pdaAddress: pdaAddress,
+        creatorAddress: creatorAddr,
       );
 
       await ApiService.redeemCheck(pdaAddress, txSignature: txSig);
@@ -1309,13 +1318,13 @@ class _MessageBubbleState extends State<MessageBubble> {
       );
       widget.onInvoicePaid?.call(widget.message.id, updated.encode());
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Чек обналичен: $txSig')),
+        SnackBar(content: Text('Check redeemed: $txSig')),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _invoicePaying = false);
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }

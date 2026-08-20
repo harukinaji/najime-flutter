@@ -15,7 +15,7 @@ Future<void> ensureWalletMedia() async {
       builder: NftMediaHandler.new,
       config: const AudioServiceConfig(
         androidNotificationChannelId: 'org.najime.wallet.nft_media',
-        androidNotificationChannelName: 'NFT медиа',
+        androidNotificationChannelName: 'NFT media',
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
       ),

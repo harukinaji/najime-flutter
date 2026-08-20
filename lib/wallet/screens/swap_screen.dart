@@ -78,7 +78,7 @@ class _SwapScreenState extends State<SwapScreen> {
       );
       pools = pools.where((p) => p.swapEnabled).toList();
       if (pools.isEmpty) {
-        if (mounted) setState(() => _error = 'Пул для этой пары не найден на devnet.');
+        if (mounted) setState(() => _error = 'Pool for this pair not found on devnet.');
       } else {
         final pool = await _firstWithLiquidity(raydium, pools);
         final config = await raydium.getAmmConfig(pool);
@@ -91,7 +91,7 @@ class _SwapScreenState extends State<SwapScreen> {
         await _refreshQuote();
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Не удалось найти пул: $e');
+      if (mounted) setState(() => _error = 'Failed to find pool: $e');
     } finally {
       if (mounted) setState(() => _loadingPool = false);
     }
@@ -145,7 +145,7 @@ class _SwapScreenState extends State<SwapScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Ошибка расчёта: $e');
+      if (mounted) setState(() => _error = 'Calculation error: $e');
     }
   }
 
@@ -185,12 +185,12 @@ class _SwapScreenState extends State<SwapScreen> {
       if (mounted) {
         setState(() => _signature = signature);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Своп отправлен: ${_short(signature)}')),
+          SnackBar(content: Text('Swap sent: ${_short(signature)}')),
         );
       }
     } catch (e) {
       debugPrint('Swap failed: $e');
-      if (mounted) setState(() => _error = 'Своп не прошёл: $e');
+      if (mounted) setState(() => _error = 'Swap failed: $e');
     } finally {
       if (mounted) setState(() => _swapping = false);
     }
@@ -260,7 +260,7 @@ class _SwapScreenState extends State<SwapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Своп (Raydium)')),
+      appBar: AppBar(title: const Text('Swap (Raydium)')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -279,7 +279,7 @@ class _SwapScreenState extends State<SwapScreen> {
                     const TextInputType.numberWithOptions(decimal: true),
                 onChanged: (_) => _refreshQuote(),
                 decoration: InputDecoration(
-                  labelText: 'Сумма (${_fromToken.symbol})',
+                  labelText: 'Amount (${_fromToken.symbol})',
                   prefixIcon: const Icon(Icons.input),
                   border: const OutlineInputBorder(),
                   filled: true,
@@ -306,7 +306,7 @@ class _SwapScreenState extends State<SwapScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.swap_horiz),
-                label: Text(_swapping ? 'Своп...' : 'Своп'),
+                label: Text(_swapping ? 'Swap...' : 'Swap'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -315,7 +315,7 @@ class _SwapScreenState extends State<SwapScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: SelectableText(
-                    'Сигнатура: $_signature',
+                    'Signature: $_signature',
                     style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
@@ -332,7 +332,7 @@ class _SwapScreenState extends State<SwapScreen> {
 
   Widget _buildFromCard() {
     return _tokenCard(
-      label: 'Вход',
+      label: 'Input',
       token: _fromToken,
       onTap: _swapping ? () {} : _pickFrom,
     );
@@ -348,12 +348,12 @@ class _SwapScreenState extends State<SwapScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Center(
-          child: Text('Загрузка...', style: TextStyle(color: Colors.white38)),
+          child: Text('Loading...', style: TextStyle(color: Colors.white38)),
         ),
       );
     }
     return _tokenCard(
-      label: 'Выход',
+      label: 'Output',
       token: to,
       onTap: _swapping ? () {} : _pickTo,
     );
@@ -429,7 +429,7 @@ class _SwapScreenState extends State<SwapScreen> {
           padding: const EdgeInsets.all(20),
           child: Center(
             child: Text(
-              'Введите сумму для расчёта',
+              'Enter an amount to calculate',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
@@ -454,10 +454,10 @@ class _SwapScreenState extends State<SwapScreen> {
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
-            _quoteRow('Комиссия', '${_fmt.format(feeUi)} ${_fromToken.symbol}'),
-            _quoteRow('Цена (влияние)',
+            _quoteRow('Fee', '${_fmt.format(feeUi)} ${_fromToken.symbol}'),
+            _quoteRow('Price (impact)',
                 '${(quote.priceImpactBps / 100).toStringAsFixed(2)}%'),
-            _quoteRow('Минимум на выходе',
+            _quoteRow('Minimum output',
                 '${_fmt.format(minOutUi)} ${_toToken!.symbol}'),
           ],
         ),
@@ -482,7 +482,7 @@ class _SwapScreenState extends State<SwapScreen> {
   Widget _buildSlippRow() {
     return Row(
       children: [
-        const Text('Проскальзывание:'),
+        const Text('Slippage:'),
         const Spacer(),
         SizedBox(
           width: 150,

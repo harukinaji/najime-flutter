@@ -19,7 +19,7 @@ class AddressChip extends StatelessWidget {
           onCopy!();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Адрес скопирован')),
+            const SnackBar(content: Text('Address copied')),
           );
         }
       },

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_service.dart';
+import 'app_attestation.dart';
 import 'notification_service.dart';
 import 'story_service.dart';
 import 'token_cipher.dart';
@@ -35,15 +37,22 @@ class AuthState {
     await _prefs!.setString('native_base_url', AppConfig.apiBaseUrl);
     final token = await _storage.read(key: _keyToken);
     if (token != null && token.isNotEmpty) {
+      debugPrint('[Auth] Restoring session for user: ${await _storage.read(key: _keyUsername)}');
       isAuthenticated = true;
       ApiService.setToken(token);
-      WebSocketService.connect(token);
       await _storeEncryptedNativeToken(token);
       username = await _storage.read(key: _keyUsername);
       displayName = await _storage.read(key: _keyDisplayName);
       email = await _storage.read(key: _keyEmail);
       bio = _prefs!.getString(_keyBio);
       avatarUrl = _prefs!.getString(_keyAvatarUrl);
+
+      await AppAttestation.instance.ensureRegistered(token);
+
+      WebSocketService.connect(token);
+      debugPrint('[Auth] Session restored, token set, WS connecting');
+    } else {
+      debugPrint('[Auth] No stored session');
     }
   }
 
@@ -74,6 +83,13 @@ class AuthState {
     this.bio = bio;
     this.avatarUrl = avatarUrl;
     ApiService.setToken(token);
+
+    // Register attestation key with the server BEFORE any API calls.
+    // The server rejects requests with unregistered attestation keys (403),
+    // so this must complete first.  Failures are non-fatal — the key may
+    // already be registered from a previous session.
+    await AppAttestation.instance.ensureRegistered(token);
+
     WebSocketService.connect(token);
 
     await _storage.write(key: _keyToken, value: token);

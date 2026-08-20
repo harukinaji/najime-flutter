@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import '../config.dart';
 import 'app_attestation.dart';
 import 'api_service.dart';
+import 'secure_http_client.dart';
 import 'webrtc_service.dart';
 
 class WebSocketService {
@@ -19,6 +20,7 @@ class WebSocketService {
   static int _reconnectDelay = 1;
   static const int _maxReconnectDelay = 30;
   static final String _deviceId = _generateDeviceId();
+  static bool _skipAttestation = false;
 
   static String _generateDeviceId() {
     final random = Random.secure();
@@ -40,6 +42,7 @@ class WebSocketService {
   static void connect(String token) {
     _token = token;
     _reconnectDelay = 1;
+    _skipAttestation = false;
     _connect();
   }
 
@@ -81,24 +84,30 @@ class WebSocketService {
         '${AppConfig.wsBaseUrl}/ws?device_id=$_deviceId');
     debugPrint('[WS] Connecting to ${AppConfig.wsBaseUrl}/ws');
 
-    // Get attestation headers for the WS handshake
+    // Get attestation headers for the WS handshake (skip if not registered)
     final attestation = AppAttestation.instance;
-    final attestationHeaders = await attestation.signRequest(
-      method: 'GET',
-      path: '/ws',
-    );
+    final Map<String, String> attestationHeaders;
+    if (_skipAttestation || !await attestation.isKeyRegistered()) {
+      attestationHeaders = {};
+    } else {
+      attestationHeaders = await attestation.signRequest(
+        method: 'GET',
+        path: '/ws',
+      );
+    }
 
-    final httpClient = HttpClient()
-      ..badCertificateCallback = (cert, host, port) {
-        // Delegate to the same pinning logic as the HTTP client
-        if (kDebugMode) return true;
-        return false;
-      };
+    final httpClient = HttpClient();
+    if (SignedHttpClient.shouldOverrideCertificateVerification) {
+      httpClient.badCertificateCallback = (cert, host, port) =>
+          SignedHttpClient.verifyServerCertificate(cert, host, port);
+    }
 
+    final appKey = appKeyValue();
     WebSocket.connect(
       uri.toString(),
       headers: {
         'X-WS-Token': _token!,
+        if (appKey.isNotEmpty) appKeyHeaderName: appKey,
         ...attestationHeaders,
       },
       customClient: httpClient,
@@ -198,6 +207,12 @@ class WebSocketService {
         _handleAuthExpired();
         return;
       }
+      if (msg.contains('403')) {
+        debugPrint('[WS] Handshake 403 -> attestation failed, retrying without');
+        _skipAttestation = true;
+        _scheduleReconnect();
+        return;
+      }
       debugPrint('[WS] Connect error: $e, retrying in ${_reconnectDelay}s...');
       _scheduleReconnect();
     });
@@ -216,6 +231,7 @@ class WebSocketService {
     _socket = null;
     _connecting = false;
     _reconnectDelay = 1;
+    _skipAttestation = false;
     _connect();
   }
 

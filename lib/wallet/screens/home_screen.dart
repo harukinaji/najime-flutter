@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await state.solana.requestAirdrop(wallet.address, 2 * WalletConfig.lamportsPerSol);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Airdrop выполнен: +2 SOL (devnet)')),
+          const SnackBar(content: Text('Airdrop completed: +2 SOL (devnet)')),
         );
       }
       await _refresh();
@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
       debugPrint('Airdrop failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Airdrop не удался. Попробуйте позже.')),
+          const SnackBar(content: Text('Airdrop failed. Try again later.')),
         );
       }
     } finally {
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (wallet == null) return;
     Clipboard.setData(ClipboardData(text: wallet.address));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Адрес скопирован')),
+      const SnackBar(content: Text('Address copied')),
     );
   }
 
@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const Spacer(),
           IconButton(
-            tooltip: 'Настройки',
+            tooltip: 'Settings',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -208,11 +208,11 @@ class _HomeScreenState extends State<HomeScreen> {
             color: session != null ? cs.primary : cs.onSurfaceVariant,
           ),
           title: Text(
-            session != null ? 'Внешний кошелёк: ${session.peerName}' : 'Подключить внешний кошелёк',
+            session != null ? 'External wallet: ${session.peerName}' : 'Connect external wallet',
           ),
           subtitle: Text(
             session != null
-                ? (session.primaryAccount ?? 'Аккаунты не предоставлены')
+                ? (session.primaryAccount ?? 'Accounts not provided')
                 : 'Phantom, Solflare',
           ),
           trailing: const Icon(Icons.chevron_right),
@@ -241,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Вы используете Solana Devnet. Все токены и транзакции не имеют реальной стоимости.',
+                'You are using Solana Devnet. All tokens and transactions have no real value.',
                 style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
               ),
             ),
@@ -275,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Баланс',
+              'Balance',
               style: TextStyle(color: Colors.white70, fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -307,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
-                  tooltip: 'Обновить',
+                  tooltip: 'Refresh',
                   onPressed: _refresh,
                   icon: _loadingBalance
                       ? const SizedBox(
@@ -342,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _WalletAction(
                   icon: Icons.arrow_downward_rounded,
-                  label: 'Получить',
+                  label: 'Receive',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ReceiveScreen()),
@@ -353,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _WalletAction(
                   icon: Icons.arrow_upward_rounded,
-                  label: 'Отправить',
+                  label: 'Send',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SendScreen()),
@@ -364,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _WalletAction(
                   icon: Icons.swap_horiz_rounded,
-                  label: 'Своп',
+                  label: 'Swap',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SwapScreen()),
@@ -388,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _WalletAction(
                   icon: Icons.qr_code_scanner_rounded,
-                  label: 'Оплатить',
+                  label: 'Pay',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SolanaPayScreen()),
@@ -399,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: _WalletAction(
                   icon: Icons.lock_outline_rounded,
-                  label: 'Стейкинг',
+                  label: 'Staking',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const StakingScreen()),
@@ -421,10 +421,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              const Text('Токены', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text('Tokens', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const Spacer(),
               IconButton(
-                tooltip: 'Добавить токен',
+                tooltip: 'Add token',
                 onPressed: _openAddTokenDialog,
                 icon: const Icon(Icons.add_circle_outline),
               ),
@@ -453,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(color: _cs.onSurfaceVariant, fontSize: 14),
                 ),
               IconButton(
-                tooltip: 'Открыть NFT коллекцию',
+                tooltip: 'Open NFT collection',
                 onPressed: _openNftCollection,
                 icon: Icon(Icons.arrow_forward_ios, size: 16, color: _cs.onSurfaceVariant),
               ),
@@ -474,7 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          'У вас пока нет NFT. Открыть коллекцию.',
+                          'You don\'t have any NFTs yet. Open collection.',
                           style: TextStyle(color: _cs.onSurfaceVariant, fontSize: 14),
                         ),
                       ),
@@ -620,16 +620,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Убрать токен?'),
-        content: const Text('Токен будет удалён из списка.'),
+        title: const Text('Remove token?'),
+        content: const Text('Token will be removed from the list.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Убрать'),
+            child: const Text('Remove'),
           ),
         ],
       ),
@@ -651,7 +651,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Добавить токен'),
+          title: const Text('Add token'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -660,15 +660,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextField(
                   controller: mintController,
                   decoration: InputDecoration(
-                    labelText: 'Mint-адрес',
-                    hintText: 'Адрес монеты (base58)',
+                    labelText: 'Mint address',
+                    hintText: 'Coin address (base58)',
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: symbolController,
                   decoration: const InputDecoration(
-                    labelText: 'Символ',
+                    labelText: 'Symbol',
                     hintText: 'USDC',
                   ),
                 ),
@@ -676,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextField(
                   controller: nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Название (необязательно)',
+                    labelText: 'Name (optional)',
                     hintText: 'USD Coin',
                   ),
                 ),
@@ -684,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextField(
                   controller: decimalsController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Десятичных знаков'),
+                  decoration: const InputDecoration(labelText: 'Decimal places'),
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 12),
@@ -696,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Отмена'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
@@ -706,21 +706,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 final decimals = int.tryParse(decimalsController.text.trim());
                 if (mint.length < 32 ||
                     !RegExp(r'^[1-9A-HJ-NP-Za-km-z]+$').hasMatch(mint)) {
-                  setDialogState(() => error = 'Некорректный mint-адрес');
+                  setDialogState(() => error = 'Invalid mint address');
                   return;
                 }
                 if (symbol.isEmpty) {
-                  setDialogState(() => error = 'Введите символ токена');
+                  setDialogState(() => error = 'Enter token symbol');
                   return;
                 }
                 if (decimals == null || decimals < 0 || decimals > 19) {
                   setDialogState(
-                      () => error = 'Некорректное число десятичных знаков');
+                      () => error = 'Invalid number of decimal places');
                   return;
                 }
                 final state = context.read<AppState>();
                 if (state.tokenRegistry.containsKey(mint)) {
-                  setDialogState(() => error = 'Этот токен уже в списке');
+                  setDialogState(() => error = 'This token is already in the list');
                   return;
                 }
                 state.addCustomToken(
@@ -734,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
                 Navigator.of(dialogContext).pop(true);
               },
-              child: const Text('Добавить'),
+              child: const Text('Add'),
             ),
           ],
         ),
@@ -762,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           const Text(
-            'История транзакций',
+            'Transaction history',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
@@ -772,7 +772,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const HistoryScreen()),
               ),
-              child: const Text('Все'),
+              child: const Text('All'),
             ),
         ],
       ),
@@ -787,7 +787,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(Icons.history, size: 56, color: _cs.onSurfaceVariant.withValues(alpha: 0.6)),
           const SizedBox(height: 12),
           Text(
-            'Транзакций пока нет.\nПолучите SOL через Airdrop.',
+            'No transactions yet.\nGet SOL via Airdrop.',
             textAlign: TextAlign.center,
             style: TextStyle(color: _cs.onSurfaceVariant),
           ),
@@ -817,13 +817,13 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: Text(
           record.date != null
               ? DateFormat('dd.MM.yyyy HH:mm').format(record.date!)
-              : 'Ожидание...',
+              : 'Waiting...',
           style: TextStyle(fontSize: 12, color: _cs.onSurfaceVariant),
         ),
         trailing: isSuccess
             ? Icon(Icons.chevron_right, color: _cs.onSurfaceVariant)
             : Text(
-                'ошибка',
+                'error',
                 style: TextStyle(color: _cs.error, fontSize: 12),
               ),
         onTap: () => Navigator.push(

@@ -60,3 +60,9 @@ GoogleService-Info.plist
 *.p12
 *.jks
 *.keystore
+
+# AppleDouble junk files (macOS metadata)
+._*
+
+# Swift Package Manager build state (generated)
+**/swiftpm/Package.resolved

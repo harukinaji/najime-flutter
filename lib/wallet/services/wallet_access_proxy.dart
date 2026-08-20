@@ -133,21 +133,21 @@ class WalletAccessProxy {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Подтвердите транзакцию'),
+        title: const Text('Confirm Transaction'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           obscureText: true,
-          decoration: const InputDecoration(hintText: 'Введите PIN'),
+          decoration: const InputDecoration(hintText: 'Enter PIN'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () async {
               final ok = await LockService.instance.verifyPin(controller.text);
               if (ctx.mounted) Navigator.pop(ctx, ok);
             },
-            child: const Text('Подтвердить'),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -511,13 +511,13 @@ class WalletAccessProxy {
           final lamports = _u64le(data, 1);
           return _InstructionSummary(
             programId: program,
-            label: 'Перевод SOL: ${lamports ?? '?'} лампортов',
+            label: 'SOL Transfer: ${lamports ?? '?'} lamports',
             risk: 0,
           );
         }
         return const _InstructionSummary(
           programId: builtinProgramId,
-          label: 'Системная операция',
+          label: 'System operation',
           risk: 0,
         );
       case tokenProgram:
@@ -526,20 +526,20 @@ class WalletAccessProxy {
       case memoProgram:
         return const _InstructionSummary(
           programId: memoProgram,
-          label: 'Заметка (memo)',
+          label: 'Memo',
           risk: 0,
         );
       case computeBudgetProgram:
         return const _InstructionSummary(
           programId: computeBudgetProgram,
-          label: 'Лимиты вычислений',
+          label: 'Compute limits',
           risk: 0,
         );
       default:
         final risk = accounts.contains(walletAddr) ? 2 : 1;
         return _InstructionSummary(
           programId: program,
-          label: 'Контракт: ${_short(program)}',
+          label: 'Contract: ${_short(program)}',
           risk: risk,
         );
     }
@@ -554,22 +554,22 @@ class WalletAccessProxy {
     if (data.isEmpty) {
       return _InstructionSummary(
         programId: program,
-        label: 'Token-операция',
+        label: 'Token operation',
         risk: accounts.contains(walletAddr) ? 1 : 0,
       );
     }
     const tokenOps = <int, String>{
-      3: 'Перевод токена',
-      9: 'Close аккаунта',
-      12: 'Перевод (checked)',
-      4: 'Approve (одобрение на списание)',
+      3: 'Token transfer',
+      9: 'Close account',
+      12: 'Transfer (checked)',
+      4: 'Approve (debit authorization)',
     };
     final op = data[0];
     final label = tokenOps[op];
     if (label == null) {
       return _InstructionSummary(
         programId: program,
-        label: 'Token-операция #$op',
+        label: 'Token operation #$op',
         risk: accounts.contains(walletAddr) ? 1 : 0,
       );
     }
@@ -601,14 +601,14 @@ class WalletAccessProxy {
   }) async {
     final danger = summaries.where((s) => s.risk >= 2).toList();
     final feeText = feeLamports == null
-        ? 'Комиссия сети: неизвестно'
-        : 'Комиссия сети: ${(feeLamports / 1000000000).toStringAsFixed(6)} SOL';
+        ? 'Network fee: unknown'
+        : 'Network fee: ${(feeLamports / 1000000000).toStringAsFixed(6)} SOL';
 
     return await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            title: const Text('Подтверждение транзакции'),
+            title: const Text('Transaction Confirmation'),
             content: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,8 +637,7 @@ class WalletAccessProxy {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
-                        'Внимание: в транзакции есть операции, которые могут '
-                        'повлиять на безопасность ваших средств.',
+                        'Warning: this transaction contains operations that may affect the safety of your funds.',
                         style: TextStyle(color: Colors.red),
                       ),
                     ),
@@ -649,11 +648,11 @@ class WalletAccessProxy {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Отмена'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(danger.isEmpty ? 'Подписать' : 'Всё равно подписать'),
+                child: Text(danger.isEmpty ? 'Sign' : 'Sign anyway'),
               ),
             ],
           ),
@@ -676,27 +675,48 @@ class WalletAccessProxy {
     BuildContext context,
     List<int> message,
   ) async {
+    final preview = _describeMessage(message);
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Подпись сообщения'),
-            content: Text(
-              'Мини-апп запрашивает подпись сообщения кошельком '
-              '(${message.length} байт).',
+            title: const Text('Message Signing'),
+            content: SingleChildScrollView(
+              child: Text(preview),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Отмена'),
+                child: const Text('Cancel'),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Подписать'),
+                child: const Text('Sign'),
               ),
             ],
           ),
         ) ??
         false;
+  }
+
+  /// Renders the message being signed for the user. When the bytes decode to
+  /// printable text the actual content is shown; otherwise only the length is
+  /// surfaced (the payload may be arbitrary binary).
+  String _describeMessage(List<int> message) {
+    String text;
+    try {
+      text = utf8.decode(message);
+    } catch (_) {
+      text = '';
+    }
+    final printable = text.isNotEmpty &&
+        text.codeUnits.every((c) =>
+            c == 0x09 || c == 0x0a || c == 0x0d || (c >= 0x20 && c != 0x7f));
+    if (printable) {
+      final preview = text.length > 200 ? '${text.substring(0, 200)}…' : text;
+      return 'A mini-app is requesting a message signature from your wallet:\n\n$preview';
+    }
+    return 'A mini-app is requesting a message signature from your wallet '
+        '(${message.length} bytes).';
   }
 
   static bool _samePub(Object? a, Ed25519HDPublicKey b) {

@@ -127,29 +127,29 @@ class _SendScreenState extends State<SendScreen> {
     final amount = double.tryParse(amountText);
 
     if (address.isEmpty) {
-      setState(() => _error = 'Введите адрес получателя');
+      setState(() => _error = 'Enter recipient address');
       return;
     }
     if (amount == null || amount <= 0) {
-      setState(() => _error = 'Введите корректную сумму');
+      setState(() => _error = 'Enter a valid amount');
       return;
     }
     if (address.length < 32 ||
         !RegExp(r'^[1-9A-HJ-NP-Za-km-z]+$').hasMatch(address)) {
-      setState(() => _error = 'Некорректный адрес Solana');
+      setState(() => _error = 'Invalid Solana address');
       return;
     }
 
     final rawAmount = (amount * pow(10, _selectedDecimals)).round();
     if (rawAmount <= 0) {
-      setState(() => _error = 'Сумма слишком мала');
+      setState(() => _error = 'Amount is too small');
       return;
     }
 
     if (rawAmount > _selectedBalance) {
       setState(() {
         _error =
-            'Недостаточно средств. Доступно: ${_formatRaw(_selectedBalance)} ${_selected.symbol}';
+            'Insufficient funds. Available: ${_formatRaw(_selectedBalance)} ${_selected.symbol}';
       });
       return;
     }
@@ -190,11 +190,11 @@ class _SendScreenState extends State<SendScreen> {
           context: context,
           builder: (_) => AlertDialog(
             icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-            title: const Text('Перевод отправлен!'),
+            title: const Text('Transfer sent!'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Транзакция подтверждена в сети.'),
+                const Text('Transaction confirmed on the network.'),
                 const SizedBox(height: 12),
                 SelectableText(
                   signature,
@@ -205,7 +205,7 @@ class _SendScreenState extends State<SendScreen> {
             actions: [
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('ОК'),
+                child: const Text('OK'),
               ),
             ],
           ),
@@ -217,14 +217,14 @@ class _SendScreenState extends State<SendScreen> {
         setState(() {
           _sending = false;
           _error =
-              'У получателя ещё нет счёта для ${_selected.symbol}. Отправьте ему сначала немного SOL.';
+              'Recipient doesn\'t have an account for ${_selected.symbol} yet. Send them some SOL first.';
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _sending = false;
-          _error = 'Ошибка отправки: ${e.toString().split('\n').first}';
+          _error = 'Send error: ${e.toString().split('\n').first}';
         });
       }
     }
@@ -233,7 +233,7 @@ class _SendScreenState extends State<SendScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Отправить')),
+      appBar: AppBar(title: const Text('Send')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -245,8 +245,8 @@ class _SendScreenState extends State<SendScreen> {
               TextField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  labelText: 'Адрес получателя',
-                  hintText: 'Solana-адрес (base58)',
+                  labelText: 'Recipient address',
+                  hintText: 'Solana address (base58)',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.paste, size: 20),
                     onPressed: _pasteAddress,
@@ -259,11 +259,11 @@ class _SendScreenState extends State<SendScreen> {
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Сумма (${_selected.symbol})',
+                  labelText: 'Amount (${_selected.symbol})',
                   hintText: '0.1',
                   prefixIcon: const Icon(Icons.attach_money),
                   suffixText: _selectedBalance > 0
-                      ? 'доступно: ${_formatRaw(_selectedBalance)}'
+                      ? 'available: ${_formatRaw(_selectedBalance)}'
                       : null,
                 ),
               ),
@@ -271,8 +271,8 @@ class _SendScreenState extends State<SendScreen> {
               TextField(
                 controller: _memoController,
                 decoration: const InputDecoration(
-                  labelText: 'Мемо (необязательно)',
-                  hintText: 'Комментарий к переводу',
+                  labelText: 'Memo (optional)',
+                  hintText: 'Comment on the transfer',
                 ),
               ),
               if (_error != null) ...[
@@ -294,7 +294,7 @@ class _SendScreenState extends State<SendScreen> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
-                    : const Text('Отправить', style: TextStyle(fontSize: 16)),
+                    : const Text('Send', style: TextStyle(fontSize: 16)),
               ),
             ],
           ),
@@ -316,7 +316,7 @@ class _SendScreenState extends State<SendScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
               SizedBox(width: 12),
-              Text('Загрузка токенов...'),
+              Text('Loading tokens...'),
             ],
           ),
         ),

@@ -42,7 +42,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('История транзакций')),
+      appBar: AppBar(title: const Text('Transaction history')),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
@@ -54,7 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Icon(Icons.history, size: 56, color: cs.onSurfaceVariant),
                       const SizedBox(height: 12),
                       Text(
-                        'Транзакций пока нет',
+                        'No transactions yet',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: cs.onSurfaceVariant),
                       ),
@@ -110,12 +110,12 @@ class _HistoryTile extends StatelessWidget {
         subtitle: Text(
           record.date != null
               ? DateFormat('dd.MM.yyyy HH:mm:ss').format(record.date!)
-              : 'Ожидание...',
+              : 'Waiting...',
           style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
         ),
         trailing: isSuccess
             ? Icon(Icons.chevron_right, color: cs.onSurfaceVariant)
-            : Text('ошибка', style: TextStyle(color: cs.error, fontSize: 12)),
+            : Text('error', style: TextStyle(color: cs.error, fontSize: 12)),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(

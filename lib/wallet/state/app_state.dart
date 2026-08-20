@@ -179,7 +179,7 @@ class AppState extends ChangeNotifier {
         if (!link.success) {
           await client.disconnect();
           throw StateError(
-            link.message ?? 'Этот кошелёк уже привязан к другому аккаунту',
+            link.message ?? 'This wallet is already linked to another account',
           );
         }
       }
@@ -199,7 +199,7 @@ class AppState extends ChangeNotifier {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Подключить кошелёк',
+                'Connect wallet',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
             ),

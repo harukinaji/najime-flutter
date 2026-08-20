@@ -79,9 +79,9 @@ class StakingService {
     if (delegated < minimalDelegationLamports) {
       final needed = (minimalDelegationLamports + reserve) / WalletConfig.lamportsPerSol;
       throw ArgumentError(
-        'Недостаточно SOL для стейкинга: требуется минимум '
-        '${needed.toStringAsFixed(4)} SOL (резерв $reserve), '
-        'а вы указали '
+        'Insufficient SOL for staking: requires minimum '
+        '${needed.toStringAsFixed(4)} SOL (reserve $reserve), '
+        'but you specified '
         '${(amountLamports / WalletConfig.lamportsPerSol).toStringAsFixed(4)} SOL.',
       );
     }

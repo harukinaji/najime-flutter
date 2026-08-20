@@ -33,19 +33,19 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
       final state = context.read<AppState>();
       if (_usePrivateKey) {
         final key = _keyController.text.trim();
-        if (key.isEmpty) throw const FormatException('Введите приватный ключ');
+        if (key.isEmpty) throw const FormatException('Enter private key');
         await state.importFromPrivateKey(key);
       } else {
         final seed = _seedController.text.trim();
         final words = seed.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
         if (words != 12 && words != 24) {
-          throw const FormatException('Seed-фраза должна содержать 12 или 24 слова');
+          throw const FormatException('Seed phrase must contain 12 or 24 words');
         }
         // Validate individual words (basic check - each word should be lowercase letters only)
         final wordList = seed.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
         for (final word in wordList) {
           if (!RegExp(r'^[a-z]+$').hasMatch(word)) {
-            throw const FormatException('Каждое слово должно содержать только латинские буквы в нижнем регистре');
+            throw const FormatException('Each word must contain only lowercase Latin letters');
           }
         }
         await state.importFromMnemonic(seed);
@@ -66,7 +66,7 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Импорт кошелька')),
+      appBar: AppBar(title: const Text('Import wallet')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -75,10 +75,10 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
             children: [
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(value: false, label: Text('Seed-фраза'), icon: Icon(Icons.notes)),
+                  ButtonSegment(value: false, label: Text('Seed phrase'), icon: Icon(Icons.notes)),
                   ButtonSegment(
                     value: true,
-                    label: Text('Приватный ключ'),
+                    label: Text('Private key'),
                     icon: Icon(Icons.key),
                   ),
                 ],
@@ -94,13 +94,13 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
                   maxLines: 4,
                   minLines: 3,
                   decoration: const InputDecoration(
-                    labelText: 'Seed-фраза (12 или 24 слова)',
+                    labelText: 'Seed phrase (12 or 24 words)',
                     hintText: 'apple banana cherry ...',
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Введите слова в правильном порядке, разделённые пробелами.',
+                  'Enter the words in the correct order, separated by spaces.',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -112,8 +112,8 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
                   maxLines: 2,
                   minLines: 1,
                   decoration: const InputDecoration(
-                    labelText: 'Приватный ключ (base58)',
-                    hintText: '64-байтовый ключ в формате base58',
+                    labelText: 'Private key (base58)',
+                    hintText: '64-byte key in base58 format',
                   ),
                 ),
               ],
@@ -137,7 +137,7 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
-                    : const Text('Импортировать', style: TextStyle(fontSize: 16)),
+                    : const Text('Import', style: TextStyle(fontSize: 16)),
               ),
             ],
           ),

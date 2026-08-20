@@ -13,7 +13,7 @@ class ReceiveScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final wallet = context.read<AppState>().wallet!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Получить SOL')),
+      appBar: AppBar(title: const Text('Receive SOL')),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -46,7 +46,7 @@ class ReceiveScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Ваш адрес для получения средств:',
+                    'Your address for receiving funds:',
                     style: TextStyle(color: cs.onSurface),
                   ),
                   const SizedBox(height: 12),
@@ -64,7 +64,7 @@ class ReceiveScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Отправляйте на этот адрес SOL или SPL-токены с Devnet.',
+                    'Send SOL or SPL tokens to this address from Devnet.',
                     style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
                   ),
                 ],

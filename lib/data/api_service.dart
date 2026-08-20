@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart' as http_io;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../config.dart';
@@ -88,13 +89,29 @@ class ApiService {
     }
   }
 
+  /// Plain client for auth endpoints — no attestation headers, only cert
+  /// pinning + the shared application key.
+  static http.Client get _authClient => _authClientCached ??= AppKeyClient(_createPlainClient());
+  static http.Client? _authClientCached;
+  static http.Client _createPlainClient() {
+    final httpClient = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
+    if (SignedHttpClient.shouldOverrideCertificateVerification) {
+      httpClient.badCertificateCallback = (cert, host, port) =>
+          SignedHttpClient.verifyServerCertificate(cert, host, port);
+    }
+    return http_io.IOClient(httpClient);
+  }
+
   static Future<ApiLoginResult> login(String username, String password) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': username, 'password': password}),
       );
+
+      debugPrint('[Auth] login ${response.statusCode}: ${response.body}');
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -129,6 +146,7 @@ class ApiService {
         message: body['message'] as String? ?? 'Login failed',
       );
     } catch (e) {
+      debugPrint('[Auth] login error: $e');
       return ApiLoginResult(success: false, message: 'Connection error: $e');
     }
   }
@@ -139,7 +157,7 @@ class ApiService {
     String? authTicket,
   }) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login/verify'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -180,7 +198,7 @@ class ApiService {
     String pollSecret,
   ) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login/approval/poll'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -228,7 +246,7 @@ class ApiService {
     String pollSecret,
   ) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login/approval/fallback_email'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -264,7 +282,7 @@ class ApiService {
     String? email,
   }) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login/google'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -334,7 +352,7 @@ class ApiService {
     String? avatarUrl,
   }) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/register/google'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -412,7 +430,7 @@ class ApiService {
 
   static Future<ApiLoginResult> loginWithApple(String identityToken) async {
     try {
-      final response = await _client.post(
+      final response = await _authClient.post(
         Uri.parse('$_baseUrl/api/login/apple'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'identity_token': identityToken}),
@@ -592,8 +610,10 @@ class ApiService {
       if (response.statusCode == 200 && body['success'] == true) {
         return body['user'] as Map<String, dynamic>;
       }
+      debugPrint('[API] getCurrentUser failed: ${response.statusCode}');
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[API] getCurrentUser error: $e');
       return null;
     }
   }
@@ -610,8 +630,10 @@ class ApiService {
       if (response.statusCode == 200 && body['success'] == true) {
         return (body['chats'] as List).cast<Map<String, dynamic>>();
       }
+      debugPrint('[API] getChats failed: ${response.statusCode}');
       return [];
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[API] getChats error: $e');
       return [];
     }
   }
@@ -628,8 +650,10 @@ class ApiService {
       if (response.statusCode == 200 && body['success'] == true) {
         return body;
       }
+      debugPrint('[API] getMessages failed: ${response.statusCode}');
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[API] getMessages error: $e');
       return null;
     }
   }
@@ -735,17 +759,6 @@ class ApiService {
     } catch (_) {
       return null;
     }
-  }
-
-  static Future<String?> getEscrowAddress() async {
-    try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/api/checks/escrow'),
-      );
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      if (body['success'] == true) return body['escrow_address'] as String?;
-    } catch (_) {}
-    return null;
   }
 
   static Future<Map<String, dynamic>?> getProgramId() async {

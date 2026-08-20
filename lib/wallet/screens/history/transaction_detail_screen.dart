@@ -45,7 +45,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   Widget build(BuildContext context) {
     final record = widget.record;
     return Scaffold(
-      appBar: AppBar(title: const Text('Детали транзакции')),
+      appBar: AppBar(title: const Text('Transaction details')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -68,7 +68,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             const SizedBox(height: 12),
             Center(
               child: Text(
-                record.isSuccess ? 'Успешно' : 'Ошибка',
+                record.isSuccess ? 'Success' : 'Error',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -78,29 +78,29 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ),
             const SizedBox(height: 24),
             _InfoRow(
-              label: 'Сигнатура',
+              label: 'Signature',
               value: record.signature,
               monospace: true,
             ),
             _InfoRow(
-              label: 'Статус',
+              label: 'Status',
               value: record.status?.name ?? '—',
             ),
             _InfoRow(
-              label: 'Слот',
+              label: 'Slot',
               value: '${record.slot}',
             ),
             _InfoRow(
-              label: 'Время',
+              label: 'Time',
               value: record.date != null
                   ? DateFormat('dd.MM.yyyy HH:mm:ss').format(record.date!)
                   : '—',
             ),
             if (record.memo != null)
-              _InfoRow(label: 'Мемо', value: record.memo!),
+              _InfoRow(label: 'Memo', value: record.memo!),
             if (record.err != null)
               _InfoRow(
-                label: 'Ошибка',
+                label: 'Error',
                 value: record.err.toString(),
                 error: true,
               ),
@@ -111,7 +111,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               )
             else if (_details != null)
               _InfoRow(
-                label: 'Комиссия',
+                label: 'Fee',
                 value: '${_extractFee(_details)} lamports',
               ),
           ],

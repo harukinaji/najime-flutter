@@ -205,7 +205,7 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Биометрия не доступна на этом устройстве. Используйте PIN-код.'),
+                content: Text('Biometrics are not available on this device. Use a PIN code.'),
                 duration: Duration(seconds: 3),
               ),
             );

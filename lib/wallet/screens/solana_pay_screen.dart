@@ -42,7 +42,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
     final info = payService.tryParse(_urlController.text);
     setState(() {
       _info = info;
-      _error = info == null ? 'Это не похоже на ссылку Solana Pay.' : null;
+      _error = info == null ? 'This doesn\'t look like a Solana Pay link.' : null;
       _resultSignature = null;
     });
   }
@@ -85,7 +85,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
     } catch (e) {
       debugPrint('Solana Pay failed: $e');
       if (mounted) {
-        setState(() => _error = 'Оплата не прошла: $e');
+        setState(() => _error = 'Payment failed: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -95,7 +95,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Оплатить (Solana Pay)')),
+      appBar: AppBar(title: const Text('Pay (Solana Pay)')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -106,11 +106,11 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                 controller: _urlController,
                 keyboardType: TextInputType.url,
                 decoration: InputDecoration(
-                  labelText: 'Ссылка Solana Pay',
-                  hintText: 'solana:... или https://...',
+                  labelText: 'Solana Pay link',
+                  hintText: 'solana:... or https://...',
                   prefixIcon: const Icon(Icons.link),
                   suffixIcon: IconButton(
-                    tooltip: 'Отсканировать QR',
+                    tooltip: 'Scan QR',
                     onPressed: _scanQr,
                     icon: const Icon(Icons.qr_code_scanner),
                   ),
@@ -124,7 +124,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                     child: FilledButton.tonalIcon(
                       onPressed: _parseUrl,
                       icon: const Icon(Icons.check),
-                      label: const Text('Разобрать'),
+                      label: const Text('Parse'),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -132,7 +132,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _scanQr,
                       icon: const Icon(Icons.qr_code_scanner),
-                      label: const Text('Сканировать'),
+                      label: const Text('Scan'),
                     ),
                   ),
                 ],
@@ -164,7 +164,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.payment),
-                  label: Text(_busy ? 'Отправка...' : 'Оплатить'),
+                  label: Text(_busy ? 'Sending...' : 'Pay'),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -182,7 +182,7 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Оплата отправлена',
+                        'Payment sent',
                         style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 6),
@@ -211,27 +211,27 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isV2 ? 'Запрос платежа (мерчант)' : 'Прямой перевод',
+              isV2 ? 'Payment request (merchant)' : 'Direct transfer',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             if (info.label != null) ...[
               const SizedBox(height: 12),
-              _DetailRow(label: 'Продавец', value: info.label!),
+              _DetailRow(label: 'Seller', value: info.label!),
             ],
             if (info.message != null) ...[
               const SizedBox(height: 8),
-              _DetailRow(label: 'Сообщение', value: info.message!),
+              _DetailRow(label: 'Message', value: info.message!),
             ],
             const SizedBox(height: 8),
             _DetailRow(
-              label: isV2 ? 'Ссылка' : 'Получатель',
+              label: isV2 ? 'Link' : 'Recipient',
               value: info.recipient,
               selectable: true,
             ),
             if (info.amount != null) ...[
               const SizedBox(height: 8),
               _DetailRow(
-                label: 'Сумма',
+                label: 'Amount',
                 value: '${_formatAmount(info.amount!)} ${info.splToken == null ? 'SOL' : 'SPL'}',
               ),
             ],
@@ -305,7 +305,7 @@ class _QrScannerScreenState extends State<_QrScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Сканировать QR')),
+      appBar: AppBar(title: const Text('Scan QR')),
       body: MobileScanner(
         controller: _controller,
         onDetect: (capture) {

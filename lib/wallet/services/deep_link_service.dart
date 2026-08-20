@@ -16,6 +16,25 @@ class WalletDeepLinks {
   /// Last error surfaced to the UI (e.g. app_links missing on this platform).
   Object? get lastError => _lastError;
 
+  /// Validates an incoming deep link before it is dispatched to the wallet.
+  /// Accepts:
+  ///   - `https://najime.app/...` (universal links from our own domain)
+  ///   - `najime://?<param>=...` (native redirect with an empty host; the
+  ///     Phantom/Solflare protocol redirects to `najime://` with query params)
+  ///
+  /// Any other host/authority is rejected so a hostile app or page cannot
+  /// inject arbitrary `najime://` links with a forged authority.
+  bool _isTrustedLink(Uri uri) {
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme == 'https') {
+      return uri.host.toLowerCase() == 'najime.app';
+    }
+    if (scheme == 'najime') {
+      return uri.host.isEmpty && uri.path.isEmpty;
+    }
+    return false;
+  }
+
   /// Starts listening for incoming links. Safe to call more than once and on
   /// platforms without app_links support (it simply becomes a no-op).
   void init() {
@@ -25,10 +44,7 @@ class WalletDeepLinks {
       _appLinks = appLinks;
       appLinks.uriLinkStream.listen((Uri? uri) {
         if (uri == null) return;
-        // Only accept najime:// scheme or https links from trusted domains
-        final scheme = uri.scheme.toLowerCase();
-        if (scheme != 'najime' && scheme != 'https') return;
-        if (scheme == 'https' && uri.host != 'najime.app') return;
+        if (!_isTrustedLink(uri)) return;
         AppState.instance.dispatchWalletLink(uri.toString());
       }, onError: (Object e) {
         _lastError = e;
@@ -44,10 +60,7 @@ class WalletDeepLinks {
     if (appLinks == null) return;
     try {
       final initial = await appLinks.getInitialLink();
-      if (initial != null) {
-        final scheme = initial.scheme.toLowerCase();
-        if (scheme != 'najime' && scheme != 'https') return;
-        if (scheme == 'https' && initial.host != 'najime.app') return;
+      if (initial != null && _isTrustedLink(initial)) {
         AppState.instance.dispatchWalletLink(initial.toString());
       }
     } catch (e) {

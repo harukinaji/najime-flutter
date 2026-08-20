@@ -59,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!AuthState.instance.isAuthenticated) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Сначала войдите в аккаунт')),
+          const SnackBar(content: Text('Please sign in to your account first')),
         );
       }
       return;
@@ -73,29 +73,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(result.success
-            ? 'Кошелёк привязан к аккаунту'
-            : (result.message ?? 'Не удалось привязать кошелёк')),
+            ? 'Wallet linked to account'
+            : (result.message ?? 'Failed to link wallet')),
       ),
     );
-    if (result.success) _loadAccountBind();
+    if (result.success) await _loadAccountBind();
   }
 
   Future<void> _unbindFromAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Отвязать кошелёк?'),
+        title: const Text('Unlink wallet?'),
         content: const Text(
-          'Публичный ключ кошелька будет удалён из профиля аккаунта.',
+          'The wallet\'s public key will be removed from the account profile.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Отвязать'),
+            child: const Text('Unlink'),
           ),
         ],
       ),
@@ -105,15 +105,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _accountLoading = true);
     final result = await ApiService.unlinkWalletAccount();
     if (!mounted) return;
-    setState(() => _accountLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(result.success
-            ? 'Кошелёк отвязан от аккаунта'
-            : (result.message ?? 'Не удалось отвязать кошелёк')),
+            ? 'Wallet unlinked from account'
+            : (result.message ?? 'Failed to unlink wallet')),
       ),
     );
-    if (result.success) _loadAccountBind();
+    await _loadAccountBind();
   }
 
   Future<bool> _requireAuth() async {
@@ -130,15 +129,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Введите PIN'),
+        title: const Text('Enter PIN'),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           obscureText: true,
-          decoration: const InputDecoration(hintText: 'PIN-код'),
+          decoration: const InputDecoration(hintText: 'PIN code'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () async {
               final ok = await LockService.instance.verifyPin(controller.text);
@@ -167,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Этот кошелёк был импортирован по приватному ключу (seed-фраза недоступна)'),
+            content: Text('This wallet was imported via private key (seed phrase unavailable)'),
           ),
         );
       }
@@ -177,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Seed-фраза'),
+          title: const Text('Seed phrase'),
           content: SelectableText(
             mnemonic,
             style: const TextStyle(fontFamily: 'monospace', height: 1.5),
@@ -185,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Закрыть'),
+              child: const Text('Close'),
             ),
           ],
         ),
@@ -202,7 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Приватный ключ'),
+          title: const Text('Private key'),
           content: SelectableText(
             key,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
@@ -210,7 +209,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Закрыть'),
+              child: const Text('Close'),
             ),
           ],
         ),
@@ -222,20 +221,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Удалить кошелёк?'),
+        title: const Text('Delete wallet?'),
         content: const Text(
-          'Кошелёк будет удалён с этого устройства. '
-          'Если у вас нет резервной копии seed-фразы, средства будут потеряны навсегда.',
+          'The wallet will be deleted from this device. '
+          'If you don\'t have a backup of your seed phrase, funds will be lost forever.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Удалить'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -250,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final wallet = context.read<AppState>().wallet!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки')),
+      appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -258,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.account_balance_wallet),
-                title: const Text('Адрес'),
+                title: const Text('Address'),
                 subtitle: Text(
                   wallet.address,
                   style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
@@ -268,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: wallet.address));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Адрес скопирован')),
+                      const SnackBar(content: Text('Address copied')),
                     );
                   },
                 ),
@@ -280,7 +279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Card(
               child: ListTile(
                 leading: const Icon(Icons.wallet),
-                title: const Text('Внешний кошелёк (WalletConnect)'),
+                title: const Text('External wallet (WalletConnect)'),
                 subtitle: const Text('Phantom, Solflare, Backpack'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.push(
@@ -297,14 +296,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.notes),
-                    title: const Text('Показать seed-фразу'),
+                    title: const Text('Show seed phrase'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _showPhrase,
                   ),
                   const Divider(height: 1, indent: 56),
                   ListTile(
                     leading: const Icon(Icons.key),
-                    title: const Text('Показать приватный ключ'),
+                    title: const Text('Show private key'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: _showPrivateKey,
                   ),
@@ -316,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: ListTile(
                 leading: Icon(Icons.warning, color: Colors.redAccent),
                 title: const Text(
-                  'Удалить кошелёк',
+                  'Delete wallet',
                   style: TextStyle(color: Colors.redAccent),
                 ),
                 onTap: _deleteWallet,
@@ -335,8 +334,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return Card(
         child: ListTile(
           leading: Icon(Icons.link_off, color: cs.onSurfaceVariant),
-          title: const Text('Привязать к аккаунту'),
-          subtitle: const Text('Войдите в аккаунт, чтобы привязать кошелёк'),
+          title: const Text('Link to account'),
+          subtitle: const Text('Sign in to your account to link the wallet'),
         ),
       );
     }
@@ -368,7 +367,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icon(Icons.link, color: cs.primary, size: 20),
                   const SizedBox(width: 8),
                   const Text(
-                    'Привязано к аккаунту',
+                    'Linked to account',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -386,7 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               OutlinedButton.icon(
                 onPressed: _unbindFromAccount,
                 icon: const Icon(Icons.link_off, size: 18),
-                label: const Text('Отвязать'),
+                label: const Text('Unlink'),
               ),
             ],
           ),
@@ -405,14 +404,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Icon(Icons.link, color: cs.onSurfaceVariant, size: 20),
                 const SizedBox(width: 8),
                 const Text(
-                  'Привязать к аккаунту',
+                  'Link to account',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
-              'Публичный ключ кошелька будет сохранён в профиле аккаунта.',
+              'The wallet\'s public key will be saved in the account profile.',
               style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
             if (_accountError != null) ...[
@@ -426,7 +425,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             FilledButton.icon(
               onPressed: _bindToAccount,
               icon: const Icon(Icons.link, size: 18),
-              label: const Text('Привязать'),
+              label: const Text('Link'),
             ),
           ],
         ),

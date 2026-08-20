@@ -1,14 +1,21 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart' as http_io;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config.dart';
 import 'api_service.dart';
+import 'secure_http_client.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -191,17 +198,68 @@ Future<void> _sendDeliveryReceiptBackground(String messageId) async {
     final token = await storage.read(key: 'auth_token');
     if (token == null) return;
 
-    await http.post(
-      Uri.parse('${AppConfig.apiBaseUrl}/api/messages/$messageId/delivered'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    debugPrint('[FCM] Delivery receipt sent for $messageId');
+    // Read attestation key from secure storage (same key used by AppAttestation)
+    const keyAlias = 'najime_app_hmac_key';
+    final keyHex = await storage.read(key: keyAlias);
+    if (keyHex == null || keyHex.isEmpty) return;
+
+    final hmacKey = _hexDecode(keyHex);
+    if (hmacKey.length != 32) return;
+
+    final deviceId = sha256.convert(hmacKey).toString().substring(0, 32);
+    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    final nonce = _generateNonce();
+    final canonical = 'POST:/api/messages/$messageId/delivered:$timestamp:$nonce:';
+    final signature = _hmacSign(hmacKey, canonical);
+
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/messages/$messageId/delivered');
+    final httpClient = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
+    if (SignedHttpClient.shouldOverrideCertificateVerification) {
+      httpClient.badCertificateCallback = (cert, host, port) =>
+          SignedHttpClient.verifyServerCertificate(cert, host, port);
+    }
+    final client = http_io.IOClient(httpClient);
+    try {
+      await client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          if (appKeyValue().isNotEmpty) appKeyHeaderName: appKeyValue(),
+          'X-App-Timestamp': timestamp,
+          'X-App-Nonce': nonce,
+          'X-App-Signature': signature,
+          'X-App-Device-Id': deviceId,
+        },
+      );
+      debugPrint('[FCM] Delivery receipt sent for $messageId');
+    } finally {
+      client.close();
+    }
   } catch (e) {
     debugPrint('[FCM] Failed to send delivery receipt: $e');
   }
+}
+
+String _generateNonce() {
+  final rng = Random.secure();
+  final bytes = List.generate(16, (_) => rng.nextInt(256));
+  return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+}
+
+String _hmacSign(List<int> key, String data) {
+  final hmac = Hmac(sha256, key);
+  final digest = hmac.convert(utf8.encode(data));
+  return digest.toString();
+}
+
+Uint8List _hexDecode(String hex) {
+  final result = Uint8List(hex.length ~/ 2);
+  for (var i = 0; i < hex.length; i += 2) {
+    result[i ~/ 2] = int.parse(hex.substring(i, i + 2), radix: 16);
+  }
+  return result;
 }
 
 void setupBackgroundMessaging() {

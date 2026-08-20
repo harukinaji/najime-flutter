@@ -38,7 +38,7 @@ class _NftScreenState extends State<NftScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('NFT коллекция')),
+      appBar: AppBar(title: const Text('NFT collection')),
       body: RefreshIndicator(
         onRefresh: _load,
         child: _loading
@@ -51,7 +51,7 @@ class _NftScreenState extends State<NftScreen> {
                           size: 56, color: cs.onSurfaceVariant),
                       const SizedBox(height: 12),
                       Text(
-                        'NFT пока нет',
+                        'No NFTs yet',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: cs.onSurfaceVariant),
                       ),

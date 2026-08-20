@@ -280,6 +280,7 @@ class CheckData {
     this.redeemerId,
     this.checkId,
     this.txSignature,
+    this.creatorAddress,
   });
 
   final double amount;
@@ -289,6 +290,7 @@ class CheckData {
   final String? redeemerId;
   final String? checkId;
   final String? txSignature;
+  final String? creatorAddress;
 
   int? get lamports =>
       currency.toUpperCase() == 'SOL' ? (amount * 1e9).round() : null;
@@ -301,6 +303,7 @@ class CheckData {
         if (redeemerId != null) 'redeemer_id': redeemerId,
         if (checkId != null) 'check_id': checkId,
         if (txSignature != null) 'tx_signature': txSignature,
+        if (creatorAddress != null) 'creator_address': creatorAddress,
       };
 
   static CheckData? tryParse(String content) {
@@ -319,6 +322,7 @@ class CheckData {
         redeemerId: json['redeemer_id'] as String?,
         checkId: json['check_id'] as String?,
         txSignature: json['tx_signature'] as String?,
+        creatorAddress: json['creator_address'] as String?,
       );
     } catch (_) {
       return null;
@@ -335,6 +339,7 @@ class CheckData {
     String? redeemerId,
     String? checkId,
     String? txSignature,
+    String? creatorAddress,
   }) {
     return CheckData(
       amount: amount ?? this.amount,
@@ -344,6 +349,7 @@ class CheckData {
       redeemerId: redeemerId ?? this.redeemerId,
       checkId: checkId ?? this.checkId,
       txSignature: txSignature ?? this.txSignature,
+      creatorAddress: creatorAddress ?? this.creatorAddress,
     );
   }
 }

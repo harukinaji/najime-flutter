@@ -60,7 +60,7 @@ class _StakingScreenState extends State<StakingScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Не удалось получить валидаторов: $e');
+      if (mounted) setState(() => _error = 'Failed to load validators: $e');
     } finally {
       if (mounted) setState(() => _loadingValidators = false);
     }
@@ -84,12 +84,12 @@ class _StakingScreenState extends State<StakingScreen> {
 
     final amount = double.tryParse(text);
     if (amount == null || amount <= 0) {
-      setState(() => _error = 'Введите корректную сумму');
+      setState(() => _error = 'Enter a valid amount');
       return;
     }
     final amountLamports = (amount * WalletConfig.lamportsPerSol).round();
     if (_walletLamports == null || amountLamports > _walletLamports!) {
-      setState(() => _error = 'Недостаточно SOL на балансе');
+      setState(() => _error = 'Insufficient SOL balance');
       return;
     }
 
@@ -109,13 +109,13 @@ class _StakingScreenState extends State<StakingScreen> {
       if (mounted) {
         setState(() => _signature = signature);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Стейкинг отправлен: ${_short(signature)}')),
+          SnackBar(content: Text('Staking sent: ${_short(signature)}')),
         );
       }
       await _refreshStakes();
     } catch (e) {
       debugPrint('Stake failed: $e');
-      if (mounted) setState(() => _error = 'Стейкинг не прошёл: $e');
+      if (mounted) setState(() => _error = 'Staking failed: $e');
     } finally {
       if (mounted) setState(() => _staking_ = false);
     }
@@ -130,7 +130,7 @@ class _StakingScreenState extends State<StakingScreen> {
         ? null
         : _walletLamports! / WalletConfig.lamportsPerSol;
     return Scaffold(
-      appBar: AppBar(title: const Text('Стейкинг SOL')),
+      appBar: AppBar(title: const Text('SOL Staking')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -139,7 +139,7 @@ class _StakingScreenState extends State<StakingScreen> {
             children: [
               if (solBalance != null)
                 Text(
-                  'Баланс: ${_solFormat.format(solBalance)} SOL',
+                  'Balance: ${_solFormat.format(solBalance)} SOL',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -151,13 +151,13 @@ class _StakingScreenState extends State<StakingScreen> {
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: 'Сумма для стейкинга',
+                  labelText: 'Amount for staking',
                   prefixIcon: Icon(Icons.savings_outlined),
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Валидатор:', style: TextStyle(fontSize: 14)),
+              const Text('Validator:', style: TextStyle(fontSize: 14)),
               const SizedBox(height: 8),
               if (_loadingValidators)
                 const Center(
@@ -181,7 +181,7 @@ class _StakingScreenState extends State<StakingScreen> {
                     return DropdownMenuItem<VoteAccount>(
                       value: v,
                       child: Text(
-                        '${_short(v.votePubkey)} · комиссия ${v.commission}%',
+                        '${_short(v.votePubkey)} · commission ${v.commission}%',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -208,7 +208,7 @@ class _StakingScreenState extends State<StakingScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.lock_outline),
-                label: Text(_staking_ ? 'Стейкинг...' : 'Застейкать'),
+                label: Text(_staking_ ? 'Staking...' : 'Stake'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -217,7 +217,7 @@ class _StakingScreenState extends State<StakingScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: SelectableText(
-                    'Сигнатура: $_signature',
+                    'Signature: $_signature',
                     style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
@@ -227,7 +227,7 @@ class _StakingScreenState extends State<StakingScreen> {
                 ),
               const SizedBox(height: 24),
               const Text(
-                'Мои стейки',
+                'My stakes',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -237,7 +237,7 @@ class _StakingScreenState extends State<StakingScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Center(
                       child: Text(
-                        'Пока нет активных стейков.',
+                        'No active stakes yet.',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -264,12 +264,12 @@ class _StakingScreenState extends State<StakingScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         subtitle: Text(
-                          s.vote != null ? 'Валидатор: ${_short(s.vote!)}' : 'Валидатор: —',
+                          s.vote != null ? 'Validator: ${_short(s.vote!)}' : 'Validator: —',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         trailing: Text(
-                          s.active ? 'активен' : 'в активации',
+                          s.active ? 'active' : 'activating',
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),

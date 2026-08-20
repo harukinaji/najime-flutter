@@ -30,20 +30,7 @@ import '../screens/stories/story_viewer_screen.dart';
 import '../stories/storybook_screen.dart';
 import '../wallet/wallet_feature.dart';
 
-/// Secure in-memory store for sensitive auth credentials passed between screens.
-/// Avoids passing passwords through GoRouter extras.
-class AuthCredentials {
-  AuthCredentials._();
-  static String? password;
-  static String? authTicket;
-  static String? pollSecret;
-
-  static void clear() {
-    password = null;
-    authTicket = null;
-    pollSecret = null;
-  }
-}
+import '../data/auth_credentials.dart' show AuthCredentials;
 
 class AppRouter {
   AppRouter._();

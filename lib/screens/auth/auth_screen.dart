@@ -8,6 +8,7 @@ import '../../data/auth_state.dart';
 import '../../data/google_oauth_flow.dart';
 import '../../utils/platform.dart';
 import '../../widgets/auth_buttons.dart';
+import '../../data/auth_credentials.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -160,22 +161,22 @@ class _AuthScreenState extends State<AuthScreen>
     if (result.success) {
       context.go('/home/chats');
     } else if (result.require2fa && result.emailHint != null) {
+      AuthCredentials.password = password;
+      AuthCredentials.authTicket = result.authTicket;
       context.push(
         '/auth/verify',
         extra: {
           'username': result.username,
           'emailHint': result.emailHint,
-          'password': password,
-          'authTicket': result.authTicket,
         },
       );
     } else if (result.require2fa && result.authMethod == 'mobile_approval') {
+      AuthCredentials.pollSecret = result.pollSecret;
       context.push(
         '/auth/approval',
         extra: {
           'username': result.username,
           'approvalId': result.approvalId,
-          'pollSecret': result.pollSecret,
           'expiresIn': result.expiresIn ?? 300,
         },
       );
@@ -223,13 +224,15 @@ class _AuthScreenState extends State<AuthScreen>
 
     return Scaffold(
       backgroundColor: cs.surface,
-      body: Column(
-        children: [
-          _buildHeader(cs),
-          Expanded(
-            child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(cs),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 32),
                   FadeTransition(
@@ -240,9 +243,9 @@ class _AuthScreenState extends State<AuthScreen>
                 ],
               ),
             ),
-          ),
-          _buildBottomBlock(cs),
-        ],
+            _buildBottomBlock(cs),
+          ],
+        ),
       ),
     );
   }
