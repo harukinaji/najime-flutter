@@ -9,6 +9,18 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # Local build artifacts (e.g. macOS Swift Package Manager checkouts under
+    # build/macos/SourcePackages are vendored third-party sources fetched at
+    # build time and are not part of this package's source).
+    - build/**
+    # Vendored flutter_contacts plugin — its bundled example apps reference
+    # dev-only packages (after_layout, pretty_json, prompt_dialog, …) that are
+    # not part of this project and would otherwise fail `flutter analyze`.
+    - plugins/flutter_contacts_patched/example/**
+    - plugins/flutter_contacts_patched/example_full/**
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
