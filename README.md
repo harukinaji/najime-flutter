@@ -1,5 +1,7 @@
 # NajiMe
 
+[![CI](https://github.com/harukinaji/najime-flutter/actions/workflows/ci.yml/badge.svg)](https://github.com/harukinaji/najime-flutter/actions/workflows/ci.yml)
+
 Open-source messenger with bots, stickers, stories, WebRTC voice/video calls, and an embedded Solana wallet. Built with Flutter for Android, iOS, Windows, macOS and Linux.
 
 > **Warning — Alpha Software**

@@ -60,6 +60,7 @@ GoogleService-Info.plist
 *.p12
 *.jks
 *.keystore
+key.properties
 
 # AppleDouble junk files (macOS metadata)
 ._*
