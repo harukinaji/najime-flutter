@@ -71,7 +71,7 @@ jobs:
             build/app/outputs/bundle/release/app-release.aab
           if-no-files-found: error
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: Najime ${{ github.ref_name }}
