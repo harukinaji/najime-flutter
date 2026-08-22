@@ -36,16 +36,26 @@ jobs:
           else
             echo '{"project_info":{"project_id":"ci-placeholder","project_number":"000000000000","storage_bucket":"ci-placeholder.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.naji.najimessenger"}},"api_key":[{"current_key":"AIzaSyDummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
           fi
-      - name: Decode signing keystore from secrets
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # Signing is OPTIONAL. Until the ANDROID_KEYSTORE_* secrets are added the
+      # release is signed with the debug keystore (see build.gradle.kts).
+      # NOTE: GitHub Actions does not allow `secrets` in a step's `if:`, so the
+      # presence check is done in the shell via env vars.
+      - name: Decode signing keystore (optional)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
-          cat >> android/key.properties <<-EOF
-          storeFile=$GITHUB_WORKSPACE/android/upload-keystore.jks
-          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-          EOF
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
+            printf 'storeFile=%s/android/upload-keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+              "$GITHUB_WORKSPACE" "$ANDROID_KEYSTORE_PASSWORD" "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PASSWORD" \
+              > android/key.properties
+            echo "Signing keystore configured."
+          else
+            echo "No signing secrets set — release will be signed with the debug keystore."
+          fi
       - name: Reduce Gradle heap for CI runner
         run: sed -i 's/-Xmx8G -XX:MaxMetaspaceSize=4G/-Xmx3G -XX:MaxMetaspaceSize=1G/' android/gradle.properties
       - name: Build release APK
