@@ -365,10 +365,14 @@ GitHub Actions, defined in `.github/workflows/`:
 
 | Workflow | Triggers | What it does |
 |---|---|---|
-| `ci.yml` | push to `main`, PRs | `dart format` check, `flutter analyze`, unit + wallet tests with coverage, gitleaks secret scan, dependency review (PRs), Android release APK/AAB build (main only), coverage to Codecov |
-| `codeql.yml` | push/PR to `main`, weekly | GitHub Code Scanning (SAST) |
+| `ci.yml` | push to `main`, PRs | `dart format` check, `flutter analyze`, unit + wallet tests with coverage, gitleaks secret scan, dependency review (PRs, advisory), Android release APK/AAB build (main only), coverage to Codecov |
 | `nightly.yml` | daily + manual | Heavy builds: iOS (unsigned), macOS, Windows, Linux desktop |
 | `release.yml` | tag `v*` | Builds+signs Android release and publishes a GitHub Release with APK/AAB |
+
+> **SAST note:** GitHub CodeQL does not support Dart, so a CodeQL workflow would
+> always fail. Static analysis is instead covered by `flutter analyze` (rules
+> from `analysis_options.yaml`) plus the gitleaks secret scan, PR dependency
+> review, and the secrets/security features you enable in repo settings.
 
 ### Required repository secrets
 

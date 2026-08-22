@@ -1,9 +1,16 @@
-# Dependabot keeps dependencies current and opens security-aware PRs.
+# Dependabot keeps compatible dependencies current and opens security-aware
+# PRs without flooding the repo with breaking changes.
 #
-# After enabling, review the GitHub Security tab:
-#   - Dependabot alerts & security updates
-#   - Secret scanning (push protection recommended)
-#   - Code scanning (CodeQL is wired via .github/workflows/codeql.yml)
+# Policy:
+#   - semver-MAJOR bumps are NOT proposed automatically for either pub or
+#     GitHub Actions: they require manual API migration and their PRs break
+#     CI compilation. Bump majors by hand when you intend to migrate.
+#   - minor/patch updates (and patch-only for actions) are grouped to keep
+#     the PR list small.
+#
+# Also enable in the repo (Settings -> Code security):
+#   - Secret scanning (incl. push protection)
+#   - Dependabot alerts / security updates
 
 version: 2
 updates:
@@ -11,9 +18,20 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    versioning-strategy: increase-if-necessary
     labels:
       - dependencies
+    groups:
+      compatible-updates:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
@@ -23,3 +41,13 @@ updates:
     labels:
       - ci
       - dependencies
+    groups:
+      actions:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - version-update:semver-major

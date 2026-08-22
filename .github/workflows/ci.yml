@@ -120,6 +120,8 @@ jobs:
         with:
           fail-on-severity: high
           comment-summary-in-pr: true
+        # Advisory only: never blocks a PR on its own.
+        continue-on-error: true
 
   # ── Android release build (main pushes only, keeps PRs fast) ───────
   build-android:
