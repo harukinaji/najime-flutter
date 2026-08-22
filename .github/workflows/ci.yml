@@ -70,22 +70,22 @@ jobs:
           path: coverage/lcov.info
           if-no-files-found: ignore
 
-  # ── Coverage publishing (needs CODECOV_TOKEN, gated at job level; secrets
-  #    are NOT allowed in step-level `if`) ──────────────────────────
+  # ── Coverage publishing (CODECOV_TOKEN is optional; the step never fails) ──
   publish-coverage:
     name: Publish coverage to Codecov
     runs-on: ubuntu-latest
     needs: test
-    if: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: coverage-lcov
-      - uses: codecov/codecov-action@v5
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage-lcov/lcov.info
           fail_ci_if_error: false
+        continue-on-error: true
 
   # ── Secret scanning (gitleaks) ────────────────────────────────────
   secret-scan:
