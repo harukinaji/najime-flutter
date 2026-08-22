@@ -81,7 +81,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: coverage-lcov
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage-lcov/lcov.info
