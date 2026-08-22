@@ -34,6 +34,7 @@ class WebSocketService {
         '${hex(bytes[8])}${hex(bytes[9])}-'
         '${hex(bytes[10])}${hex(bytes[11])}${hex(bytes[12])}${hex(bytes[13])}${hex(bytes[14])}${hex(bytes[15])}';
   }
+
   static VoidCallback? onConnected;
   static VoidCallback? onAuthExpired;
 
@@ -65,14 +66,18 @@ class WebSocketService {
   static Future<void> _verifyTokenBeforeLogout() async {
     final user = await ApiService.getCurrentUser();
     if (user != null) {
-      debugPrint('[WS] 401 false alarm — REST token is still valid; '
-          'reconnecting WS without logout');
+      debugPrint(
+        '[WS] 401 false alarm — REST token is still valid; '
+        'reconnecting WS without logout',
+      );
       _reconnectDelay = 1;
       _connect();
       return;
     }
-    debugPrint('[WS] Session really expired (REST also unauthorized) — '
-        'forcing re-login');
+    debugPrint(
+      '[WS] Session really expired (REST also unauthorized) — '
+      'forcing re-login',
+    );
     onAuthExpired?.call();
   }
 
@@ -80,8 +85,7 @@ class WebSocketService {
     if (_socket != null || _connecting || _token == null) return;
     _connecting = true;
 
-    final uri = Uri.parse(
-        '${AppConfig.wsBaseUrl}/ws?device_id=$_deviceId');
+    final uri = Uri.parse('${AppConfig.wsBaseUrl}/ws?device_id=$_deviceId');
     debugPrint('[WS] Connecting to ${AppConfig.wsBaseUrl}/ws');
 
     // Get attestation headers for the WS handshake (skip if not registered)
@@ -104,119 +108,134 @@ class WebSocketService {
 
     final appKey = appKeyValue();
     WebSocket.connect(
-      uri.toString(),
-      headers: {
-        'X-WS-Token': _token!,
-        if (appKey.isNotEmpty) appKeyHeaderName: appKey,
-        ...attestationHeaders,
-      },
-      customClient: httpClient,
-    ).then((ws) {
-      _socket = ws;
-      _connecting = false;
-      _reconnectDelay = 1;
-      debugPrint('[WS] Connected');
+          uri.toString(),
+          headers: {
+            'X-WS-Token': _token!,
+            if (appKey.isNotEmpty) appKeyHeaderName: appKey,
+            ...attestationHeaders,
+          },
+          customClient: httpClient,
+        )
+        .then((ws) {
+          _socket = ws;
+          _connecting = false;
+          _reconnectDelay = 1;
+          debugPrint('[WS] Connected');
 
-      sendStatus(true);
-      for (final p in _pending) {
-        _send(p);
-      }
-      _pending.clear();
-      onConnected?.call();
+          sendStatus(true);
+          for (final p in _pending) {
+            _send(p);
+          }
+          _pending.clear();
+          onConnected?.call();
 
-      ws.listen((data) {
-        try {
-          final msg = jsonDecode(data as String) as Map<String, dynamic>;
-          final event = msg['event'] as String?;
-          final msgData = msg['data'] as Map<String, dynamic>? ?? {};
+          ws.listen(
+            (data) {
+              try {
+                final msg = jsonDecode(data as String) as Map<String, dynamic>;
+                final event = msg['event'] as String?;
+                final msgData = msg['data'] as Map<String, dynamic>? ?? {};
 
-          if (event == null) return;
+                if (event == null) return;
 
-          if (event == 'new_message') {
-            final ev = _listeners[event];
-            if (ev != null) {
-              for (final cb in ev) {
-                cb(msgData);
-              }
-            }
+                if (event == 'new_message') {
+                  final ev = _listeners[event];
+                  if (ev != null) {
+                    for (final cb in ev) {
+                      cb(msgData);
+                    }
+                  }
+                  return;
+                }
+
+                if (event == 'offer') {
+                  WebRTCService.handleOffer(msgData);
+                  return;
+                }
+
+                if (event == 'answer') {
+                  WebRTCService.handleAnswer(msgData);
+                  return;
+                }
+
+                if (event == 'ice_candidate') {
+                  WebRTCService.handleIceCandidate(msgData);
+                  return;
+                }
+
+                if (event == 'call_end') {
+                  WebRTCService.handleRemoteEnd(msgData);
+                  return;
+                }
+
+                if (event == 'reaction_added' || event == 'reaction_removed') {
+                  final ev = _listeners[event];
+                  if (ev != null) {
+                    for (final cb in ev) {
+                      cb(msgData);
+                    }
+                  }
+                  return;
+                }
+
+                if (event.startsWith('sfu_')) {
+                  final ev = _listeners[event];
+                  if (ev != null) {
+                    for (final cb in ev) {
+                      cb(msgData);
+                    }
+                  }
+                  return;
+                }
+
+                final ev = _listeners[event];
+                if (ev != null) {
+                  for (final cb in ev) {
+                    cb(msgData);
+                  }
+                }
+              } catch (_) {}
+            },
+            onDone: () {
+              debugPrint(
+                '[WS] Disconnected, reconnecting in ${_reconnectDelay}s...',
+              );
+              _socket = null;
+              _scheduleReconnect();
+            },
+            onError: (e) {
+              debugPrint(
+                '[WS] Error: $e, reconnecting in ${_reconnectDelay}s...',
+              );
+              _socket = null;
+              _scheduleReconnect();
+            },
+          );
+        })
+        .catchError((e) {
+          _connecting = false;
+          _socket = null;
+          final msg = e.toString();
+          if (msg.contains('401')) {
+            debugPrint('[WS] Handshake 401 -> session expired');
+            _handleAuthExpired();
             return;
           }
-
-          if (event == 'offer') {
-            WebRTCService.handleOffer(msgData);
+          if (msg.contains('403')) {
+            debugPrint(
+              '[WS] Handshake 403 -> attestation failed, retrying without',
+            );
+            _skipAttestation = true;
+            _scheduleReconnect();
             return;
           }
-
-          if (event == 'answer') {
-            WebRTCService.handleAnswer(msgData);
-            return;
-          }
-
-          if (event == 'ice_candidate') {
-            WebRTCService.handleIceCandidate(msgData);
-            return;
-          }
-
-          if (event == 'call_end') {
-            WebRTCService.handleRemoteEnd(msgData);
-            return;
-          }
-
-          if (event == 'reaction_added' || event == 'reaction_removed') {
-            final ev = _listeners[event];
-            if (ev != null) {
-              for (final cb in ev) {
-                cb(msgData);
-              }
-            }
-            return;
-          }
-
-          if (event.startsWith('sfu_')) {
-            final ev = _listeners[event];
-            if (ev != null) {
-              for (final cb in ev) {
-                cb(msgData);
-              }
-            }
-            return;
-          }
-
-          final ev = _listeners[event];
-          if (ev != null) {
-            for (final cb in ev) {
-              cb(msgData);
-            }
-          }
-        } catch (_) {}
-      }, onDone: () {
-        debugPrint('[WS] Disconnected, reconnecting in ${_reconnectDelay}s...');
-        _socket = null;
-        _scheduleReconnect();
-      }, onError: (e) {
-        debugPrint('[WS] Error: $e, reconnecting in ${_reconnectDelay}s...');
-        _socket = null;
-        _scheduleReconnect();
-      });
-    }).catchError((e) {
-      _connecting = false;
-      _socket = null;
-      final msg = e.toString();
-      if (msg.contains('401')) {
-        debugPrint('[WS] Handshake 401 -> session expired');
-        _handleAuthExpired();
-        return;
-      }
-      if (msg.contains('403')) {
-        debugPrint('[WS] Handshake 403 -> attestation failed, retrying without');
-        _skipAttestation = true;
-        _scheduleReconnect();
-        return;
-      }
-      debugPrint('[WS] Connect error: $e, retrying in ${_reconnectDelay}s...');
-      _scheduleReconnect();
-    });
+          debugPrint(
+            '[WS] Connect error: $e, retrying in ${_reconnectDelay}s...',
+          );
+          _scheduleReconnect();
+        });
   }
+
   static void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(Duration(seconds: _reconnectDelay), () {
@@ -260,7 +279,10 @@ class WebSocketService {
   }
 
   static void sendStatus(bool isOnline) {
-    final msg = {'event': 'status', 'data': {'is_online': isOnline}};
+    final msg = {
+      'event': 'status',
+      'data': {'is_online': isOnline},
+    };
     if (_socket != null) {
       _send(msg);
     } else {

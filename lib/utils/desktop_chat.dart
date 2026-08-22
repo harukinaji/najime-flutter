@@ -20,11 +20,7 @@ class DesktopChatController {
 
   final ValueNotifier<DesktopChatSelection?> selected = ValueNotifier(null);
 
-  void open({
-    required String chatId,
-    String? contactId,
-    bool isGroup = false,
-  }) {
+  void open({required String chatId, String? contactId, bool isGroup = false}) {
     selected.value = DesktopChatSelection(
       chatId: chatId,
       contactId: contactId,
@@ -49,9 +45,9 @@ void openChat(
       isGroup: isGroup,
     );
   } else {
-    context.push('/home/chats/$chatId', extra: {
-      'contactId': contactId,
-      'isGroup': isGroup,
-    });
+    context.push(
+      '/home/chats/$chatId',
+      extra: {'contactId': contactId, 'isGroup': isGroup},
+    );
   }
 }

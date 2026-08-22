@@ -56,7 +56,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             iconColor: AppColors.success,
             trailing: Switch(
               value: _showOnline,
-              onChanged: (v) { setState(() => _showOnline = v); _saveSettings(); },
+              onChanged: (v) {
+                setState(() => _showOnline = v);
+                _saveSettings();
+              },
               activeThumbColor: Colors.white,
               activeTrackColor: AppColors.primary,
             ),
@@ -68,7 +71,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             iconColor: AppColors.primary,
             trailing: Switch(
               value: _showReadReceipts,
-              onChanged: (v) { setState(() => _showReadReceipts = v); _saveSettings(); },
+              onChanged: (v) {
+                setState(() => _showReadReceipts = v);
+                _saveSettings();
+              },
               activeThumbColor: Colors.white,
               activeTrackColor: AppColors.primary,
             ),
@@ -80,7 +86,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             iconColor: AppColors.warning,
             trailing: Switch(
               value: _showPhoneNumber,
-              onChanged: (v) { setState(() => _showPhoneNumber = v); _saveSettings(); },
+              onChanged: (v) {
+                setState(() => _showPhoneNumber = v);
+                _saveSettings();
+              },
               activeThumbColor: Colors.white,
               activeTrackColor: AppColors.primary,
             ),
@@ -92,7 +101,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             iconColor: Colors.purple,
             trailing: Switch(
               value: _allowGroupInvites,
-              onChanged: (v) { setState(() => _allowGroupInvites = v); _saveSettings(); },
+              onChanged: (v) {
+                setState(() => _allowGroupInvites = v);
+                _saveSettings();
+              },
               activeThumbColor: Colors.white,
               activeTrackColor: AppColors.primary,
             ),

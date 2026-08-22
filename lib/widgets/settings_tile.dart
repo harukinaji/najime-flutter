@@ -37,20 +37,22 @@ class SettingsTile extends StatelessWidget {
         title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: cs.onSurface),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: cs.onSurface,
+        ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                color: cs.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             )
           : null,
-      trailing: trailing ??
+      trailing:
+          trailing ??
           Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 22),
       onTap: onTap,
     );

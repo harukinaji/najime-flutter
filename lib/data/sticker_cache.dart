@@ -30,7 +30,9 @@ class StickerCache {
     final tasks = <Future>[];
     for (final url in urls) {
       if (_memCache.containsKey(url)) continue;
-      final fullUrl = url.startsWith('/uploads') ? '${AppConfig.apiBaseUrl}$url' : url;
+      final fullUrl = url.startsWith('/uploads')
+          ? '${AppConfig.apiBaseUrl}$url'
+          : url;
       if (fullUrl.endsWith('.json') || fullUrl.endsWith('.tgs')) {
         tasks.add(_loadOne(fullUrl, url));
       } else if (fullUrl.endsWith('.webm') || fullUrl.endsWith('.mp4')) {
@@ -40,7 +42,9 @@ class StickerCache {
 
     await Future.wait(tasks, eagerError: false);
     _loading = false;
-    debugPrint('[StickerCache] Preloaded ${_memCache.length} mem + ${_fileCache.length} files');
+    debugPrint(
+      '[StickerCache] Preloaded ${_memCache.length} mem + ${_fileCache.length} files',
+    );
   }
 
   Future<void> _loadOne(String fullUrl, String originalUrl) async {
@@ -89,7 +93,9 @@ class StickerCache {
     final cached = _fileCache[url];
     if (cached != null && await File(cached).exists()) return cached;
 
-    final fullUrl = url.startsWith('/uploads') ? '${AppConfig.apiBaseUrl}$url' : url;
+    final fullUrl = url.startsWith('/uploads')
+        ? '${AppConfig.apiBaseUrl}$url'
+        : url;
     try {
       final res = await http.get(Uri.parse(fullUrl));
       if (res.statusCode == 200) {
@@ -106,7 +112,9 @@ class StickerCache {
 
   void put(String url, Uint8List bytes) {
     _memCache[url] = bytes;
-    final fullUrl = url.startsWith('/uploads') ? '${AppConfig.apiBaseUrl}$url' : url;
+    final fullUrl = url.startsWith('/uploads')
+        ? '${AppConfig.apiBaseUrl}$url'
+        : url;
     _memCache[fullUrl] = bytes;
   }
 }

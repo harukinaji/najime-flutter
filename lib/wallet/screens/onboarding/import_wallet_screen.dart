@@ -37,15 +37,25 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
         await state.importFromPrivateKey(key);
       } else {
         final seed = _seedController.text.trim();
-        final words = seed.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+        final words = seed
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty)
+            .length;
         if (words != 12 && words != 24) {
-          throw const FormatException('Seed phrase must contain 12 or 24 words');
+          throw const FormatException(
+            'Seed phrase must contain 12 or 24 words',
+          );
         }
         // Validate individual words (basic check - each word should be lowercase letters only)
-        final wordList = seed.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+        final wordList = seed
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty)
+            .toList();
         for (final word in wordList) {
           if (!RegExp(r'^[a-z]+$').hasMatch(word)) {
-            throw const FormatException('Each word must contain only lowercase Latin letters');
+            throw const FormatException(
+              'Each word must contain only lowercase Latin letters',
+            );
           }
         }
         await state.importFromMnemonic(seed);
@@ -75,7 +85,11 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
             children: [
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(value: false, label: Text('Seed phrase'), icon: Icon(Icons.notes)),
+                  ButtonSegment(
+                    value: false,
+                    label: Text('Seed phrase'),
+                    icon: Icon(Icons.notes),
+                  ),
                   ButtonSegment(
                     value: true,
                     label: Text('Private key'),
@@ -119,16 +133,15 @@ class _ImportWalletScreenState extends State<ImportWalletScreen> {
               ],
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
+                Text(_error!, style: const TextStyle(color: Colors.redAccent)),
               ],
               const SizedBox(height: 28),
               FilledButton(
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 onPressed: _importing ? null : _import,
                 child: _importing

@@ -35,19 +35,14 @@ final commonStories = [
           title: 'Privacy & Security',
           subtitle: 'Control your privacy settings',
         ),
-        SettingsTile(
-          icon: Icons.palette_outlined,
-          title: 'Appearance',
-        ),
+        SettingsTile(icon: Icons.palette_outlined, title: 'Appearance'),
       ],
     ),
   ),
   Story(
     name: 'Common/GoogleIcon',
-    builder: (context) => const Padding(
-      padding: EdgeInsets.all(16),
-      child: GoogleIcon(size: 48),
-    ),
+    builder: (context) =>
+        const Padding(padding: EdgeInsets.all(16), child: GoogleIcon(size: 48)),
   ),
   Story(
     name: 'Common/PhoneNumberCard - Empty',

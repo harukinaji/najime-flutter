@@ -72,9 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _accountLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.success
-            ? 'Wallet linked to account'
-            : (result.message ?? 'Failed to link wallet')),
+        content: Text(
+          result.success
+              ? 'Wallet linked to account'
+              : (result.message ?? 'Failed to link wallet'),
+        ),
       ),
     );
     if (result.success) await _loadAccountBind();
@@ -107,9 +109,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.success
-            ? 'Wallet unlinked from account'
-            : (result.message ?? 'Failed to unlink wallet')),
+        content: Text(
+          result.success
+              ? 'Wallet unlinked from account'
+              : (result.message ?? 'Failed to unlink wallet'),
+        ),
       ),
     );
     await _loadAccountBind();
@@ -137,7 +141,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: const InputDecoration(hintText: 'PIN code'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               final ok = await LockService.instance.verifyPin(controller.text);
@@ -166,7 +173,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('This wallet was imported via private key (seed phrase unavailable)'),
+            content: Text(
+              'This wallet was imported via private key (seed phrase unavailable)',
+            ),
           ),
         );
       }

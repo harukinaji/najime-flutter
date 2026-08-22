@@ -94,10 +94,14 @@ class _ReactionChip extends StatelessWidget {
             Text(reaction.emoji, style: const TextStyle(fontSize: 15)),
             const SizedBox(width: 3),
             if (reaction.count <= 2) ...[
-              ...reaction.users.take(2).map((u) => Padding(
-                    padding: const EdgeInsets.only(left: 1),
-                    child: _UserAvatar(user: u, size: 16),
-                  )),
+              ...reaction.users
+                  .take(2)
+                  .map(
+                    (u) => Padding(
+                      padding: const EdgeInsets.only(left: 1),
+                      child: _UserAvatar(user: u, size: 16),
+                    ),
+                  ),
             ] else ...[
               _UserAvatar(user: reaction.users.first, size: 16),
               const SizedBox(width: 1),
@@ -164,10 +168,7 @@ class _UserAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: cs.surfaceContainerHighest,
-          width: 1,
-        ),
+        border: Border.all(color: cs.surfaceContainerHighest, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: avatar,

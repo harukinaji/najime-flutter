@@ -26,7 +26,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final a = AuthState.instance;
-    _nameController = TextEditingController(text: a.displayName ?? a.username ?? '');
+    _nameController = TextEditingController(
+      text: a.displayName ?? a.username ?? '',
+    );
     _bioController = TextEditingController(text: a.bio ?? '');
   }
 
@@ -78,8 +80,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.message ?? (result.success ? 'Profile updated' : 'Failed to update')),
-        backgroundColor: result.success ? Colors.green : Theme.of(context).colorScheme.error,
+        content: Text(
+          result.message ??
+              (result.success ? 'Profile updated' : 'Failed to update'),
+        ),
+        backgroundColor: result.success
+            ? Colors.green
+            : Theme.of(context).colorScheme.error,
       ),
     );
     if (result.success) {
@@ -146,17 +153,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: ListTile(
-                leading: Icon(Icons.alternate_email, color: cs.onSurfaceVariant),
+                leading: Icon(
+                  Icons.alternate_email,
+                  color: cs.onSurfaceVariant,
+                ),
                 title: Text(
                   '@${AuthState.instance.username ?? ''}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
                 ),
                 subtitle: Text(
                   'Username cannot be changed',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ),
@@ -170,7 +180,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildAvatarSection(ColorScheme cs) {
     final a = AuthState.instance;
     final displayUrl = _avatarBase64 ?? a.avatarUrl;
-    final displayName = _nameController.text.isNotEmpty ? _nameController.text : (a.displayName ?? a.username ?? '?');
+    final displayName = _nameController.text.isNotEmpty
+        ? _nameController.text
+        : (a.displayName ?? a.username ?? '?');
     final initial = displayName[0].toUpperCase();
 
     return Column(
@@ -187,7 +199,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   shape: BoxShape.circle,
                   gradient: displayUrl == null
                       ? LinearGradient(
-                          colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
+                          colors: [
+                            cs.primary,
+                            cs.primary.withValues(alpha: 0.7),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
@@ -195,9 +210,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   border: Border.all(color: cs.primary, width: 2.5),
                 ),
                 child: displayUrl != null
-                    ? ClipOval(
-                        child: _avatarWidget(displayUrl, 108, 108),
-                      )
+                    ? ClipOval(child: _avatarWidget(displayUrl, 108, 108))
                     : Center(
                         child: Text(
                           initial,
@@ -227,7 +240,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 19),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 19,
+                  ),
                 ),
               ),
             ],
@@ -244,7 +261,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             child: Text(
               _pickedImage != null ? 'Change Avatar' : 'Set Avatar',
-              style: TextStyle(color: cs.primary, fontSize: 14, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: cs.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
@@ -255,7 +276,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _avatarWidget(String url, double width, double height) {
     if (url.startsWith('data:image')) {
       final base64 = url.split(',').last;
-      return Image.memory(base64Decode(base64), width: width, height: height, fit: BoxFit.cover);
+      return Image.memory(
+        base64Decode(base64),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      );
     }
     return Image.network(url, width: width, height: height, fit: BoxFit.cover);
   }
@@ -280,22 +306,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           maxLines: 3,
           maxLength: _bioMaxLen,
           style: TextStyle(fontSize: 15, color: cs.onSurface),
-          buildCounter: (context,
-                  {required currentLength,
-                  required isFocused,
-                  required maxLength}) =>
-              Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              '$currentLength / $maxLength',
-              style: TextStyle(
-                fontSize: 12,
-                color: currentLength >= _bioMaxLen
-                    ? cs.error
-                    : cs.onSurfaceVariant.withValues(alpha: 0.6),
+          buildCounter:
+              (
+                context, {
+                required currentLength,
+                required isFocused,
+                required maxLength,
+              }) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '$currentLength / $maxLength',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: currentLength >= _bioMaxLen
+                        ? cs.error
+                        : cs.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                ),
               ),
-            ),
-          ),
           decoration: InputDecoration(
             hintText: 'Tell something about yourself...',
             hintStyle: TextStyle(
@@ -309,14 +337,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                  color: cs.outlineVariant.withValues(alpha: 0.5)),
+                color: cs.outlineVariant.withValues(alpha: 0.5),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: cs.primary, width: 1.5),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
         ),
       ],

@@ -74,9 +74,9 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
                       counterText: '',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(obscure1
-                            ? Icons.visibility_off
-                            : Icons.visibility),
+                        icon: Icon(
+                          obscure1 ? Icons.visibility_off : Icons.visibility,
+                        ),
                         onPressed: () =>
                             setDialogState(() => obscure1 = !obscure1),
                       ),
@@ -97,9 +97,9 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
                       counterText: '',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(obscure2
-                            ? Icons.visibility_off
-                            : Icons.visibility),
+                        icon: Icon(
+                          obscure2 ? Icons.visibility_off : Icons.visibility,
+                        ),
                         onPressed: () =>
                             setDialogState(() => obscure2 = !obscure2),
                       ),
@@ -135,9 +135,7 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
                     }
 
                     await LockService.instance.setPin(pin);
-                    await LockService.instance.enable(
-                      method: LockMethod.pin,
-                    );
+                    await LockService.instance.enable(method: LockMethod.pin);
                     if (ctx.mounted) {
                       Navigator.pop(ctx);
                     }
@@ -173,9 +171,7 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.error,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
               onPressed: () async {
                 await LockService.instance.disable();
                 if (ctx.mounted) {
@@ -198,14 +194,16 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
     if (enabled) {
       try {
         debugPrint('[LockSettings] calling authenticateWithBiometric...');
-        final authenticated =
-            await LockService.instance.authenticateWithBiometric();
+        final authenticated = await LockService.instance
+            .authenticateWithBiometric();
         debugPrint('[LockSettings] authenticated=$authenticated');
         if (!authenticated) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Biometrics are not available on this device. Use a PIN code.'),
+                content: Text(
+                  'Biometrics are not available on this device. Use a PIN code.',
+                ),
                 duration: Duration(seconds: 3),
               ),
             );
@@ -217,9 +215,9 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
       } catch (e) {
         debugPrint('[LockSettings] exception: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Biometric error: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Biometric error: $e')));
         }
         return;
       }
@@ -244,7 +242,9 @@ class _LockSettingsScreenState extends State<LockSettingsScreen> {
                   icon: Icons.lock_outline,
                   title: 'Lock App',
                   subtitle: _lockEnabled ? 'Enabled' : 'Disabled',
-                  iconColor: _lockEnabled ? AppColors.success : cs.onSurfaceVariant,
+                  iconColor: _lockEnabled
+                      ? AppColors.success
+                      : cs.onSurfaceVariant,
                   trailing: Switch(
                     value: _lockEnabled,
                     onChanged: _toggleLock,

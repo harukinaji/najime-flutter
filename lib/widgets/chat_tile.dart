@@ -72,9 +72,7 @@ class ChatTile extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Expanded(
-                          child: _buildLastMessagePreview(cs),
-                        ),
+                        Expanded(child: _buildLastMessagePreview(cs)),
                         if (chat.unreadCount > 0) ...[
                           const SizedBox(width: 8),
                           _buildUnreadBadge(cs),
@@ -101,9 +99,7 @@ class ChatTile extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          ClipOval(
-            child: _buildAvatarImage(avatarSize, cs),
-          ),
+          ClipOval(child: _buildAvatarImage(avatarSize, cs)),
           Positioned(
             right: -1,
             bottom: -1,
@@ -288,9 +284,7 @@ class ChatTile extends StatelessWidget {
             Icon(Icons.card_giftcard, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
             Text(
-              chk != null
-                  ? 'Check: ${chk.amount} ${chk.currency}'
-                  : 'Check',
+              chk != null ? 'Check: ${chk.amount} ${chk.currency}' : 'Check',
               style: textStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -127,26 +127,71 @@ class RaydiumService {
   RaydiumService(this._client);
 
   /// Raydium CPMM program id on devnet.
-  static const String programId = 'DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb';
+  static const String programId =
+      'DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb';
 
   /// Raydium CPMM program id on mainnet (for reference).
-  static const String programIdMainnet = 'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1';
+  static const String programIdMainnet =
+      'CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1';
 
   /// Anchor discriminator of the PoolState account.
-  static const List<int> poolDiscriminator = [247, 237, 227, 245, 215, 195, 222, 70];
+  static const List<int> poolDiscriminator = [
+    247,
+    237,
+    227,
+    245,
+    215,
+    195,
+    222,
+    70,
+  ];
 
   /// Anchor discriminator of the AmmConfig account.
-  static const List<int> configDiscriminator = [218, 244, 33, 104, 203, 203, 43, 111];
+  static const List<int> configDiscriminator = [
+    218,
+    244,
+    33,
+    104,
+    203,
+    203,
+    43,
+    111,
+  ];
 
   /// Discriminator of the `swap_base_input` instruction.
-  static const List<int> swapBaseInputDiscriminator = [143, 190, 90, 218, 196, 30, 51, 222];
+  static const List<int> swapBaseInputDiscriminator = [
+    143,
+    190,
+    90,
+    218,
+    196,
+    30,
+    51,
+    222,
+  ];
 
   /// PoolState serialized size (8-byte discriminator + packed struct).
   static const int poolDataSize = 637;
 
   /// PDA seed for the vault & lp mint authority.
   static const List<int> authSeed = [
-    118, 97, 117, 108, 116, 95, 97, 110, 100, 95, 108, 112, 95, 109, 105, 110, 116, //
+    118,
+    97,
+    117,
+    108,
+    116,
+    95,
+    97,
+    110,
+    100,
+    95,
+    108,
+    112,
+    95,
+    109,
+    105,
+    110,
+    116, //
     95, 97, 117, 116, 104, 95, 115, 101, 101, 100,
   ];
 
@@ -155,10 +200,11 @@ class RaydiumService {
   final SolanaClient _client;
 
   /// Derives the Raydium authority PDA (pool vault + lp mint authority).
-  static Future<Ed25519HDPublicKey> deriveAuthority() => Ed25519HDPublicKey.findProgramAddress(
-    seeds: [authSeed],
-    programId: Ed25519HDPublicKey.fromBase58(programId),
-  );
+  static Future<Ed25519HDPublicKey> deriveAuthority() =>
+      Ed25519HDPublicKey.findProgramAddress(
+        seeds: [authSeed],
+        programId: Ed25519HDPublicKey.fromBase58(programId),
+      );
 
   /// Discovers CPMM pools where [mintA] is one of the two pool mints.
   ///
@@ -232,11 +278,13 @@ class RaydiumService {
 
   /// Fetches and parses the AmmConfig account referenced by [pool].
   Future<RaydiumAmmConfig> getAmmConfig(RaydiumCpmmPool pool) async {
-    final info = await _client.rpcClient.getAccountInfo(
-      pool.ammConfig,
-      commitment: Commitment.confirmed,
-      encoding: Encoding.base64,
-    ).value;
+    final info = await _client.rpcClient
+        .getAccountInfo(
+          pool.ammConfig,
+          commitment: Commitment.confirmed,
+          encoding: Encoding.base64,
+        )
+        .value;
     if (info == null || info.data is! BinaryAccountData) {
       throw const RaydiumException('AmmConfig not found');
     }
@@ -255,7 +303,9 @@ class RaydiumService {
   }
 
   /// Reads the current token amounts (base units) of [pool]'s two vaults.
-  Future<({int token0, int token1})> getVaultBalances(RaydiumCpmmPool pool) async {
+  Future<({int token0, int token1})> getVaultBalances(
+    RaydiumCpmmPool pool,
+  ) async {
     final token0 = await _tokenAmount(pool.token0Vault);
     final token1 = await _tokenAmount(pool.token1Vault);
     return (token0: token0, token1: token1);
@@ -265,7 +315,10 @@ class RaydiumService {
     try {
       return int.parse(
         (await _client.rpcClient
-                .getTokenAccountBalance(address, commitment: Commitment.confirmed)
+                .getTokenAccountBalance(
+                  address,
+                  commitment: Commitment.confirmed,
+                )
                 .value)
             .amount,
       );
@@ -299,14 +352,24 @@ class RaydiumService {
 
     final balances = await getVaultBalances(pool);
     // Deduct accrued fees exactly like `vault_amount_without_fee`.
-    final inputReserve = (inputIsToken0 ? balances.token0 : balances.token1) -
+    final inputReserve =
+        (inputIsToken0 ? balances.token0 : balances.token1) -
         (inputIsToken0
-            ? pool.protocolFeesToken0 + pool.fundFeesToken0 + pool.creatorFeesToken0
-            : pool.protocolFeesToken1 + pool.fundFeesToken1 + pool.creatorFeesToken1);
-    final outputReserve = (inputIsToken0 ? balances.token1 : balances.token0) -
+            ? pool.protocolFeesToken0 +
+                  pool.fundFeesToken0 +
+                  pool.creatorFeesToken0
+            : pool.protocolFeesToken1 +
+                  pool.fundFeesToken1 +
+                  pool.creatorFeesToken1);
+    final outputReserve =
+        (inputIsToken0 ? balances.token1 : balances.token0) -
         (inputIsToken0
-            ? pool.protocolFeesToken1 + pool.fundFeesToken1 + pool.creatorFeesToken1
-            : pool.protocolFeesToken0 + pool.fundFeesToken0 + pool.creatorFeesToken0);
+            ? pool.protocolFeesToken1 +
+                  pool.fundFeesToken1 +
+                  pool.creatorFeesToken1
+            : pool.protocolFeesToken0 +
+                  pool.fundFeesToken0 +
+                  pool.creatorFeesToken0);
     if (inputReserve <= 0 || outputReserve <= 0) {
       throw const RaydiumException('Pool has no liquidity');
     }
@@ -320,8 +383,7 @@ class RaydiumService {
       2 => !inputIsToken0,
       _ => false,
     };
-    final creatorFeeRate =
-        pool.enableCreatorFee ? config.creatorFeeRate : 0;
+    final creatorFeeRate = pool.enableCreatorFee ? config.creatorFeeRate : 0;
 
     final input = BigInt.from(amountIn);
     final inputVault = BigInt.from(inputReserve);
@@ -330,16 +392,16 @@ class RaydiumService {
     BigInt tradeFee;
     BigInt inputAfterFee;
     if (isCreatorFeeOnInput) {
-      final totalRate =
-          BigInt.from(config.tradeFeeRate + creatorFeeRate);
+      final totalRate = BigInt.from(config.tradeFeeRate + creatorFeeRate);
       final totalFee = _ceilDiv(input * totalRate, BigInt.from(feeDenominator));
-      final creatorFee =
-          (totalFee * BigInt.from(creatorFeeRate)) ~/ totalRate;
+      final creatorFee = (totalFee * BigInt.from(creatorFeeRate)) ~/ totalRate;
       tradeFee = totalFee - creatorFee;
       inputAfterFee = input - totalFee;
     } else {
-      tradeFee = _ceilDiv(input * BigInt.from(config.tradeFeeRate),
-          BigInt.from(feeDenominator));
+      tradeFee = _ceilDiv(
+        input * BigInt.from(config.tradeFeeRate),
+        BigInt.from(feeDenominator),
+      );
       inputAfterFee = input - tradeFee;
     }
 
@@ -350,8 +412,9 @@ class RaydiumService {
     var outputAmount = outputSwapped;
     if (!isCreatorFeeOnInput && creatorFeeRate > 0) {
       final creatorFee = _ceilDiv(
-          outputSwapped * BigInt.from(creatorFeeRate),
-          BigInt.from(feeDenominator));
+        outputSwapped * BigInt.from(creatorFeeRate),
+        BigInt.from(feeDenominator),
+      );
       outputAmount = outputSwapped - creatorFee;
     }
 
@@ -367,8 +430,8 @@ class RaydiumService {
     );
 
     // minimum_amount_out = output * (10000 - slippage) / 10000
-    final minOut = (outputAmount * BigInt.from(10000 - slippageBps)) ~/
-        BigInt.from(10000);
+    final minOut =
+        (outputAmount * BigInt.from(10000 - slippageBps)) ~/ BigInt.from(10000);
 
     return RaydiumQuote(
       amountIn: amountIn,
@@ -417,8 +480,12 @@ class RaydiumService {
     final inputIsToken0 = pool.token0Mint == quote.inputMint;
     final inputVault = inputIsToken0 ? pool.token0Vault : pool.token1Vault;
     final outputVault = inputIsToken0 ? pool.token1Vault : pool.token0Vault;
-    final inputProgram = inputIsToken0 ? pool.token0Program : pool.token1Program;
-    final outputProgram = inputIsToken0 ? pool.token1Program : pool.token0Program;
+    final inputProgram = inputIsToken0
+        ? pool.token0Program
+        : pool.token1Program;
+    final outputProgram = inputIsToken0
+        ? pool.token1Program
+        : pool.token0Program;
     final inputMintKey = Ed25519HDPublicKey.fromBase58(quote.inputMint);
     final outputMintKey = Ed25519HDPublicKey.fromBase58(quote.outputMint);
 
@@ -548,14 +615,21 @@ class RaydiumService {
     Wallet wallet,
     Ed25519HDPublicKey mint,
   ) async {
-    final ata = await findAssociatedTokenAddress(owner: wallet.keyPair.publicKey, mint: mint);
+    final ata = await findAssociatedTokenAddress(
+      owner: wallet.keyPair.publicKey,
+      mint: mint,
+    );
     final info = await _client.rpcClient
         .getAccountInfo(ata.toBase58(), commitment: Commitment.confirmed)
         .value;
     return (address: ata, exists: info != null);
   }
 
-  Future<SignedTx> _sign(Message message, String blockhash, Wallet wallet) async {
+  Future<SignedTx> _sign(
+    Message message,
+    String blockhash,
+    Wallet wallet,
+  ) async {
     final compiled = message.compile(
       recentBlockhash: blockhash,
       feePayer: wallet.keyPair.publicKey,

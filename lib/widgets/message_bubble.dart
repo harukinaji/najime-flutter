@@ -190,18 +190,26 @@ class _MessageBubbleState extends State<MessageBubble> {
             children: [
               // Quick reactions row
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: ['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'].map((emoji) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        _handleReaction(emoji);
-                      },
-                      child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                    );
-                  }).toList(),
+                  children: ['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉']
+                      .map((emoji) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _handleReaction(emoji);
+                          },
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 28),
+                          ),
+                        );
+                      })
+                      .toList(),
                 ),
               ),
               const Divider(height: 1),
@@ -295,8 +303,9 @@ class _MessageBubbleState extends State<MessageBubble> {
             bottom: 2,
           ),
           child: Column(
-            crossAxisAlignment:
-                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.message.replyToId != null)
@@ -321,13 +330,13 @@ class _MessageBubbleState extends State<MessageBubble> {
                       const SizedBox(width: 4),
                       _buildStatusIcon(widget.message.deliveryStatus, isMe, cs),
                     ],
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
     }
 
     return GestureDetector(
@@ -355,100 +364,116 @@ class _MessageBubbleState extends State<MessageBubble> {
                 if (!isMe) const SizedBox(width: 8),
                 Flexible(
                   child: Column(
-                crossAxisAlignment:
-                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: isMe ? _sentColor : cs.surfaceContainerHighest,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(20),
-                        topRight: const Radius.circular(20),
-                        bottomLeft: Radius.circular(isMe ? 20 : 4),
-                        bottomRight: Radius.circular(isMe ? 4 : 20),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (widget.message.forwardedFrom != null)
-                          _buildForwardedPreview(cs, isMe),
-                        if (widget.message.replyToId != null)
-                          _buildReplyPreview(cs, isMe),
-                        Padding(
-                          padding: widget.message.type == MessageType.image ||
-                                  widget.message.type == MessageType.sticker
-                              ? const EdgeInsets.all(8)
-                              : EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: widget.message.replyToId != null ? 6 : 10,
-                                ),
-                          child: _buildContent(context, cs, isMe),
-                        ),
-                        if (hasReactions)
-                          _buildInlineReactions(cs, isMe),
-                        if (widget.message.keyboard != null)
-                          _buildInlineKeyboard(cs),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            left: 10,
-                            right: 10,
-                            bottom: 6,
-                            top: hasReactions ? 0 : 2,
+                    crossAxisAlignment: isMe
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          color: isMe ? _sentColor : cs.surfaceContainerHighest,
+                          borderRadius: BorderRadius.only(
+                            topLeft: const Radius.circular(20),
+                            topRight: const Radius.circular(20),
+                            bottomLeft: Radius.circular(isMe ? 20 : 4),
+                            bottomRight: Radius.circular(isMe ? 4 : 20),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (widget.message.isPinned) ...[
-                                Icon(
-                                  Icons.push_pin,
-                                  size: 10,
-                                  color: (isMe ? Colors.white54 : cs.onSurfaceVariant)
-                                      .withValues(alpha: 0.5),
-                                ),
-                                const SizedBox(width: 2),
-                              ],
-                              if (widget.message.isEdited) ...[
-                                Text(
-                                  'edited ',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontStyle: FontStyle.italic,
-                                    color: (isMe ? Colors.white70 : cs.onSurfaceVariant)
-                                        .withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ],
-                              Text(
-                                _formatTime(widget.message.timestamp),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: (isMe ? Colors.white70 : cs.onSurfaceVariant)
-                                      .withValues(alpha: 0.6),
-                                ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            if (widget.message.forwardedFrom != null)
+                              _buildForwardedPreview(cs, isMe),
+                            if (widget.message.replyToId != null)
+                              _buildReplyPreview(cs, isMe),
+                            Padding(
+                              padding:
+                                  widget.message.type == MessageType.image ||
+                                      widget.message.type == MessageType.sticker
+                                  ? const EdgeInsets.all(8)
+                                  : EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: widget.message.replyToId != null
+                                          ? 6
+                                          : 10,
+                                    ),
+                              child: _buildContent(context, cs, isMe),
+                            ),
+                            if (hasReactions) _buildInlineReactions(cs, isMe),
+                            if (widget.message.keyboard != null)
+                              _buildInlineKeyboard(cs),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: 10,
+                                right: 10,
+                                bottom: 6,
+                                top: hasReactions ? 0 : 2,
                               ),
-                              if (isMe) ...[
-                                const SizedBox(width: 4),
-                                _buildStatusIcon(widget.message.deliveryStatus, isMe, cs),
-                              ],
-                            ],
-                          ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (widget.message.isPinned) ...[
+                                    Icon(
+                                      Icons.push_pin,
+                                      size: 10,
+                                      color:
+                                          (isMe
+                                                  ? Colors.white54
+                                                  : cs.onSurfaceVariant)
+                                              .withValues(alpha: 0.5),
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ],
+                                  if (widget.message.isEdited) ...[
+                                    Text(
+                                      'edited ',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontStyle: FontStyle.italic,
+                                        color:
+                                            (isMe
+                                                    ? Colors.white70
+                                                    : cs.onSurfaceVariant)
+                                                .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                  Text(
+                                    _formatTime(widget.message.timestamp),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color:
+                                          (isMe
+                                                  ? Colors.white70
+                                                  : cs.onSurfaceVariant)
+                                              .withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                  if (isMe) ...[
+                                    const SizedBox(width: 4),
+                                    _buildStatusIcon(
+                                      widget.message.deliveryStatus,
+                                      isMe,
+                                      cs,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildInlineKeyboard(ColorScheme cs) {
@@ -473,19 +498,28 @@ class _MessageBubbleState extends State<MessageBubble> {
                           child: OutlinedButton(
                             onPressed: () => _onButtonPressed(btn),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               side: BorderSide(color: cs.outlineVariant),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 if (btn.url != null) ...[
-                                  Icon(Icons.open_in_new, size: 14, color: cs.primary),
+                                  Icon(
+                                    Icons.open_in_new,
+                                    size: 14,
+                                    color: cs.primary,
+                                  ),
                                   const SizedBox(width: 4),
                                 ],
                                 Flexible(
@@ -538,8 +572,8 @@ class _MessageBubbleState extends State<MessageBubble> {
               decoration: BoxDecoration(
                 color: hasReacted
                     ? (isMe
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : cs.primary.withValues(alpha: 0.12))
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : cs.primary.withValues(alpha: 0.12))
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -549,10 +583,14 @@ class _MessageBubbleState extends State<MessageBubble> {
                   Text(r.emoji, style: const TextStyle(fontSize: 14)),
                   const SizedBox(width: 3),
                   if (r.count <= 2) ...[
-                    ...r.users.take(2).map((u) => Padding(
-                          padding: const EdgeInsets.only(left: 1),
-                          child: _buildReactionAvatar(u, isMe, cs),
-                        )),
+                    ...r.users
+                        .take(2)
+                        .map(
+                          (u) => Padding(
+                            padding: const EdgeInsets.only(left: 1),
+                            child: _buildReactionAvatar(u, isMe, cs),
+                          ),
+                        ),
                   ] else ...[
                     _buildReactionAvatar(r.users.first, isMe, cs),
                     const SizedBox(width: 2),
@@ -585,7 +623,12 @@ class _MessageBubbleState extends State<MessageBubble> {
         final base64Data = user.avatarUrl.split(',').last;
         final bytes = base64Decode(base64Data);
         avatar = ClipOval(
-          child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover),
+          child: Image.memory(
+            bytes,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+          ),
         );
       } catch (_) {
         avatar = _reactionInitials(user, size, isMe, cs);
@@ -621,7 +664,12 @@ class _MessageBubbleState extends State<MessageBubble> {
     );
   }
 
-  Widget _reactionInitials(ReactionUser user, double size, bool isMe, ColorScheme cs) {
+  Widget _reactionInitials(
+    ReactionUser user,
+    double size,
+    bool isMe,
+    ColorScheme cs,
+  ) {
     final initial = user.displayName.isNotEmpty
         ? user.displayName[0].toUpperCase()
         : '?';
@@ -654,7 +702,11 @@ class _MessageBubbleState extends State<MessageBubble> {
           return _buildHighlightedText(
             widget.message.content,
             widget.searchQuery!,
-            TextStyle(color: isMe ? Colors.white : cs.onSurface, fontSize: 15, height: 1.35),
+            TextStyle(
+              color: isMe ? Colors.white : cs.onSurface,
+              fontSize: 15,
+              height: 1.35,
+            ),
             widget.isCurrentSearchMatch,
           );
         }
@@ -700,7 +752,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                   height: 180,
                   color: Colors.grey[300],
                   child: const Center(
-                    child: Icon(Icons.broken_image, size: 48, color: Colors.white),
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 48,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -784,8 +840,11 @@ class _MessageBubbleState extends State<MessageBubble> {
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, size: 18,
-                    color: isMe ? Colors.white : cs.primary),
+                Icon(
+                  Icons.receipt_long,
+                  size: 18,
+                  color: isMe ? Colors.white : cs.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Invoice',
@@ -834,8 +893,11 @@ class _MessageBubbleState extends State<MessageBubble> {
             if (paid) ...[
               Row(
                 children: [
-                  Icon(Icons.check_circle, size: 16,
-                      color: isMe ? Colors.white : Colors.green),
+                  Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: isMe ? Colors.white : Colors.green,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Paid',
@@ -847,7 +909,8 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                 ],
               ),
-              if (invoice.txSignature != null && invoice.txSignature!.isNotEmpty) ...[
+              if (invoice.txSignature != null &&
+                  invoice.txSignature!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   'Tx: ${invoice.txSignature!.length > 16 ? '${invoice.txSignature!.substring(0, 8)}...${invoice.txSignature!.substring(invoice.txSignature!.length - 6)}' : invoice.txSignature}',
@@ -869,7 +932,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, size: 12, color: Colors.orange),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 12,
+                      color: Colors.orange,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -883,8 +950,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ],
                 ),
               ),
-            ]
-            else if (_invoicePaying)
+            ] else if (_invoicePaying)
               Row(
                 children: [
                   SizedBox(
@@ -995,16 +1061,18 @@ class _MessageBubbleState extends State<MessageBubble> {
         widget.onInvoicePaid?.call(messageId, updated.encode());
       }
       if (mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Paid: $txSig')),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text('Paid: $txSig')));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _invoicePaying = false);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
-            content: const Text('Payment error. If you already paid, press \"Sync\"'),
+            content: const Text(
+              'Payment error. If you already paid, press \"Sync\"',
+            ),
             action: SnackBarAction(
               label: 'Sync',
               onPressed: () => _syncInvoicePaid(),
@@ -1037,20 +1105,24 @@ class _MessageBubbleState extends State<MessageBubble> {
           final updated = parsed.copyWith(status: 'paid');
           widget.onInvoicePaid?.call(widget.message.id, updated.encode());
         }
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Status synced')),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(const SnackBar(content: Text('Status synced')));
       } else {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Server did not confirm payment. Check the status later.')),
+          const SnackBar(
+            content: Text(
+              'Server did not confirm payment. Check the status later.',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _invoicePaying = false);
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Sync error: $e')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text('Sync error: $e')));
     }
   }
 
@@ -1096,8 +1168,11 @@ class _MessageBubbleState extends State<MessageBubble> {
           children: [
             Row(
               children: [
-                Icon(redeemed ? Icons.receipt_long : Icons.card_giftcard,
-                    size: 18, color: Colors.white),
+                Icon(
+                  redeemed ? Icons.receipt_long : Icons.card_giftcard,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   redeemed ? 'Check redeemed' : 'Check',
@@ -1136,7 +1211,11 @@ class _MessageBubbleState extends State<MessageBubble> {
             if (redeemed)
               Row(
                 children: [
-                  const Icon(Icons.check_circle, size: 16, color: Colors.white70),
+                  const Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: Colors.white70,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     isCreator ? 'Your check has been redeemed' : 'Redeemed',
@@ -1152,7 +1231,10 @@ class _MessageBubbleState extends State<MessageBubble> {
               // Show wallet info
               if (_myWalletAddress != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -1162,7 +1244,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                       Icon(
                         _hasBuiltInWallet ? Icons.check_circle : Icons.warning,
                         size: 12,
-                        color: _hasBuiltInWallet ? Colors.green.shade200 : Colors.orange.shade200,
+                        color: _hasBuiltInWallet
+                            ? Colors.green.shade200
+                            : Colors.orange.shade200,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -1185,12 +1269,12 @@ class _MessageBubbleState extends State<MessageBubble> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _hasBuiltInWallet ? () => _redeemCheck(check) : null,
+                  onPressed: _hasBuiltInWallet
+                      ? () => _redeemCheck(check)
+                      : null,
                   icon: const Icon(Icons.redeem, size: 18),
                   label: Text(
-                    _hasBuiltInWallet
-                        ? 'Redeem'
-                        : 'Built-in wallet required',
+                    _hasBuiltInWallet ? 'Redeem' : 'Built-in wallet required',
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -1200,14 +1284,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                 ),
               ),
-            ]
-            else
+            ] else
               const Text(
                 'Awaiting redemption',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
             const SizedBox(height: 6),
             Container(
@@ -1218,7 +1298,11 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, size: 12, color: Colors.white70),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 12,
+                    color: Colors.white70,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -1244,16 +1328,18 @@ class _MessageBubbleState extends State<MessageBubble> {
     final appState = AppState.instance;
     final binding = await const WalletAccessProxy().getBinding();
     if (!binding.bound || binding.publicKey == null) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Connect a wallet first')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Connect a wallet first')));
       return;
     }
 
     if (!_hasBuiltInWallet) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(
-          content: Text('On-chain checks require a built-in wallet. Phantom does not support custom programs via deep link.'),
+          content: Text(
+            'On-chain checks require a built-in wallet. Phantom does not support custom programs via deep link.',
+          ),
           duration: Duration(seconds: 4),
         ),
       );
@@ -1275,13 +1361,25 @@ class _MessageBubbleState extends State<MessageBubble> {
           children: [
             Text('Amount: ${check.amount} ${check.currency}'),
             const SizedBox(height: 8),
-            const Text('Recipient:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(walletAddress, style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+            const Text(
+              'Recipient:',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Text(
+              walletAddress,
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirm'),
+          ),
         ],
       ),
     );
@@ -1294,7 +1392,9 @@ class _MessageBubbleState extends State<MessageBubble> {
 
       final creatorAddr = check.creatorAddress;
       if (creatorAddr == null || creatorAddr.isEmpty) {
-        throw Exception('Creator wallet address unknown — cannot redeem legacy check');
+        throw Exception(
+          'Creator wallet address unknown — cannot redeem legacy check',
+        );
       }
 
       final escrowService = CheckEscrowService(appState.solana.client);
@@ -1317,15 +1417,15 @@ class _MessageBubbleState extends State<MessageBubble> {
         txSignature: txSig,
       );
       widget.onInvoicePaid?.call(widget.message.id, updated.encode());
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Check redeemed: $txSig')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text('Check redeemed: $txSig')));
     } catch (e) {
       if (!mounted) return;
       setState(() => _invoicePaying = false);
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -1335,7 +1435,10 @@ class _MessageBubbleState extends State<MessageBubble> {
         : Duration(milliseconds: widget.message.voiceDurationMs ?? 0);
 
     final progress = totalDuration.inMilliseconds > 0
-        ? (_position.inMilliseconds / totalDuration.inMilliseconds).clamp(0.0, 1.0)
+        ? (_position.inMilliseconds / totalDuration.inMilliseconds).clamp(
+            0.0,
+            1.0,
+          )
         : 0.0;
 
     final displayDuration = _isPlaying || _position.inMilliseconds > 0
@@ -1368,12 +1471,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                 final height = _waveform[i] * 44.0 + 4.0;
                 final isPlayed = i <= playedIndex;
                 final barColor = isPlayed
-                    ? (isMe
-                        ? Colors.white
-                        : cs.primary)
+                    ? (isMe ? Colors.white : cs.primary)
                     : (isMe
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : cs.onSurfaceVariant.withValues(alpha: 0.3));
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : cs.onSurfaceVariant.withValues(alpha: 0.3));
 
                 return Expanded(
                   child: Center(
@@ -1442,8 +1543,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: (isMe ? Colors.white : cs.onSurface)
-                          .withValues(alpha: 0.9),
+                      color: (isMe ? Colors.white : cs.onSurface).withValues(
+                        alpha: 0.9,
+                      ),
                     ),
                   ),
                   Text(
@@ -1487,15 +1589,12 @@ class _MessageBubbleState extends State<MessageBubble> {
             final height = _waveform[i] * 28.0 + 4.0;
             final isPlayed = i <= playedIndex;
             final barColor = isPlayed
-                ? (isMe
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary)
+                ? (isMe ? Colors.white : Theme.of(context).colorScheme.primary)
                 : (isMe
-                    ? Colors.white.withValues(alpha: 0.3)
-                    : Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withValues(alpha: 0.3));
+                      ? Colors.white.withValues(alpha: 0.3)
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3));
 
             return Expanded(
               child: Center(
@@ -1536,10 +1635,15 @@ class _MessageBubbleState extends State<MessageBubble> {
                 loadingBuilder: (ctx, child, progress) {
                   if (progress == null) return child;
                   return const Center(
-                      child: CircularProgressIndicator(color: Colors.white));
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
                 },
                 errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.broken_image, size: 64, color: Colors.white54),
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: Colors.white54,
+                  ),
                 ),
               ),
             ),
@@ -1620,7 +1724,9 @@ class _MessageBubbleState extends State<MessageBubble> {
             : Border(left: BorderSide(color: barColor, width: 3)),
       ),
       child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
@@ -1676,7 +1782,9 @@ class _MessageBubbleState extends State<MessageBubble> {
               : Border(left: BorderSide(color: barColor, width: 3)),
         ),
         child: Column(
-          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
@@ -1697,8 +1805,9 @@ class _MessageBubbleState extends State<MessageBubble> {
               style: TextStyle(
                 fontSize: 11,
                 height: 1.2,
-                color: (isMe ? Colors.white60 : cs.onSurfaceVariant)
-                    .withValues(alpha: 0.7),
+                color: (isMe ? Colors.white60 : cs.onSurfaceVariant).withValues(
+                  alpha: 0.7,
+                ),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1720,7 +1829,9 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   Widget _buildStatusIcon(DeliveryStatus status, bool isMe, ColorScheme cs) {
-    final color = (isMe ? Colors.white70 : cs.onSurfaceVariant).withValues(alpha: 0.6);
+    final color = (isMe ? Colors.white70 : cs.onSurfaceVariant).withValues(
+      alpha: 0.6,
+    );
     switch (status) {
       case DeliveryStatus.sending:
         return SizedBox(
@@ -1737,7 +1848,12 @@ class _MessageBubbleState extends State<MessageBubble> {
     }
   }
 
-  Widget _buildHighlightedText(String text, String query, TextStyle style, bool isCurrent) {
+  Widget _buildHighlightedText(
+    String text,
+    String query,
+    TextStyle style,
+    bool isCurrent,
+  ) {
     final lowerText = text.toLowerCase();
     final lowerQuery = query.toLowerCase();
     final spans = <TextSpan>[];
@@ -1754,16 +1870,18 @@ class _MessageBubbleState extends State<MessageBubble> {
       if (index > start) {
         spans.add(TextSpan(text: text.substring(start, index), style: style));
       }
-      spans.add(TextSpan(
-        text: text.substring(index, index + query.length),
-        style: style.copyWith(
-          backgroundColor: isCurrent
-              ? const Color(0xFFFFEB3B)
-              : const Color(0xFFFFEB3B).withValues(alpha: 0.5),
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + query.length),
+          style: style.copyWith(
+            backgroundColor: isCurrent
+                ? const Color(0xFFFFEB3B)
+                : const Color(0xFFFFEB3B).withValues(alpha: 0.5),
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ));
+      );
       start = index + query.length;
     }
 

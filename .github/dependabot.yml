@@ -1,0 +1,25 @@
+# Dependabot keeps dependencies current and opens security-aware PRs.
+#
+# After enabling, review the GitHub Security tab:
+#   - Dependabot alerts & security updates
+#   - Secret scanning (push protection recommended)
+#   - Code scanning (CodeQL is wired via .github/workflows/codeql.yml)
+
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - ci
+      - dependencies

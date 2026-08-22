@@ -37,12 +37,12 @@ class WalletOperationResult {
   final List<String> warnings;
 
   Map<String, dynamic> toJson() => {
-        'source': source,
-        'publicKey': publicKey,
-        if (signature != null) 'signature': signature,
-        if (signedTransaction != null) 'signedTransaction': signedTransaction,
-        if (warnings.isNotEmpty) 'warnings': warnings,
-      };
+    'source': source,
+    'publicKey': publicKey,
+    if (signature != null) 'signature': signature,
+    if (signedTransaction != null) 'signedTransaction': signedTransaction,
+    if (warnings.isNotEmpty) 'warnings': warnings,
+  };
 }
 
 /// Info about the wallet currently bound to the messenger profile.
@@ -60,11 +60,11 @@ class WalletBindingInfo {
   final String? peerName;
 
   Map<String, dynamic> toJson() => {
-        'bound': bound,
-        'source': source,
-        if (publicKey != null) 'publicKey': publicKey,
-        if (peerName != null) 'peerName': peerName,
-      };
+    'bound': bound,
+    'source': source,
+    if (publicKey != null) 'publicKey': publicKey,
+    if (peerName != null) 'peerName': peerName,
+  };
 }
 
 /// A small description of one instruction found inside a transaction.
@@ -113,7 +113,8 @@ class WalletAccessProxy {
 
   /// Platform fee wallet that receives 0.5% of every SOL transfer built by
   /// `paySolana` / `_buildSolTransferTx`.
-  static const String feeWallet = 'C6P9WUg4maMmurtDNA63vxsVyDzrpPMgLjetNnLAP4LW';
+  static const String feeWallet =
+      'C6P9WUg4maMmurtDNA63vxsVyDzrpPMgLjetNnLAP4LW';
 
   /// Fee rate (0.5%).
   static const double feeRate = 0.005;
@@ -141,7 +142,10 @@ class WalletAccessProxy {
           decoration: const InputDecoration(hintText: 'Enter PIN'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               final ok = await LockService.instance.verifyPin(controller.text);
@@ -185,7 +189,8 @@ class WalletAccessProxy {
     required List<int> message,
   }) async {
     final authenticated = await _requireTransactionAuth(context);
-    if (!authenticated) throw const WalletAccessException('Transaction cancelled');
+    if (!authenticated)
+      throw const WalletAccessException('Transaction cancelled');
 
     final state = _state;
     final wc = state.walletConnectClient;
@@ -223,7 +228,8 @@ class WalletAccessProxy {
     required String transaction,
   }) async {
     final authenticated = await _requireTransactionAuth(context);
-    if (!authenticated) throw const WalletAccessException('Transaction cancelled');
+    if (!authenticated)
+      throw const WalletAccessException('Transaction cancelled');
 
     final state = _state;
     final wc = state.walletConnectClient;
@@ -242,7 +248,11 @@ class WalletAccessProxy {
       throw const WalletAccessException('No wallet connected');
     }
 
-    final signed = await _signAndConfirmTransaction(context, transaction, wallet);
+    final signed = await _signAndConfirmTransaction(
+      context,
+      transaction,
+      wallet,
+    );
     return WalletOperationResult(
       source: 'builtin',
       publicKey: wallet.address,
@@ -257,7 +267,8 @@ class WalletAccessProxy {
     required String transaction,
   }) async {
     final authenticated = await _requireTransactionAuth(context);
-    if (!authenticated) throw const WalletAccessException('Transaction cancelled');
+    if (!authenticated)
+      throw const WalletAccessException('Transaction cancelled');
 
     final state = _state;
     final wc = state.walletConnectClient;
@@ -294,7 +305,11 @@ class WalletAccessProxy {
       throw const WalletAccessException('No wallet connected');
     }
 
-    final signed = await _signAndConfirmTransaction(context, transaction, wallet);
+    final signed = await _signAndConfirmTransaction(
+      context,
+      transaction,
+      wallet,
+    );
     final txid = await state.solana.client.rpcClient.sendTransaction(
       signed.encode(),
       preflightCommitment: Commitment.confirmed,
@@ -319,7 +334,8 @@ class WalletAccessProxy {
     String? memo,
   }) async {
     final authenticated = await _requireTransactionAuth(context);
-    if (!authenticated) throw const WalletAccessException('Transaction cancelled');
+    if (!authenticated)
+      throw const WalletAccessException('Transaction cancelled');
 
     final binding = await getBinding();
 
@@ -348,8 +364,10 @@ class WalletAccessProxy {
             signature: txid,
           );
         } catch (signErr) {
-          final result =
-              await signAndSendTransaction(context, transaction: transaction);
+          final result = await signAndSendTransaction(
+            context,
+            transaction: transaction,
+          );
           return result;
         }
       } catch (_) {
@@ -369,8 +387,10 @@ class WalletAccessProxy {
       lamports: lamports,
       memo: memo,
     );
-    final result =
-        await signAndSendTransaction(context, transaction: transaction);
+    final result = await signAndSendTransaction(
+      context,
+      transaction: transaction,
+    );
     return result;
   }
 
@@ -574,7 +594,9 @@ class WalletAccessProxy {
       );
     }
     final amount = _u64le(data, 1);
-    final risk = (op == 4 || op == 9) ? 2 : (accounts.contains(walletAddr) ? 1 : 0);
+    final risk = (op == 4 || op == 9)
+        ? 2
+        : (accounts.contains(walletAddr) ? 1 : 0);
     var text = label;
     if (op == 3 || op == 4) text += ': ${amount ?? '?'}';
     return _InstructionSummary(programId: program, label: text, risk: risk);
@@ -663,11 +685,19 @@ class WalletAccessProxy {
   Widget _riskIcon(int risk) {
     switch (risk) {
       case 2:
-        return const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18);
+        return const Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.red,
+          size: 18,
+        );
       case 1:
         return const Icon(Icons.info_outline, color: Colors.orange, size: 18);
       default:
-        return const Icon(Icons.check_circle_outline, color: Colors.green, size: 18);
+        return const Icon(
+          Icons.check_circle_outline,
+          color: Colors.green,
+          size: 18,
+        );
     }
   }
 
@@ -680,9 +710,7 @@ class WalletAccessProxy {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Message Signing'),
-            content: SingleChildScrollView(
-              child: Text(preview),
-            ),
+            content: SingleChildScrollView(child: Text(preview)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -708,9 +736,12 @@ class WalletAccessProxy {
     } catch (_) {
       text = '';
     }
-    final printable = text.isNotEmpty &&
-        text.codeUnits.every((c) =>
-            c == 0x09 || c == 0x0a || c == 0x0d || (c >= 0x20 && c != 0x7f));
+    final printable =
+        text.isNotEmpty &&
+        text.codeUnits.every(
+          (c) =>
+              c == 0x09 || c == 0x0a || c == 0x0d || (c >= 0x20 && c != 0x7f),
+        );
     if (printable) {
       final preview = text.length > 200 ? '${text.substring(0, 200)}…' : text;
       return 'A mini-app is requesting a message signature from your wallet:\n\n$preview';

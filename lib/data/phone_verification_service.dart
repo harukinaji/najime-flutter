@@ -136,7 +136,8 @@ class PhoneVerificationService {
         return 'Phone verification is not configured. '
             'Please contact support.';
       default:
-        if (e.message != null && e.message!.contains('CONFIGURATION_NOT_FOUND')) {
+        if (e.message != null &&
+            e.message!.contains('CONFIGURATION_NOT_FOUND')) {
           return 'Phone verification is not available. '
               'Please contact support or try again later.';
         }

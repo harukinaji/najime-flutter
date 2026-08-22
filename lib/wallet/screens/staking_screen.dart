@@ -121,8 +121,9 @@ class _StakingScreenState extends State<StakingScreen> {
     }
   }
 
-  String _short(String s) =>
-      s.length > 24 ? '${s.substring(0, 10)}...${s.substring(s.length - 8)}' : s;
+  String _short(String s) => s.length > 24
+      ? '${s.substring(0, 10)}...${s.substring(s.length - 8)}'
+      : s;
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +149,9 @@ class _StakingScreenState extends State<StakingScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Amount for staking',
                   prefixIcon: Icon(Icons.savings_outlined),
@@ -246,34 +248,37 @@ class _StakingScreenState extends State<StakingScreen> {
                   ),
                 )
               else
-                ..._stakes.map((s) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: s.active
-                              ? Colors.green.withValues(alpha: 0.15)
-                              : Colors.orange.withValues(alpha: 0.15),
-                          child: Icon(
-                            s.active ? Icons.check : Icons.schedule,
-                            color:
-                                s.active ? Colors.greenAccent : Colors.orange,
-                          ),
-                        ),
-                        title: Text(
-                          '${_solFormat.format(s.amountSol)} SOL',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          s.vote != null ? 'Validator: ${_short(s.vote!)}' : 'Validator: —',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          s.active ? 'active' : 'activating',
-                          style: const TextStyle(fontSize: 12),
+                ..._stakes.map(
+                  (s) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: s.active
+                            ? Colors.green.withValues(alpha: 0.15)
+                            : Colors.orange.withValues(alpha: 0.15),
+                        child: Icon(
+                          s.active ? Icons.check : Icons.schedule,
+                          color: s.active ? Colors.greenAccent : Colors.orange,
                         ),
                       ),
-                    )),
+                      title: Text(
+                        '${_solFormat.format(s.amountSol)} SOL',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        s.vote != null
+                            ? 'Validator: ${_short(s.vote!)}'
+                            : 'Validator: —',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Text(
+                        s.active ? 'active' : 'activating',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

@@ -117,7 +117,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     }
     if (!mounted) return;
     final duration = _videoController!.value.duration;
-    _progressController.duration = duration.inMilliseconds > 0 && !duration.isNegative
+    _progressController.duration =
+        duration.inMilliseconds > 0 && !duration.isNegative
         ? duration
         : const Duration(seconds: 10);
     _videoController!.play();
@@ -231,11 +232,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
             Positioned.fill(
               child: story.mediaType == StoryMediaType.image
                   ? Image.network(story.mediaPath, fit: BoxFit.contain)
-                  : _videoController != null && _videoController!.value.isInitialized
-                      ? VideoPlayer(_videoController!)
-                      : const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        ),
+                  : _videoController != null &&
+                        _videoController!.value.isInitialized
+                  ? VideoPlayer(_videoController!)
+                  : const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
             ),
             // Gradient overlay for UI readability
             Positioned(
@@ -309,7 +311,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                 left: 16,
                 right: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black38,
                     borderRadius: BorderRadius.circular(12),
@@ -321,12 +326,16 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                 ),
               ),
             // Viewers count for my own stories
-            if (story.userId == (AuthState.instance.username ?? '') && story.viewerIds.isNotEmpty)
+            if (story.userId == (AuthState.instance.username ?? '') &&
+                story.viewerIds.isNotEmpty)
               Positioned(
                 bottom: 80,
                 left: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black38,
                     borderRadius: BorderRadius.circular(16),
@@ -362,17 +371,17 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                     ),
                   )
                 : i == _storyIndex
-                    ? AnimatedBuilder(
-                        animation: _progressController,
-                        builder: (context, child) {
-                          return LinearProgressIndicator(
-                            value: _progressController.value,
-                            backgroundColor: Colors.transparent,
-                            valueColor: const AlwaysStoppedAnimation(Colors.white),
-                          );
-                        },
-                      )
-                    : null,
+                ? AnimatedBuilder(
+                    animation: _progressController,
+                    builder: (context, child) {
+                      return LinearProgressIndicator(
+                        value: _progressController.value,
+                        backgroundColor: Colors.transparent,
+                        valueColor: const AlwaysStoppedAnimation(Colors.white),
+                      );
+                    },
+                  )
+                : null,
           ),
         );
       }),

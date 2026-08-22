@@ -31,9 +31,10 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
       _signaturePreview = null;
     });
     try {
-      await context
-          .read<AppState>()
-          .connectExternalWallet(context, wallet: wallet);
+      await context.read<AppState>().connectExternalWallet(
+        context,
+        wallet: wallet,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -48,19 +49,20 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
       _signaturePreview = null;
     });
     try {
-      final message = 'Najime Wallet verification\nTimestamp: '
+      final message =
+          'Najime Wallet verification\nTimestamp: '
           '${DateTime.now().millisecondsSinceEpoch}';
-      final result = await context
-          .read<AppState>()
-          .signWithWalletConnect(message.codeUnits);
+      final result = await context.read<AppState>().signWithWalletConnect(
+        message.codeUnits,
+      );
       if (!mounted) return;
       setState(() {
         _signing = false;
         _signaturePreview = result.publicKey;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message signed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Message signed')));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -104,11 +106,7 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
     );
   }
 
-  Widget _buildPairing(
-    BuildContext context,
-    ColorScheme cs,
-    AppState state,
-  ) {
+  Widget _buildPairing(BuildContext context, ColorScheme cs, AppState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -223,13 +221,20 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.info_outline, size: 16, color: cs.onSurfaceVariant),
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: cs.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Signing happens in your wallet — '
                         'the private key is not transmitted.',
-                        style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -286,7 +291,9 @@ class _ConnectWalletScreenState extends State<ConnectWalletScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.edit_note),
-          label: Text(_signing ? 'Waiting for signature…' : 'Sign test message'),
+          label: Text(
+            _signing ? 'Waiting for signature…' : 'Sign test message',
+          ),
         ),
         const SizedBox(height: 10),
         OutlinedButton.icon(

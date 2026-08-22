@@ -33,10 +33,18 @@ class _CallsScreenState extends State<CallsScreen> {
 
       CallStatus status = CallStatus.answered;
       switch (c['status']) {
-        case 'missed': status = CallStatus.missed; break;
-        case 'incoming': status = CallStatus.incoming; break;
-        case 'outgoing': status = CallStatus.outgoing; break;
-        case 'answered': status = CallStatus.answered; break;
+        case 'missed':
+          status = CallStatus.missed;
+          break;
+        case 'incoming':
+          status = CallStatus.incoming;
+          break;
+        case 'outgoing':
+          status = CallStatus.outgoing;
+          break;
+        case 'answered':
+          status = CallStatus.answered;
+          break;
       }
 
       Duration? duration;
@@ -146,12 +154,21 @@ class _CallsScreenState extends State<CallsScreen> {
           final base64Data = call.contactAvatar!.split(',').last;
           final bytes = base64.decode(base64Data);
           return ClipOval(
-            child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+            ),
           );
         } catch (_) {}
       } else {
         return ClipOval(
-          child: Image.network(call.contactAvatar!, width: size, height: size, fit: BoxFit.cover,
+          child: Image.network(
+            call.contactAvatar!,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
             errorBuilder: (_, _, _) => _buildInitialAvatar(call, cs),
           ),
         );
@@ -191,17 +208,15 @@ class _CallsScreenState extends State<CallsScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Calls'),
-      ),
+      appBar: AppBar(title: const Text('Calls')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _calls.isEmpty
-              ? _buildEmptyState(cs)
-              : RefreshIndicator(
-                  onRefresh: _loadCalls,
-                  child: _buildGroupedList(cs),
-                ),
+          ? _buildEmptyState(cs)
+          : RefreshIndicator(
+              onRefresh: _loadCalls,
+              child: _buildGroupedList(cs),
+            ),
     );
   }
 
@@ -212,7 +227,13 @@ class _CallsScreenState extends State<CallsScreen> {
       grouped.putIfAbsent(section, () => []).add(call);
     }
 
-    final sectionOrder = ['Today', 'Yesterday', 'This Week', 'This Month', 'Older'];
+    final sectionOrder = [
+      'Today',
+      'Yesterday',
+      'This Week',
+      'This Month',
+      'Older',
+    ];
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 16),
@@ -220,8 +241,7 @@ class _CallsScreenState extends State<CallsScreen> {
         for (final section in sectionOrder)
           if (grouped.containsKey(section)) ...[
             _buildSectionHeader(section, cs),
-            for (final call in grouped[section]!)
-              _buildCallCard(call, cs),
+            for (final call in grouped[section]!) _buildCallCard(call, cs),
           ],
       ],
     );
@@ -276,7 +296,10 @@ class _CallsScreenState extends State<CallsScreen> {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: isVideo
                                   ? cs.primary.withValues(alpha: 0.12)
@@ -308,7 +331,11 @@ class _CallsScreenState extends State<CallsScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(_statusIcon(call.status), size: 14, color: statusCol),
+                          Icon(
+                            _statusIcon(call.status),
+                            size: 14,
+                            color: statusCol,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _statusLabel(call.status),
@@ -320,9 +347,20 @@ class _CallsScreenState extends State<CallsScreen> {
                           ),
                           if (call.duration != null) ...[
                             const SizedBox(width: 6),
-                            Container(width: 3, height: 3, decoration: BoxDecoration(color: cs.onSurfaceVariant, shape: BoxShape.circle)),
+                            Container(
+                              width: 3,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: cs.onSurfaceVariant,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                             const SizedBox(width: 6),
-                            Icon(Icons.timer_outlined, size: 12, color: cs.onSurfaceVariant),
+                            Icon(
+                              Icons.timer_outlined,
+                              size: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               _formatDuration(call.duration!),
@@ -384,10 +422,7 @@ class _CallsScreenState extends State<CallsScreen> {
           const SizedBox(height: 8),
           Text(
             'Start a call from your contacts',
-            style: TextStyle(
-              fontSize: 14,
-              color: cs.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
           ),
         ],
       ),

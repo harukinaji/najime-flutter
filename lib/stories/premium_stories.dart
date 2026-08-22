@@ -23,7 +23,8 @@ final premiumStories = [
       padding: const EdgeInsets.all(16),
       child: PremiumMessageCard(
         premiumInfo: _lockedInfo,
-        content: 'This is exclusive premium content that is locked behind a payment wall.',
+        content:
+            'This is exclusive premium content that is locked behind a payment wall.',
       ),
     ),
   ),

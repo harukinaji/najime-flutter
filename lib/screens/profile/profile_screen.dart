@@ -77,7 +77,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SettingsTile(
                     icon: Icons.link,
                     title: 'Connected Accounts',
-                    onTap: () => context.push('/home/profile/connected-accounts'),
+                    onTap: () =>
+                        context.push('/home/profile/connected-accounts'),
                   ),
                   SettingsTile(
                     icon: Icons.folder_outlined,
@@ -102,7 +103,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Divider(height: 1, indent: 16, endIndent: 16, color: cs.outlineVariant),
+            child: Divider(
+              height: 1,
+              indent: 16,
+              endIndent: 16,
+              color: cs.outlineVariant,
+            ),
           ),
           SliverToBoxAdapter(
             child: Column(
@@ -142,7 +148,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Divider(height: 1, indent: 16, endIndent: 16, color: cs.outlineVariant),
+            child: Divider(
+              height: 1,
+              indent: 16,
+              endIndent: 16,
+              color: cs.outlineVariant,
+            ),
           ),
           SliverToBoxAdapter(
             child: Column(

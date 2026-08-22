@@ -261,7 +261,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
     bool showStatus = false,
   }) {
     final isOnline =
-        contact.najiMeUserId != null && _onlineStatus[contact.najiMeUserId] == true;
+        contact.najiMeUserId != null &&
+        _onlineStatus[contact.najiMeUserId] == true;
     Widget? avatarImage;
 
     if (contact.najiMeAvatarUrl != null &&
@@ -316,10 +317,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       ? const Color(0xFF22C55E)
                       : const Color(0xFF787880),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: cs.surface,
-                    width: 2.5,
-                  ),
+                  border: Border.all(color: cs.surface, width: 2.5),
                 ),
               ),
             ),

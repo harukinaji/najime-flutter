@@ -73,7 +73,9 @@ class _NajiMeAppState extends State<NajiMeApp> with WidgetsBindingObserver {
                   color: Colors.black,
                   child: LockScreen(
                     onUnlocked: () {
-                      debugPrint('[App] onUnlocked called, setting _isLocked = false');
+                      debugPrint(
+                        '[App] onUnlocked called, setting _isLocked = false',
+                      );
                       setState(() => _isLocked = false);
                     },
                   ),

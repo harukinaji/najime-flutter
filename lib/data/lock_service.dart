@@ -40,7 +40,8 @@ class LockService {
   bool get isEnabled => _enabled;
   LockMethod get method => _method;
   bool get hasPin => _hasPin;
-  bool get canUseBiometric => _method == LockMethod.biometric || _method == LockMethod.both;
+  bool get canUseBiometric =>
+      _method == LockMethod.biometric || _method == LockMethod.both;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -106,7 +107,11 @@ class LockService {
 
   /// PBKDF2-HMAC-SHA256 key derivation over `pin + pepper` with a random salt.
   /// High iteration count makes offline brute-force of the 4-8 digit PIN slow.
-  Future<Uint8List> _deriveKey(String pin, Uint8List salt, Uint8List pepper) async {
+  Future<Uint8List> _deriveKey(
+    String pin,
+    Uint8List salt,
+    Uint8List pepper,
+  ) async {
     final pbkdf2 = crypto_lib.Pbkdf2(
       macAlgorithm: crypto_lib.Hmac.sha256(),
       iterations: _pbkdf2Iterations,
@@ -148,7 +153,9 @@ class LockService {
     final bytes = utf8.encode(pin) + salt;
     final hmacSha256 = Hmac(sha256, utf8.encode('najime_lock_key'));
     final digest = hmacSha256.convert(bytes);
-    final computedHex = digest.bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final computedHex = digest.bytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
     return _constantTimeEqualsString(computedHex, expectedHex);
   }
 
@@ -191,7 +198,10 @@ class LockService {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setInt(_keyFailedAttempts, _failedAttempts);
     if (_lockoutUntil != null) {
-      await _prefs!.setInt(_keyLockoutUntil, _lockoutUntil!.millisecondsSinceEpoch);
+      await _prefs!.setInt(
+        _keyLockoutUntil,
+        _lockoutUntil!.millisecondsSinceEpoch,
+      );
     } else {
       await _prefs!.remove(_keyLockoutUntil);
     }
@@ -259,32 +269,38 @@ class LockService {
       final canCheck = await _auth.canCheckBiometrics;
       final isSupported = await _auth.isDeviceSupported();
       final biometrics = await _auth.getAvailableBiometrics();
-      debugPrint('[LockService] canCheck=$canCheck, isSupported=$isSupported, biometrics=$biometrics');
+      debugPrint(
+        '[LockService] canCheck=$canCheck, isSupported=$isSupported, biometrics=$biometrics',
+      );
 
       if (!canCheck || !isSupported || biometrics.isEmpty) {
         debugPrint('[LockService] biometric not available on this device');
         return false;
       }
 
-      final result = await _auth.authenticate(
-        localizedReason: 'Unlock NajiMe',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-          useErrorDialogs: true,
-          sensitiveTransaction: true,
-        ),
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          debugPrint('[LockService] authenticate timed out after 10s');
-          return false;
-        },
-      );
+      final result = await _auth
+          .authenticate(
+            localizedReason: 'Unlock NajiMe',
+            options: const AuthenticationOptions(
+              stickyAuth: true,
+              biometricOnly: true,
+              useErrorDialogs: true,
+              sensitiveTransaction: true,
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              debugPrint('[LockService] authenticate timed out after 10s');
+              return false;
+            },
+          );
       debugPrint('[LockService] authenticateWithBiometric: result=$result');
       return result;
     } on PlatformException catch (e) {
-      debugPrint('[LockService] biometric PlatformException: ${e.code} - ${e.message}');
+      debugPrint(
+        '[LockService] biometric PlatformException: ${e.code} - ${e.message}',
+      );
       return false;
     } catch (e) {
       debugPrint('[LockService] biometric unexpected error: $e');

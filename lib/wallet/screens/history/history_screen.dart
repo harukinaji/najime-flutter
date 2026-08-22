@@ -27,9 +27,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final wallet = context.read<AppState>().wallet;
     if (wallet == null) return;
     final records = await context.read<AppState>().solana.getTransactionHistory(
-          wallet.address,
-          limit: 100,
-        );
+      wallet.address,
+      limit: 100,
+    );
     if (mounted) {
       setState(() {
         _records = records;
@@ -48,34 +48,34 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _records!.isEmpty
-                ? ListView(
-                    children: [
-                      const SizedBox(height: 120),
-                      Icon(Icons.history, size: 56, color: cs.onSurfaceVariant),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No transactions yet',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  )
-                : Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 760),
-                      child: ListView.separated(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _records!.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final record = _records![index];
-                          return _HistoryTile(record: record);
-                        },
-                      ),
-                    ),
+            ? ListView(
+                children: [
+                  const SizedBox(height: 120),
+                  Icon(Icons.history, size: 56, color: cs.onSurfaceVariant),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No transactions yet',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
+                ],
+              )
+            : Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _records!.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final record = _records![index];
+                      return _HistoryTile(record: record);
+                    },
+                  ),
+                ),
+              ),
       ),
     );
   }

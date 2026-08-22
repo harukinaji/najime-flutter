@@ -30,11 +30,7 @@ class PhoneNumberCard extends StatelessWidget {
                 color: cs.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.phone,
-                color: cs.primary,
-                size: 20,
-              ),
+              child: Icon(Icons.phone, color: cs.primary, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -43,10 +39,7 @@ class PhoneNumberCard extends StatelessWidget {
                 children: [
                   Text(
                     'Phone Number',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: cs.onSurfaceVariant,
-                    ),
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 2),
                   Row(
@@ -65,11 +58,7 @@ class PhoneNumberCard extends StatelessWidget {
                       ),
                       if (isVerified && phoneNumber != null) ...[
                         const SizedBox(width: 6),
-                        Icon(
-                          Icons.verified,
-                          color: cs.primary,
-                          size: 16,
-                        ),
+                        Icon(Icons.verified, color: cs.primary, size: 16),
                       ],
                     ],
                   ),
@@ -79,7 +68,9 @@ class PhoneNumberCard extends StatelessWidget {
             IconButton(
               onPressed: onEdit,
               icon: Icon(
-                phoneNumber != null ? Icons.edit_outlined : Icons.add_circle_outline,
+                phoneNumber != null
+                    ? Icons.edit_outlined
+                    : Icons.add_circle_outline,
                 color: cs.primary,
                 size: 22,
               ),

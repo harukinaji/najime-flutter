@@ -142,7 +142,10 @@ class CheckEscrowService {
     // ── Path A: Built-in wallet (has private key) ──
     if (wallet != null) {
       final signature = await wallet.keyPair.sign(compiled.toByteArray());
-      final signed = SignedTx(compiledMessage: compiled, signatures: [signature]);
+      final signed = SignedTx(
+        compiledMessage: compiled,
+        signatures: [signature],
+      );
       return _client.rpcClient.sendTransaction(
         signed.encode(),
         preflightCommitment: Commitment.confirmed,
@@ -156,7 +159,10 @@ class CheckEscrowService {
         List<int>.filled(64, 0),
         publicKey: feePayer,
       );
-      final unsigned = SignedTx(compiledMessage: compiled, signatures: [placeholder]);
+      final unsigned = SignedTx(
+        compiledMessage: compiled,
+        signatures: [placeholder],
+      );
       final txB58 = unsigned.encode();
 
       // Use signTransaction (not signAndSendTransaction — Phantom
@@ -187,7 +193,8 @@ class CheckEscrowService {
 
   static ByteArray _borshString(String s) {
     final bytes = Uint8List.fromList(utf8.encode(s));
-    final len = Uint8List(4)..buffer.asByteData().setUint32(0, bytes.length, Endian.little);
+    final len = Uint8List(4)
+      ..buffer.asByteData().setUint32(0, bytes.length, Endian.little);
     return ByteArray(Uint8List.fromList([...len, ...bytes]));
   }
 }

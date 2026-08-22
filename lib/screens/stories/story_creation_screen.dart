@@ -52,7 +52,8 @@ class _StoryCreationScreenState extends State<StoryCreationScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade300,
@@ -62,17 +63,26 @@ class _StoryCreationScreenState extends State<StoryCreationScreen> {
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
                 title: const Text('Take Photo'),
-                onTap: () { Navigator.pop(ctx); _pickMedia(ImageSource.camera); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickMedia(ImageSource.camera);
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
                 title: const Text('Choose from Gallery'),
-                onTap: () { Navigator.pop(ctx); _pickMedia(ImageSource.gallery); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickMedia(ImageSource.gallery);
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.videocam_outlined),
                 title: const Text('Record Video'),
-                onTap: () { Navigator.pop(ctx); _pickVideo(ImageSource.camera); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickVideo(ImageSource.camera);
+                },
               ),
             ],
           ),
@@ -117,7 +127,8 @@ class _StoryCreationScreenState extends State<StoryCreationScreen> {
               onPressed: _publishing ? null : _publish,
               child: _publishing
                   ? const SizedBox(
-                      width: 20, height: 20,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Share'),
@@ -129,7 +140,11 @@ class _StoryCreationScreenState extends State<StoryCreationScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add_photo_alternate_outlined, size: 80, color: cs.primary),
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 80,
+                    color: cs.primary,
+                  ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _showPicker,
@@ -150,7 +165,11 @@ class _StoryCreationScreenState extends State<StoryCreationScreen> {
                       child: _mediaType == StoryMediaType.image
                           ? Image.file(_mediaFile!, fit: BoxFit.contain)
                           : const Center(
-                              child: Icon(Icons.videocam, size: 64, color: Colors.white54),
+                              child: Icon(
+                                Icons.videocam,
+                                size: 64,
+                                color: Colors.white54,
+                              ),
                             ),
                     ),
                   ),

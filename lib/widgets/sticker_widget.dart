@@ -23,7 +23,12 @@ class StickerThumb extends StatefulWidget {
   final double? size;
   final BoxFit fit;
 
-  const StickerThumb({super.key, required this.url, this.size, this.fit = BoxFit.cover});
+  const StickerThumb({
+    super.key,
+    required this.url,
+    this.size,
+    this.fit = BoxFit.cover,
+  });
 
   @override
   State<StickerThumb> createState() => _StickerThumbState();
@@ -61,7 +66,10 @@ class _StickerThumbState extends State<StickerThumb> {
       if (res.statusCode == 200 && mounted) {
         final data = res.bodyBytes;
         StickerCache.instance.put(widget.url, data);
-        setState(() { _bytes = data; _loading = false; });
+        setState(() {
+          _bytes = data;
+          _loading = false;
+        });
       } else {
         if (mounted) setState(() => _loading = false);
       }
@@ -75,15 +83,24 @@ class _StickerThumbState extends State<StickerThumb> {
     if (_isVideo) {
       return Container(
         color: Colors.blue.withValues(alpha: 0.08),
-        child: Center(child: Icon(Icons.play_circle_outline,
-            size: widget.size != null ? widget.size! * 0.5 : 24, color: Colors.blue)),
+        child: Center(
+          child: Icon(
+            Icons.play_circle_outline,
+            size: widget.size != null ? widget.size! * 0.5 : 24,
+            color: Colors.blue,
+          ),
+        ),
       );
     }
 
     if (_isLottie) {
       if (_bytes != null) {
-        return Lottie.memory(_bytes!, fit: BoxFit.contain, repeat: true,
-            errorBuilder: (_, __, ___) => _ph());
+        return Lottie.memory(
+          _bytes!,
+          fit: BoxFit.contain,
+          repeat: true,
+          errorBuilder: (_, __, ___) => _ph(),
+        );
       }
       if (_loading) {
         return _ph();
@@ -98,25 +115,43 @@ class _StickerThumbState extends State<StickerThumb> {
     if (url.startsWith('data:image')) {
       try {
         final bytes = base64Decode(url.split(',').last);
-        return Image.memory(bytes, fit: widget.fit, gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => _broken());
+        return Image.memory(
+          bytes,
+          fit: widget.fit,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _broken(),
+        );
       } catch (_) {}
       return _broken();
     }
-    return Image.network(url, fit: widget.fit, gaplessPlayback: true,
-        errorBuilder: (_, __, ___) => _broken());
+    return Image.network(
+      url,
+      fit: widget.fit,
+      gaplessPlayback: true,
+      errorBuilder: (_, __, ___) => _broken(),
+    );
   }
 
   Widget _ph() => Container(
     color: Colors.purple.withValues(alpha: 0.08),
-    child: Center(child: Icon(Icons.animation,
-        size: widget.size != null ? widget.size! * 0.5 : 24, color: Colors.purple)),
+    child: Center(
+      child: Icon(
+        Icons.animation,
+        size: widget.size != null ? widget.size! * 0.5 : 24,
+        color: Colors.purple,
+      ),
+    ),
   );
 
   Widget _broken() => Container(
     color: Colors.grey[200],
-    child: Center(child: Icon(Icons.broken_image,
-        size: widget.size != null ? widget.size! * 0.5 : 24, color: Colors.grey)),
+    child: Center(
+      child: Icon(
+        Icons.broken_image,
+        size: widget.size != null ? widget.size! * 0.5 : 24,
+        color: Colors.grey,
+      ),
+    ),
   );
 }
 
@@ -127,7 +162,13 @@ class StickerWidget extends StatefulWidget {
   final double? height;
   final BoxFit fit;
 
-  const StickerWidget({super.key, required this.url, this.width, this.height, this.fit = BoxFit.contain});
+  const StickerWidget({
+    super.key,
+    required this.url,
+    this.width,
+    this.height,
+    this.fit = BoxFit.contain,
+  });
 
   @override
   State<StickerWidget> createState() => _StickerWidgetState();
@@ -167,7 +208,11 @@ class _StickerWidgetState extends State<StickerWidget> {
       if (res.statusCode == 200) {
         final data = res.bodyBytes;
         StickerCache.instance.put(widget.url, data);
-        if (mounted) setState(() { _lottieBytes = data; _loadingLottie = false; });
+        if (mounted)
+          setState(() {
+            _lottieBytes = data;
+            _loadingLottie = false;
+          });
       } else {
         if (mounted) setState(() => _loadingLottie = false);
       }
@@ -179,20 +224,43 @@ class _StickerWidgetState extends State<StickerWidget> {
   @override
   Widget build(BuildContext context) {
     if (_isLottie) return _buildLottie();
-    if (_isVideo) return _VideoSticker(url: _fullUrl, width: widget.width, height: widget.height);
+    if (_isVideo)
+      return _VideoSticker(
+        url: _fullUrl,
+        width: widget.width,
+        height: widget.height,
+      );
     return _buildImage();
   }
 
   Widget _buildLottie() {
     if (_lottieBytes == null) {
-      return SizedBox(width: widget.width ?? 160, height: widget.height ?? 160,
-          child: _loadingLottie
-              ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
-              : _brokenIcon());
+      return SizedBox(
+        width: widget.width ?? 160,
+        height: widget.height ?? 160,
+        child: _loadingLottie
+            ? const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : _brokenIcon(),
+      );
     }
-    return SizedBox(width: widget.width ?? 160, height: widget.height ?? 160,
-        child: Lottie.memory(_lottieBytes!, width: widget.width, height: widget.height,
-            fit: widget.fit, repeat: true, errorBuilder: (_, __, ___) => _brokenIcon()));
+    return SizedBox(
+      width: widget.width ?? 160,
+      height: widget.height ?? 160,
+      child: Lottie.memory(
+        _lottieBytes!,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        repeat: true,
+        errorBuilder: (_, __, ___) => _brokenIcon(),
+      ),
+    );
   }
 
   Widget _buildImage() {
@@ -200,24 +268,50 @@ class _StickerWidgetState extends State<StickerWidget> {
     if (url.startsWith('data:image')) {
       try {
         final bytes = base64Decode(url.split(',').last);
-        return Image.memory(bytes, width: widget.width, height: widget.height,
-            fit: widget.fit, gaplessPlayback: true, errorBuilder: (_, __, ___) => _brokenIcon());
+        return Image.memory(
+          bytes,
+          width: widget.width,
+          height: widget.height,
+          fit: widget.fit,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _brokenIcon(),
+        );
       } catch (_) {}
       return _brokenIcon();
     }
-    return Image.network(url, width: widget.width, height: widget.height,
-        fit: widget.fit, gaplessPlayback: true,
-        loadingBuilder: (ctx, child, progress) {
-          if (progress == null) return child;
-          return SizedBox(width: widget.width ?? 160, height: widget.height ?? 160,
-              child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
-        },
-        errorBuilder: (_, __, ___) => _brokenIcon());
+    return Image.network(
+      url,
+      width: widget.width,
+      height: widget.height,
+      fit: widget.fit,
+      gaplessPlayback: true,
+      loadingBuilder: (ctx, child, progress) {
+        if (progress == null) return child;
+        return SizedBox(
+          width: widget.width ?? 160,
+          height: widget.height ?? 160,
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+      },
+      errorBuilder: (_, __, ___) => _brokenIcon(),
+    );
   }
 
   Widget _brokenIcon() {
-    return Container(width: widget.width ?? 160, height: widget.height ?? 160,
-        color: Colors.grey[200], child: const Center(child: Icon(Icons.broken_image, size: 32, color: Colors.grey)));
+    return Container(
+      width: widget.width ?? 160,
+      height: widget.height ?? 160,
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.broken_image, size: 32, color: Colors.grey),
+      ),
+    );
   }
 }
 
@@ -260,29 +354,74 @@ class _VideoStickerState extends State<_VideoSticker> {
       _controller!
         ..setLooping(true)
         ..setVolume(0)
-        ..initialize().then((_) {
-          if (mounted) setState(() { _ok = true; _loading = false; _controller!.play(); });
-        }).catchError((_) {
-          if (mounted) setState(() { _err = true; _loading = false; });
-        });
+        ..initialize()
+            .then((_) {
+              if (mounted)
+                setState(() {
+                  _ok = true;
+                  _loading = false;
+                  _controller!.play();
+                });
+            })
+            .catchError((_) {
+              if (mounted)
+                setState(() {
+                  _err = true;
+                  _loading = false;
+                });
+            });
     } catch (_) {
-      if (mounted) setState(() { _err = true; _loading = false; });
+      if (mounted)
+        setState(() {
+          _err = true;
+          _loading = false;
+        });
     }
   }
 
   @override
-  void dispose() { _controller?.dispose(); super.dispose(); }
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_err) return Container(width: widget.width ?? 160, height: widget.height ?? 160,
-        color: Colors.grey[200], child: const Center(child: Icon(Icons.broken_image, size: 32, color: Colors.grey)));
-    if (!_ok) return SizedBox(width: widget.width ?? 160, height: widget.height ?? 160,
-        child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
-    return SizedBox(width: widget.width ?? 160, height: widget.height ?? 160,
-        child: ClipRRect(borderRadius: BorderRadius.circular(8),
-            child: FittedBox(fit: BoxFit.cover,
-                child: SizedBox(width: _controller!.value.size.width, height: _controller!.value.size.height,
-                    child: VideoPlayer(_controller!)))));
+    if (_err)
+      return Container(
+        width: widget.width ?? 160,
+        height: widget.height ?? 160,
+        color: Colors.grey[200],
+        child: const Center(
+          child: Icon(Icons.broken_image, size: 32, color: Colors.grey),
+        ),
+      );
+    if (!_ok)
+      return SizedBox(
+        width: widget.width ?? 160,
+        height: widget.height ?? 160,
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    return SizedBox(
+      width: widget.width ?? 160,
+      height: widget.height ?? 160,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _controller!.value.size.width,
+            height: _controller!.value.size.height,
+            child: VideoPlayer(_controller!),
+          ),
+        ),
+      ),
+    );
   }
 }

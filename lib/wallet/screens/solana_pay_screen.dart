@@ -42,7 +42,9 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
     final info = payService.tryParse(_urlController.text);
     setState(() {
       _info = info;
-      _error = info == null ? 'This doesn\'t look like a Solana Pay link.' : null;
+      _error = info == null
+          ? 'This doesn\'t look like a Solana Pay link.'
+          : null;
       _resultSignature = null;
     });
   }
@@ -73,11 +75,12 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
     try {
       final service = _payService ??= SolanaPayService(state.solana.client);
       final signature = switch (info.type) {
-        SolanaPayType.transfer => await service.payWithSol(wallet: wallet, info: info),
-        SolanaPayType.transactionRequest => await service.processTransactionRequest(
-            wallet: wallet,
-            info: info,
-          ),
+        SolanaPayType.transfer => await service.payWithSol(
+          wallet: wallet,
+          info: info,
+        ),
+        SolanaPayType.transactionRequest =>
+          await service.processTransactionRequest(wallet: wallet, info: info),
       };
       if (mounted) {
         setState(() => _resultSignature = signature);
@@ -183,12 +186,18 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
                     children: [
                       const Text(
                         'Payment sent',
-                        style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       SelectableText(
                         _resultSignature!,
-                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -232,7 +241,8 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
               const SizedBox(height: 8),
               _DetailRow(
                 label: 'Amount',
-                value: '${_formatAmount(info.amount!)} ${info.splToken == null ? 'SOL' : 'SPL'}',
+                value:
+                    '${_formatAmount(info.amount!)} ${info.splToken == null ? 'SOL' : 'SPL'}',
               ),
             ],
             if (info.memo != null) ...[
@@ -247,12 +257,18 @@ class _SolanaPayScreenState extends State<SolanaPayScreen> {
 
   String _formatAmount(Decimal amount) {
     final s = amount.toString();
-    return s.contains('.') ? s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '') : s;
+    return s.contains('.')
+        ? s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '')
+        : s;
   }
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value, this.selectable = false});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.selectable = false,
+  });
 
   final String label;
   final String value;

@@ -109,8 +109,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
     final isGroup = data['is_group'] == true;
     final contactId = data['contact_id'] as String?;
     if (chatId != null && mounted) {
-      openChat(context,
-          chatId: chatId, contactId: contactId, isGroup: isGroup);
+      openChat(context, chatId: chatId, contactId: contactId, isGroup: isGroup);
     }
   }
 
@@ -160,7 +159,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
             senderId: m['sender_id'] as String? ?? '',
             content: m['content'] as String? ?? '',
             type: _parseMessageType(m['type'] as String?),
-            timestamp: DateTime.tryParse(m['timestamp'] as String? ?? '') ?? DateTime.now(),
+            timestamp:
+                DateTime.tryParse(m['timestamp'] as String? ?? '') ??
+                DateTime.now(),
             isMe: m['is_me'] as bool? ?? false,
             fileName: m['file_name'] as String?,
             fileSize: m['file_size'] as String?,
@@ -177,9 +178,12 @@ class _ChatsScreenState extends State<ChatsScreen> {
           isOnline: c['is_online'] as bool? ?? false,
           isGroup: c['is_group'] as bool? ?? false,
           participantIds: (c['participant_ids'] as List?)?.cast<String>() ?? [],
-          lastActivity: DateTime.tryParse(c['last_activity'] as String? ?? '') ?? DateTime.now(),
+          lastActivity:
+              DateTime.tryParse(c['last_activity'] as String? ?? '') ??
+              DateTime.now(),
           hasPublishedStory: c['has_story'] as bool? ?? false,
-          isMuted: (c['is_muted'] as bool? ?? false) || mutedChats.contains(chatId),
+          isMuted:
+              (c['is_muted'] as bool? ?? false) || mutedChats.contains(chatId),
         );
       }).toList();
       // Save to cache
@@ -257,7 +261,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
       final usersFuture = ApiService.searchUsers(q);
       final groupsFuture = ApiService.searchGroups(q);
       final messagesFuture = ApiService.searchMessages(q);
-      final results = await Future.wait([usersFuture, groupsFuture, messagesFuture]);
+      final results = await Future.wait([
+        usersFuture,
+        groupsFuture,
+        messagesFuture,
+      ]);
       if (!mounted) return;
       _searchQuery = q;
       _searchLoading = false;
@@ -368,7 +376,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_searchResults.isEmpty && _groupSearchResults.isEmpty && _messageSearchResults.isEmpty) {
+    if (_searchResults.isEmpty &&
+        _groupSearchResults.isEmpty &&
+        _messageSearchResults.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -468,8 +478,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
               _groupSearchResults = [];
               _messageSearchResults = [];
               _isSearching = false;
-              openChat(context,
-                  chatId: result['chat_id'], contactId: user.id);
+              openChat(context, chatId: result['chat_id'], contactId: user.id);
             }
           },
           contentPadding: const EdgeInsets.symmetric(
@@ -498,7 +507,10 @@ class _ChatsScreenState extends State<ChatsScreen> {
               if (user.isBot) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(4),
@@ -570,8 +582,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
         ),
         clipBehavior: Clip.antiAlias,
         child: avatarUrl != null && avatarUrl.isNotEmpty
-            ? Image.network(avatarUrl, fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _buildGroupIcon(cs))
+            ? Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _buildGroupIcon(cs),
+              )
             : _buildGroupIcon(cs),
       ),
       title: Row(
@@ -614,9 +629,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
   }
 
   Widget _buildGroupIcon(ColorScheme cs) {
-    return Center(
-      child: Icon(Icons.group, color: cs.primary, size: 22),
-    );
+    return Center(child: Icon(Icons.group, color: cs.primary, size: 22));
   }
 
   Widget _buildMessageSearchTile(Map<String, dynamic> result, ColorScheme cs) {
@@ -632,7 +645,8 @@ class _ChatsScreenState extends State<ChatsScreen> {
         final dt = DateTime.parse(timestamp);
         final now = DateTime.now();
         if (dt.day == now.day && dt.month == now.month && dt.year == now.year) {
-          timeStr = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+          timeStr =
+              '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
         } else {
           timeStr = '${dt.day}/${dt.month}';
         }
@@ -828,12 +842,21 @@ class _ChatsScreenState extends State<ChatsScreen> {
           final base64Data = auth.avatarUrl!.split(',').last;
           final bytes = base64.decode(base64Data);
           avatarImage = ClipOval(
-            child: Image.memory(bytes, width: 56, height: 56, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: 56,
+              height: 56,
+              fit: BoxFit.cover,
+            ),
           );
         } catch (_) {}
       } else {
         avatarImage = ClipOval(
-          child: Image.network(auth.avatarUrl!, width: 56, height: 56, fit: BoxFit.cover,
+          child: Image.network(
+            auth.avatarUrl!,
+            width: 56,
+            height: 56,
+            fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         );
@@ -863,12 +886,15 @@ class _ChatsScreenState extends State<ChatsScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: hasStories ? const Color(0xFF18A7B5) : cs.outlineVariant,
+                        color: hasStories
+                            ? const Color(0xFF18A7B5)
+                            : cs.outlineVariant,
                         width: hasStories ? 2.5 : 2,
                       ),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: avatarImage ??
+                    child:
+                        avatarImage ??
                         Center(
                           child: Icon(
                             Icons.person,
@@ -942,9 +968,13 @@ class _ChatsScreenState extends State<ChatsScreen> {
                 clipBehavior: Clip.antiAlias,
                 child: hasAvatar
                     ? ClipOval(
-                        child: Image.network(story.userAvatar!, width: 56, height: 56,
+                        child: Image.network(
+                          story.userAvatar!,
+                          width: 56,
+                          height: 56,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _storyAvatarFallback(story, cs),
+                          errorBuilder: (_, _, _) =>
+                              _storyAvatarFallback(story, cs),
                         ),
                       )
                     : _storyAvatarFallback(story, cs),
@@ -989,12 +1019,14 @@ class _ChatsScreenState extends State<ChatsScreen> {
       userIds.insert(0, myId);
     }
     if (!userIds.contains(userId)) return;
-    context.push('/story/view', extra: {
-      'initialUserId': userId,
-      'userIds': userIds,
-    }).then((_) {
-      if (mounted) setState(() {});
-    });
+    context
+        .push(
+          '/story/view',
+          extra: {'initialUserId': userId, 'userIds': userIds},
+        )
+        .then((_) {
+          if (mounted) setState(() {});
+        });
   }
 
   Widget _buildUserAvatar(
@@ -1057,10 +1089,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF22C55E),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: cs.surface,
-                  width: 2,
-                ),
+                border: Border.all(color: cs.surface, width: 2),
               ),
             ),
           ),
@@ -1103,10 +1132,12 @@ class _ChatsScreenState extends State<ChatsScreen> {
         final chat = _filteredChats[index];
         return ChatTile(
           chat: chat,
-          onTap: () => openChat(context,
-              chatId: chat.id,
-              contactId: chat.contactId,
-              isGroup: chat.isGroup),
+          onTap: () => openChat(
+            context,
+            chatId: chat.id,
+            contactId: chat.contactId,
+            isGroup: chat.isGroup,
+          ),
           onLongPress: () => _showChatOptions(chat),
         );
       },
@@ -1135,13 +1166,17 @@ class _ChatsScreenState extends State<ChatsScreen> {
               ),
               ListTile(
                 leading: Icon(
-                  chat.isMuted ? Icons.notifications_active : Icons.notifications_off,
+                  chat.isMuted
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
                   color: chat.isMuted ? Colors.green : null,
                 ),
                 title: Text(chat.isMuted ? 'Unmute' : 'Mute'),
-                subtitle: Text(chat.isMuted
-                    ? 'Turn on notifications'
-                    : 'Turn off notifications'),
+                subtitle: Text(
+                  chat.isMuted
+                      ? 'Turn on notifications'
+                      : 'Turn off notifications',
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _toggleChatMute(chat);
@@ -1180,7 +1215,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(newMutedState ? 'Notifications muted' : 'Notifications unmuted'),
+          content: Text(
+            newMutedState ? 'Notifications muted' : 'Notifications unmuted',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );

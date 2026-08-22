@@ -14,6 +14,22 @@ env:
   FLUTTER_VERSION: '3.44.3'
 
 jobs:
+  # ── Format (enforced) ─────────────────────────────────────────────
+  format:
+    name: Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - name: dart format --set-exit-if-changed
+        run: dart format --output=none --set-exit-if-changed lib test
+
+  # ── Static analysis ───────────────────────────────────────────────
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
@@ -26,11 +42,15 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      # analysis_options.yaml rules are enforced here. For grant / mainnet
+      # readiness switch to `--fatal-infos` after the remaining style lints
+      # are cleaned up (currently ~170 non-fatal info/warning entries).
       - name: Analyze
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
+  # ── Unit tests + coverage ─────────────────────────────────────────
   test:
-    name: Test
+    name: Test (unit + wallet)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,17 +63,69 @@ jobs:
         run: flutter pub get
       - name: Run tests
         run: flutter test --coverage
-      - name: Upload coverage report
+      - name: Upload coverage (lcov)
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: coverage
+          name: coverage-lcov
           path: coverage/lcov.info
           if-no-files-found: ignore
 
-  build-android:
-    name: Build Android (release)
+  # ── Coverage publishing (needs CODECOV_TOKEN, gated at job level; secrets
+  #    are NOT allowed in step-level `if`) ──────────────────────────
+  publish-coverage:
+    name: Publish coverage to Codecov
     runs-on: ubuntu-latest
+    needs: test
+    if: ${{ secrets.CODECOV_TOKEN != '' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-lcov
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage-lcov/lcov.info
+          fail_ci_if_error: false
+
+  # ── Secret scanning (gitleaks) ────────────────────────────────────
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    # Needs `contents: read`; a PAT or `security-events: write` is required
+    # for SARIF upload into the security tab.
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Dependency review (PRs only) ──────────────────────────────────
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: true
+
+  # ── Android release build (main pushes only, keeps PRs fast) ───────
+  build-android:
+    name: Build Android (release APK + AAB)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

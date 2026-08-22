@@ -18,9 +18,9 @@ class AddressChip extends StatelessWidget {
         if (onCopy != null) {
           onCopy!();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Address copied')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Address copied')));
         }
       },
       borderRadius: BorderRadius.circular(20),

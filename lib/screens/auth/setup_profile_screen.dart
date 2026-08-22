@@ -60,9 +60,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     _nameController = TextEditingController(
       text: widget.displayName ?? widget.suggestedNickname,
     );
-    _usernameController = TextEditingController(
-      text: widget.suggestedNickname,
-    );
+    _usernameController = TextEditingController(text: widget.suggestedNickname);
     _usernameController.addListener(_onUsernameChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _generateAndCheckUsername();
@@ -146,15 +144,15 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
   Future<void> _continue() async {
     if (_displayName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter your name')));
       return;
     }
     if (_username.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a nickname')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a nickname')));
       return;
     }
     if (_username.length < 3) {
@@ -222,7 +220,13 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _loading || _checkingUsername || _usernameAvailable == false || _username.length < 3 ? null : _continue,
+                  onPressed:
+                      _loading ||
+                          _checkingUsername ||
+                          _usernameAvailable == false ||
+                          _username.length < 3
+                      ? null
+                      : _continue,
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF18A7B5),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -280,18 +284,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
         const SizedBox(height: 8),
         Text(
           widget.email,
-          style: TextStyle(
-            fontSize: 14,
-            color: cs.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Text(
           'Choose your display name, nickname, and avatar',
-          style: TextStyle(
-            fontSize: 13,
-            color: cs.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
         ),
       ],
     );
@@ -318,7 +316,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       ? LinearGradient(
                           colors: [
                             _avatarColors[_selectedColorIndex],
-                            _avatarColors[_selectedColorIndex].withValues(alpha: 0.7),
+                            _avatarColors[_selectedColorIndex].withValues(
+                              alpha: 0.7,
+                            ),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -408,7 +408,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: _avatarColors[index].withValues(alpha: 0.4),
+                              color: _avatarColors[index].withValues(
+                                alpha: 0.4,
+                              ),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -466,22 +468,22 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 suffixIcon: _username.isEmpty || _username.length < 3
                     ? null
                     : _checkingUsername
-                        ? Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          )
-                        : _usernameAvailable == true
-                            ? Icon(Icons.check_circle, color: Colors.green)
-                            : _usernameAvailable == false
-                                ? Icon(Icons.cancel, color: Colors.red)
-                                : null,
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      )
+                    : _usernameAvailable == true
+                    ? Icon(Icons.check_circle, color: Colors.green)
+                    : _usernameAvailable == false
+                    ? Icon(Icons.cancel, color: Colors.red)
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -491,8 +493,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed:
-                    _generatingNickname ? null : _generateAndCheckUsername,
+                onPressed: _generatingNickname
+                    ? null
+                    : _generateAndCheckUsername,
                 icon: _generatingNickname
                     ? const SizedBox(
                         width: 16,

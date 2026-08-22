@@ -11,10 +11,7 @@ class ChatFolder {
     this.isDefault = false,
   });
 
-  ChatFolder copyWith({
-    String? name,
-    List<String>? chatIds,
-  }) {
+  ChatFolder copyWith({String? name, List<String>? chatIds}) {
     return ChatFolder(
       id: id,
       name: name ?? this.name,

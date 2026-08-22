@@ -22,19 +22,19 @@ class TokenInfo {
   bool get isSol => mint == solMint;
 
   factory TokenInfo.fromJson(Map<String, dynamic> json) => TokenInfo(
-        mint: json['mint'] as String,
-        symbol: json['symbol'] as String,
-        name: json['name'] as String,
-        decimals: json['decimals'] as int,
-        isCustom: true,
-      );
+    mint: json['mint'] as String,
+    symbol: json['symbol'] as String,
+    name: json['name'] as String,
+    decimals: json['decimals'] as int,
+    isCustom: true,
+  );
 
   Map<String, dynamic> toJson() => {
-        'mint': mint,
-        'symbol': symbol,
-        'name': name,
-        'decimals': decimals,
-      };
+    'mint': mint,
+    'symbol': symbol,
+    'name': name,
+    'decimals': decimals,
+  };
 }
 
 const TokenInfo kSolToken = TokenInfo(

@@ -10,10 +10,7 @@ import '../../models/message.dart';
 class ForwardMessageScreen extends StatefulWidget {
   final MessageModel messageToForward;
 
-  const ForwardMessageScreen({
-    super.key,
-    required this.messageToForward,
-  });
+  const ForwardMessageScreen({super.key, required this.messageToForward});
 
   @override
   State<ForwardMessageScreen> createState() => _ForwardMessageScreenState();
@@ -52,7 +49,9 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
             senderId: m['sender_id'] as String? ?? '',
             content: m['content'] as String? ?? '',
             type: _parseMessageType(m['type'] as String?),
-            timestamp: DateTime.tryParse(m['timestamp'] as String? ?? '') ?? DateTime.now(),
+            timestamp:
+                DateTime.tryParse(m['timestamp'] as String? ?? '') ??
+                DateTime.now(),
             isMe: m['is_me'] as bool? ?? false,
           );
         }
@@ -66,7 +65,9 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
           isOnline: c['is_online'] as bool? ?? false,
           isGroup: c['is_group'] as bool? ?? false,
           participantIds: (c['participant_ids'] as List?)?.cast<String>() ?? [],
-          lastActivity: DateTime.tryParse(c['last_activity'] as String? ?? '') ?? DateTime.now(),
+          lastActivity:
+              DateTime.tryParse(c['last_activity'] as String? ?? '') ??
+              DateTime.now(),
         );
       }).toList();
     } catch (e) {
@@ -110,10 +111,10 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
     final type = msg.type == MessageType.image
         ? 'image'
         : msg.type == MessageType.voice
-            ? 'voice'
-            : msg.type == MessageType.file
-                ? 'file'
-                : 'text';
+        ? 'voice'
+        : msg.type == MessageType.file
+        ? 'file'
+        : 'text';
 
     final result = await ApiService.forwardMessage(
       sourceMessageId: msg.id,
@@ -171,13 +172,20 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
                 cursorColor: cs.primary,
                 decoration: InputDecoration(
                   hintText: 'Search chats...',
-                  hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
+                  hintStyle: TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 15,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
                   ),
-                  prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant, size: 20),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: cs.onSurfaceVariant,
+                    size: 20,
+                  ),
                 ),
                 onChanged: (q) => setState(() => _searchQuery = q.trim()),
               ),
@@ -188,20 +196,20 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _filteredChats.isEmpty
-              ? Center(
-                  child: Text(
-                    'No chats found',
-                    style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _filteredChats.length,
-                  itemBuilder: (context, index) {
-                    final chat = _filteredChats[index];
-                    return _buildChatTile(chat, cs);
-                  },
-                ),
+          ? Center(
+              child: Text(
+                'No chats found',
+                style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _filteredChats.length,
+              itemBuilder: (context, index) {
+                final chat = _filteredChats[index];
+                return _buildChatTile(chat, cs);
+              },
+            ),
     );
   }
 
@@ -222,7 +230,12 @@ class _ForwardMessageScreenState extends State<ForwardMessageScreen> {
         }
         if (bytes != null) {
           avatarImage = ClipOval(
-            child: Image.memory(bytes, width: 44, height: 44, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: 44,
+              height: 44,
+              fit: BoxFit.cover,
+            ),
           );
         }
       } else {

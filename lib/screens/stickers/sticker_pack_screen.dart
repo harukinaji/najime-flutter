@@ -44,8 +44,9 @@ class _StickerPackScreenState extends State<StickerPackScreen>
     if (!mounted) return;
     setState(() {
       _myPacks = myData.map((p) => StickerPack.fromJson(p)).toList();
-      _installedPacks =
-          installedData.map((p) => StickerPack.fromJson(p)).toList();
+      _installedPacks = installedData
+          .map((p) => StickerPack.fromJson(p))
+          .toList();
       _loading = false;
     });
   }
@@ -70,7 +71,10 @@ class _StickerPackScreenState extends State<StickerPackScreen>
               const SizedBox(height: 4),
               Text(
                 'e.g. https://t.me/addstickers/PackName',
-                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -126,7 +130,9 @@ class _StickerPackScreenState extends State<StickerPackScreen>
                         _loadPacks();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to import pack')),
+                          const SnackBar(
+                            content: Text('Failed to import pack'),
+                          ),
                         );
                       }
                     },
@@ -199,10 +205,8 @@ class _StickerPackScreenState extends State<StickerPackScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => _StickerPackDetailScreen(
-          pack: pack,
-          onUpdated: _loadPacks,
-        ),
+        builder: (_) =>
+            _StickerPackDetailScreen(pack: pack, onUpdated: _loadPacks),
       ),
     );
   }
@@ -333,7 +337,8 @@ class _StickerPackScreenState extends State<StickerPackScreen>
                   builder: (ctx) => AlertDialog(
                     title: const Text('Delete pack?'),
                     content: Text(
-                        'Are you sure you want to delete "${pack.name}"?'),
+                      'Are you sure you want to delete "${pack.name}"?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
@@ -357,7 +362,9 @@ class _StickerPackScreenState extends State<StickerPackScreen>
             )
           : IconButton(
               icon: Icon(
-                pack.isInstalled ? Icons.check_circle : Icons.add_circle_outline,
+                pack.isInstalled
+                    ? Icons.check_circle
+                    : Icons.add_circle_outline,
                 color: pack.isInstalled ? cs.primary : cs.onSurfaceVariant,
               ),
               onPressed: () async {
@@ -381,8 +388,12 @@ class _StickerPackScreenState extends State<StickerPackScreen>
       try {
         final base64Data = fullUrl.split(',').last;
         final bytes = base64Decode(base64Data);
-        return Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => _brokenIcon());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _brokenIcon(),
+        );
       } catch (_) {
         return _brokenIcon();
       }
@@ -424,10 +435,7 @@ class _StickerPackDetailScreen extends StatefulWidget {
   final StickerPack pack;
   final VoidCallback onUpdated;
 
-  const _StickerPackDetailScreen({
-    required this.pack,
-    required this.onUpdated,
-  });
+  const _StickerPackDetailScreen({required this.pack, required this.onUpdated});
 
   @override
   State<_StickerPackDetailScreen> createState() =>
@@ -535,9 +543,9 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
     if (uploadResult == null || !mounted) {
       setState(() => _addingSticker = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to upload image')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to upload image')));
       }
       return;
     }
@@ -570,9 +578,9 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
         );
       }
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add sticker')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to add sticker')));
     }
   }
 
@@ -617,32 +625,27 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Text(
                 _pack.description!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: cs.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
               ),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
-                Icon(Icons.person_outline, size: 16, color: cs.onSurfaceVariant),
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: cs.onSurfaceVariant,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   'by ${_pack.creatorName}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                 ),
                 const Spacer(),
                 Text(
                   '${_pack.stickers.length} stickers',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -652,102 +655,101 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
             child: _loadingStickers
                 ? const Center(child: CircularProgressIndicator())
                 : _pack.stickers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.emoji_emotions_outlined,
-                              size: 48,
-                              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No stickers yet',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                              onPressed: _addSticker,
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Add First Sticker'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.emoji_emotions_outlined,
+                          size: 48,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadPackDetail,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SizedBox(height: 12),
+                        Text(
+                          'No stickers yet',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: _addSticker,
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add First Sticker'),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadPackDetail,
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 4,
                             mainAxisSpacing: 6,
                             crossAxisSpacing: 6,
                           ),
-                          itemCount: _pack.stickers.length,
-                          itemBuilder: (context, index) {
-                            final sticker = _pack.stickers[index];
-                            return GestureDetector(
-                              onLongPress: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  builder: (ctx) => SafeArea(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (sticker.emoji != null &&
-                                            sticker.emoji!.isNotEmpty)
-                                          ListTile(
-                                            leading: Text(
-                                              sticker.emoji!,
-                                              style:
-                                                  const TextStyle(fontSize: 24),
-                                            ),
-                                            title:
-                                                Text('Emoji: ${sticker.emoji}'),
-                                          ),
-                                        ListTile(
-                                          leading: Icon(
-                                            Icons.delete,
-                                            color: cs.error,
-                                          ),
-                                          title: Text(
-                                            'Delete Sticker',
-                                            style: TextStyle(color: cs.error),
-                                          ),
-                                          onTap: () {
-                                            Navigator.pop(ctx);
-                                            _deleteSticker(sticker.id);
-                                          },
+                      itemCount: _pack.stickers.length,
+                      itemBuilder: (context, index) {
+                        final sticker = _pack.stickers[index];
+                        return GestureDetector(
+                          onLongPress: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (ctx) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (sticker.emoji != null &&
+                                        sticker.emoji!.isNotEmpty)
+                                      ListTile(
+                                        leading: Text(
+                                          sticker.emoji!,
+                                          style: const TextStyle(fontSize: 24),
                                         ),
-                                      ],
+                                        title: Text('Emoji: ${sticker.emoji}'),
+                                      ),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.delete,
+                                        color: cs.error,
+                                      ),
+                                      title: Text(
+                                        'Delete Sticker',
+                                        style: TextStyle(color: cs.error),
+                                      ),
+                                      onTap: () {
+                                        Navigator.pop(ctx);
+                                        _deleteSticker(sticker.id);
+                                      },
                                     ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: cs.surfaceContainerHighest
-                                      .withValues(alpha: 0.3),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                   child: StickerThumb(
-                                      url: sticker.imageUrl,
-                                      size: 80,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  ],
                                 ),
                               ),
                             );
                           },
-                        ),
-                      ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerHighest.withValues(
+                                alpha: 0.3,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: StickerThumb(
+                                url: sticker.imageUrl,
+                                size: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -762,8 +764,12 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
       try {
         final base64Data = fullUrl.split(',').last;
         final bytes = base64Decode(base64Data);
-        return Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => _brokenIcon());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _brokenIcon(),
+        );
       } catch (_) {
         return _brokenIcon();
       }

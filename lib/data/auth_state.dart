@@ -37,7 +37,9 @@ class AuthState {
     await _prefs!.setString('native_base_url', AppConfig.apiBaseUrl);
     final token = await _storage.read(key: _keyToken);
     if (token != null && token.isNotEmpty) {
-      debugPrint('[Auth] Restoring session for user: ${await _storage.read(key: _keyUsername)}');
+      debugPrint(
+        '[Auth] Restoring session for user: ${await _storage.read(key: _keyUsername)}',
+      );
       isAuthenticated = true;
       ApiService.setToken(token);
       await _storeEncryptedNativeToken(token);

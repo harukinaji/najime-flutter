@@ -87,7 +87,9 @@ class _ConnectedAccountsScreenState extends State<ConnectedAccountsScreen> {
               // TODO: Implement real Google Sign-In flow using google_sign_in package
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Google Sign-In not yet implemented')),
+                  const SnackBar(
+                    content: Text('Google Sign-In not yet implemented'),
+                  ),
                 );
               }
             },
@@ -153,89 +155,87 @@ class _ConnectedAccountsScreenState extends State<ConnectedAccountsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Connected Accounts')),
       body: _loading
-          ? Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            )
+          ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline, size: 48, color: cs.error),
-                        const SizedBox(height: 16),
-                        Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: cs.onSurface, fontSize: 15),
-                        ),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: _loadAccounts,
-                          child: const Text('Retry'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: cs.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: cs.onSurface, fontSize: 15),
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadAccounts,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        PhoneNumberCard(
-                          phoneNumber: _phone,
-                          isVerified: _phoneVerified,
-                          onEdit: _openPhoneVerification,
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _loadAccounts,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadAccounts,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    PhoneNumberCard(
+                      phoneNumber: _phone,
+                      isVerified: _phoneVerified,
+                      onEdit: _openPhoneVerification,
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Social Accounts',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: cs.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Link accounts for easier sign-in and recovery.',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _GoogleRow(
-                                    isConnected: _googleConnected,
-                                    email: _googleEmail,
-                                    onToggle: (v) => _toggleGoogle(v),
-                                  ),
-                                ],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Social Accounts',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: cs.onSurface,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Link accounts for easier sign-in and recovery.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _GoogleRow(
+                                isConnected: _googleConnected,
+                                email: _googleEmail,
+                                onToggle: (v) => _toggleGoogle(v),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 32),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
+              ),
+            ),
     );
   }
 }
@@ -266,9 +266,7 @@ class _GoogleRow extends StatelessWidget {
               color: const Color(0xFF4285F4).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Center(
-              child: GoogleIcon(size: 24),
-            ),
+            child: const Center(child: GoogleIcon(size: 24)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -286,10 +284,7 @@ class _GoogleRow extends StatelessWidget {
                 if (email != null)
                   Text(
                     email!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: cs.onSurfaceVariant,
-                    ),
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                   ),
               ],
             ),

@@ -44,9 +44,7 @@ class AppRouter {
       final a = AuthState.instance;
       final loc = state.matchedLocation;
       final isPublic =
-          loc == '/' ||
-          loc == '/onboarding' ||
-          loc.startsWith('/auth');
+          loc == '/' || loc == '/onboarding' || loc.startsWith('/auth');
 
       if (!a.isAuthenticated && !isPublic) {
         return '/onboarding';
@@ -59,10 +57,7 @@ class AppRouter {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const OnboardingScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const OnboardingScreen()),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
@@ -111,9 +106,8 @@ class AppRouter {
         ],
       ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => HomeShell(
-          navigationShell: navigationShell,
-        ),
+        builder: (context, state, navigationShell) =>
+            HomeShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
             routes: [
@@ -156,9 +150,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home/contacts',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: ContactsScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ContactsScreen()),
               ),
             ],
           ),
@@ -166,9 +159,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home/calls',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: CallsScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CallsScreen()),
               ),
             ],
           ),
@@ -176,9 +168,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home/profile',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: ProfileScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ProfileScreen()),
                 routes: [
                   GoRoute(
                     path: 'edit',
@@ -229,9 +220,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home/wallet',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: WalletFeature(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: WalletFeature()),
               ),
             ],
           ),

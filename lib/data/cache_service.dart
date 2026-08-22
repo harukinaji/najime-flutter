@@ -137,30 +137,30 @@ class CacheService {
   }
 
   Map<String, dynamic> _chatToJson(ChatModel c) => {
-        'id': c.id,
-        'name': c.name,
-        'avatarUrl': c.avatarUrl,
-        'contactId': c.contactId,
-        'unreadCount': c.unreadCount,
-        'isOnline': c.isOnline,
-        'isGroup': c.isGroup,
-        'participantIds': c.participantIds,
-        'lastActivity': c.lastActivity.toIso8601String(),
-        'hasPublishedStory': c.hasPublishedStory,
-        'isMuted': c.isMuted,
-        'lastMessage': c.lastMessage != null
-            ? {
-                'id': c.lastMessage!.id,
-                'senderId': c.lastMessage!.senderId,
-                'content': c.lastMessage!.content,
-                'type': c.lastMessage!.type.name,
-                'timestamp': c.lastMessage!.timestamp.toIso8601String(),
-                'isMe': c.lastMessage!.isMe,
-                'fileName': c.lastMessage!.fileName,
-                'fileSize': c.lastMessage!.fileSize,
-              }
-            : null,
-      };
+    'id': c.id,
+    'name': c.name,
+    'avatarUrl': c.avatarUrl,
+    'contactId': c.contactId,
+    'unreadCount': c.unreadCount,
+    'isOnline': c.isOnline,
+    'isGroup': c.isGroup,
+    'participantIds': c.participantIds,
+    'lastActivity': c.lastActivity.toIso8601String(),
+    'hasPublishedStory': c.hasPublishedStory,
+    'isMuted': c.isMuted,
+    'lastMessage': c.lastMessage != null
+        ? {
+            'id': c.lastMessage!.id,
+            'senderId': c.lastMessage!.senderId,
+            'content': c.lastMessage!.content,
+            'type': c.lastMessage!.type.name,
+            'timestamp': c.lastMessage!.timestamp.toIso8601String(),
+            'isMe': c.lastMessage!.isMe,
+            'fileName': c.lastMessage!.fileName,
+            'fileSize': c.lastMessage!.fileSize,
+          }
+        : null,
+  };
 
   ChatModel _chatFromJson(Map<String, dynamic> m) {
     MessageModel? lastMsg;
@@ -174,7 +174,8 @@ class CacheService {
           (t) => t.name == lm['type'],
           orElse: () => MessageType.text,
         ),
-        timestamp: DateTime.tryParse(lm['timestamp'] as String? ?? '') ??
+        timestamp:
+            DateTime.tryParse(lm['timestamp'] as String? ?? '') ??
             DateTime.now(),
         isMe: lm['isMe'] as bool? ?? false,
         fileName: lm['fileName'] as String?,
@@ -192,7 +193,8 @@ class CacheService {
       isGroup: m['isGroup'] as bool? ?? false,
       participantIds: (m['participantIds'] as List?)?.cast<String>() ?? [],
       lastActivity:
-          DateTime.tryParse(m['lastActivity'] as String? ?? '') ?? DateTime.now(),
+          DateTime.tryParse(m['lastActivity'] as String? ?? '') ??
+          DateTime.now(),
       hasPublishedStory: m['hasPublishedStory'] as bool? ?? false,
       isMuted: m['isMuted'] as bool? ?? false,
     );

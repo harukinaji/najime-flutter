@@ -224,15 +224,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         if (!existing.hasUser(userId)) {
           reactions[rIdx] = Reaction(
             emoji: emoji,
-            users: [...existing.users, ReactionUser(
-              userId: userId, displayName: displayName, avatarUrl: avatarUrl,
-            )],
+            users: [
+              ...existing.users,
+              ReactionUser(
+                userId: userId,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+              ),
+            ],
           );
         }
       } else {
-        reactions.add(Reaction(emoji: emoji, users: [
-          ReactionUser(userId: userId, displayName: displayName, avatarUrl: avatarUrl),
-        ]));
+        reactions.add(
+          Reaction(
+            emoji: emoji,
+            users: [
+              ReactionUser(
+                userId: userId,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+              ),
+            ],
+          ),
+        );
       }
       _messages[idx] = msg.copyWith(reactions: reactions);
     });
@@ -254,7 +268,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final rIdx = reactions.indexWhere((r) => r.emoji == emoji);
       if (rIdx >= 0) {
         final existing = reactions[rIdx];
-        final updatedUsers = existing.users.where((u) => u.userId != userId).toList();
+        final updatedUsers = existing.users
+            .where((u) => u.userId != userId)
+            .toList();
         if (updatedUsers.isEmpty) {
           reactions.removeAt(rIdx);
         } else {
@@ -265,22 +281,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     });
   }
 
-  Future<void> _handleKeyboardCallback(String messageId, String callbackData) async {
-    if (kDebugMode) debugPrint('[Callback] messageId=$messageId data=$callbackData');
+  Future<void> _handleKeyboardCallback(
+    String messageId,
+    String callbackData,
+  ) async {
+    if (kDebugMode)
+      debugPrint('[Callback] messageId=$messageId data=$callbackData');
     try {
       final result = await ApiService.sendCallback(messageId, callbackData);
       if (kDebugMode) debugPrint('[Callback] result=$result');
       if (!result && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Callback failed')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Callback failed')));
       }
     } catch (e) {
       if (kDebugMode) debugPrint('[Callback] error=$e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send callback: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send callback: $e')));
       }
     }
   }
@@ -293,7 +313,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Future<void> _handleReaction(String messageId, String emoji) async {
     final msg = _messages.firstWhere((m) => m.id == messageId);
     final hasReacted = msg.reactions.any(
-        (r) => r.emoji == emoji && r.hasUser(_currentUserId));
+      (r) => r.emoji == emoji && r.hasUser(_currentUserId),
+    );
 
     if (hasReacted) {
       await ApiService.removeReaction(messageId, emoji);
@@ -346,7 +367,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           builder: (ctx) => AlertDialog(
             content: Text(text),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
             ],
           ),
         );
@@ -483,7 +507,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (time == null || !mounted) return;
 
     final scheduledAt = DateTime(
-      picked.year, picked.month, picked.day, time.hour, time.minute,
+      picked.year,
+      picked.month,
+      picked.day,
+      time.hour,
+      time.minute,
     );
 
     if (scheduledAt.isBefore(now)) {
@@ -516,7 +544,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _loadScheduledMessages();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Message scheduled for ${_formatScheduledDate(scheduledAt)}'),
+          content: Text(
+            'Message scheduled for ${_formatScheduledDate(scheduledAt)}',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -536,12 +566,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     String day;
     if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
       day = 'today';
-    } else if (dt.year == now.year && dt.month == now.month && dt.day == now.day + 1) {
+    } else if (dt.year == now.year &&
+        dt.month == now.month &&
+        dt.day == now.day + 1) {
       day = 'tomorrow';
     } else {
-      day = '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+      day =
+          '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
     }
-    final time = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final time =
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     return '$day at $time';
   }
 
@@ -616,8 +650,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                               itemBuilder: (ctx, index) {
                                 final msg = _scheduledMessages[index];
                                 final content = msg['content'] as String? ?? '';
-                                final scheduledAt = msg['scheduled_at'] as String? ?? '';
-                                final msgType = msg['type'] as String? ?? 'text';
+                                final scheduledAt =
+                                    msg['scheduled_at'] as String? ?? '';
+                                final msgType =
+                                    msg['type'] as String? ?? 'text';
 
                                 DateTime? dt;
                                 try {
@@ -627,25 +663,28 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                 return ListTile(
                                   leading: Icon(
                                     msgType == 'voice'
-                                    ? Icons.mic
-                                    : msgType == 'image'
+                                        ? Icons.mic
+                                        : msgType == 'image'
                                         ? Icons.photo
                                         : msgType == 'file'
-                                            ? Icons.attach_file
-                                            : Icons.message,
+                                        ? Icons.attach_file
+                                        : Icons.message,
                                     color: cs.primary,
                                   ),
                                   title: Text(
                                     msgType == 'image'
                                         ? '📷 Photo'
                                         : msgType == 'voice'
-                                            ? '🎤 Voice message'
-                                            : msgType == 'file'
-                                                ? '📎 File'
-                                                : content,
+                                        ? '🎤 Voice message'
+                                        : msgType == 'file'
+                                        ? '📎 File'
+                                        : content,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 14, color: cs.onSurface),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: cs.onSurface,
+                                    ),
                                   ),
                                   subtitle: dt != null
                                       ? Text(
@@ -657,17 +696,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                         )
                                       : null,
                                   trailing: IconButton(
-                                    icon: Icon(Icons.cancel_outlined, size: 20, color: cs.error),
+                                    icon: Icon(
+                                      Icons.cancel_outlined,
+                                      size: 20,
+                                      color: cs.error,
+                                    ),
                                     onPressed: () async {
                                       final msgId = msg['id'] as String?;
                                       if (msgId == null) return;
-                                      final success = await ApiService.cancelScheduledMessage(msgId);
+                                      final success =
+                                          await ApiService.cancelScheduledMessage(
+                                            msgId,
+                                          );
                                       if (success && mounted) {
                                         setState(() {
                                           _scheduledMessages.removeAt(index);
                                         });
                                         setSheetState(() {});
-                                        if (_scheduledMessages.isEmpty && mounted) {
+                                        if (_scheduledMessages.isEmpty &&
+                                            mounted) {
                                           Navigator.pop(ctx);
                                         }
                                       }
@@ -676,7 +723,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                                 );
                               },
                             ),
-                          ),
+                    ),
                   ],
                 );
               },
@@ -834,10 +881,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     Clipboard.setData(ClipboardData(text: message.content));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Copied'),
-          duration: Duration(seconds: 1),
-        ),
+        const SnackBar(content: Text('Copied'), duration: Duration(seconds: 1)),
       );
     }
   }
@@ -875,8 +919,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         replyToId: data['reply_to_id'] as String?,
         replyToContent: data['reply_to_content'] as String?,
         replyToSenderName: data['reply_to_sender_name'] as String?,
-        forwardedFrom: _parseForwardedFrom(data['forwarded_from'] as Map<String, dynamic>?),
-        keyboard: data['keyboard'] != null ? InlineKeyboard.fromJson(data['keyboard']) : null,
+        forwardedFrom: _parseForwardedFrom(
+          data['forwarded_from'] as Map<String, dynamic>?,
+        ),
+        keyboard: data['keyboard'] != null
+            ? InlineKeyboard.fromJson(data['keyboard'])
+            : null,
       );
       if (mounted) {
         setState(() => _messages.add(msg));
@@ -944,27 +992,35 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           break;
       }
       String content = msg['content'] as String? ?? '';
-      _messages.add(MessageModel(
-        id: msg['id'] as String,
-        senderId: msg['sender_id'] as String,
-        content: content,
-        type: type,
-        timestamp: DateTime.parse(msg['timestamp'] as String),
-        isMe: msg['is_me'] as bool? ?? false,
-        fileName: msg['file_name'] as String?,
-        fileSize: msg['file_size'] as String?,
-        voiceDurationMs: msg['voice_duration_ms'] as int?,
-        voiceWaveform: _parseWaveform(msg['voice_waveform'] as String?),
-        reactions: _parseReactions(msg['reactions']),
-        isEdited: msg['is_edited'] as bool? ?? false,
-        replyToId: msg['reply_to_id'] as String?,
-        replyToContent: msg['reply_to_content'] as String?,
-        replyToSenderName: msg['reply_to_sender_name'] as String?,
-        deliveryStatus: _parseDeliveryStatus(msg['delivery_status'] as String? ?? 'sent'),
-        forwardedFrom: _parseForwardedFrom(msg['forwarded_from'] as Map<String, dynamic>?),
-        isPinned: msg['is_pinned'] as bool? ?? false,
-        keyboard: msg['keyboard'] != null ? InlineKeyboard.fromJson(msg['keyboard']) : null,
-      ));
+      _messages.add(
+        MessageModel(
+          id: msg['id'] as String,
+          senderId: msg['sender_id'] as String,
+          content: content,
+          type: type,
+          timestamp: DateTime.parse(msg['timestamp'] as String),
+          isMe: msg['is_me'] as bool? ?? false,
+          fileName: msg['file_name'] as String?,
+          fileSize: msg['file_size'] as String?,
+          voiceDurationMs: msg['voice_duration_ms'] as int?,
+          voiceWaveform: _parseWaveform(msg['voice_waveform'] as String?),
+          reactions: _parseReactions(msg['reactions']),
+          isEdited: msg['is_edited'] as bool? ?? false,
+          replyToId: msg['reply_to_id'] as String?,
+          replyToContent: msg['reply_to_content'] as String?,
+          replyToSenderName: msg['reply_to_sender_name'] as String?,
+          deliveryStatus: _parseDeliveryStatus(
+            msg['delivery_status'] as String? ?? 'sent',
+          ),
+          forwardedFrom: _parseForwardedFrom(
+            msg['forwarded_from'] as Map<String, dynamic>?,
+          ),
+          isPinned: msg['is_pinned'] as bool? ?? false,
+          keyboard: msg['keyboard'] != null
+              ? InlineKeyboard.fromJson(msg['keyboard'])
+              : null,
+        ),
+      );
     }
     _loading = false;
     setState(() {});
@@ -1067,7 +1123,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             type: MessageType.text,
             timestamp: DateTime.parse(result['timestamp'] as String),
             isMe: true,
-            deliveryStatus: _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
+            deliveryStatus: _parseDeliveryStatus(
+              result['delivery_status'] as String? ?? 'sent',
+            ),
             replyToId: replyTo?.id,
             replyToContent: replyTo?.content,
             replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1125,8 +1183,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             type: MessageType.sticker,
             timestamp: DateTime.parse(result['timestamp'] as String),
             isMe: true,
-            deliveryStatus:
-                _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
+            deliveryStatus: _parseDeliveryStatus(
+              result['delivery_status'] as String? ?? 'sent',
+            ),
             replyToId: replyTo?.id,
             replyToContent: replyTo?.content,
             replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1250,7 +1309,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 isMe: true,
                 fileName: fileName,
                 fileSize: sizeStr,
-                deliveryStatus: _parseDeliveryStatus(sendResult['delivery_status'] as String? ?? 'sent'),
+                deliveryStatus: _parseDeliveryStatus(
+                  sendResult['delivery_status'] as String? ?? 'sent',
+                ),
                 replyToId: replyTo?.id,
                 replyToContent: replyTo?.content,
                 replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1293,8 +1354,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     children: [
                       TextField(
                         controller: amountCtrl,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
                           labelText: 'Amount',
                           border: OutlineInputBorder(),
@@ -1311,7 +1373,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           DropdownMenuItem(value: 'SOL', child: Text('SOL')),
                           DropdownMenuItem(value: 'USDC', child: Text('USDC')),
                           DropdownMenuItem(value: 'USDT', child: Text('USDT')),
-                          DropdownMenuItem(value: 'PYUSD', child: Text('PYUSD')),
+                          DropdownMenuItem(
+                            value: 'PYUSD',
+                            child: Text('PYUSD'),
+                          ),
                         ],
                         onChanged: (v) {
                           if (v != null) setSheet(() => currency = v);
@@ -1326,9 +1391,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         ),
                         items: const [
                           DropdownMenuItem(
-                              value: 'self', child: Text('My wallet')),
+                            value: 'self',
+                            child: Text('My wallet'),
+                          ),
                           DropdownMenuItem(
-                              value: 'custom', child: Text('Custom address')),
+                            value: 'custom',
+                            child: Text('Custom address'),
+                          ),
                         ],
                         onChanged: (v) {
                           if (v != null) setSheet(() => recipientMode = v);
@@ -1342,7 +1411,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                             labelText: 'Recipient address (base58)',
                             border: OutlineInputBorder(),
                           ),
-                          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 12),
@@ -1385,9 +1457,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final amount = double.tryParse(result['amount'] as String? ?? '');
     final coin = (result['currency'] as String?) ?? 'SOL';
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Enter a valid amount')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
       return;
     }
 
@@ -1395,9 +1467,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (result['recipient_mode'] == 'self') {
       final binding = await const WalletAccessProxy().getBinding();
       if (!binding.bound || binding.publicKey == null) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Wallet not connected')),
-        );
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(const SnackBar(content: Text('Wallet not connected')));
         return;
       }
       recipient = binding.publicKey!;
@@ -1464,8 +1536,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             type: MessageType.invoice,
             timestamp: DateTime.parse(result['timestamp'] as String),
             isMe: true,
-            deliveryStatus:
-                _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
+            deliveryStatus: _parseDeliveryStatus(
+              result['delivery_status'] as String? ?? 'sent',
+            ),
             replyToId: replyTo?.id,
             replyToContent: replyTo?.content,
             replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1496,8 +1569,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     children: [
                       TextField(
                         controller: amountCtrl,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
                           labelText: 'Amount (SOL)',
                           border: OutlineInputBorder(),
@@ -1527,9 +1601,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 ),
                 FilledButton(
                   onPressed: () {
-                    Navigator.pop(ctx, {
-                      'amount': amountCtrl.text.trim(),
-                    });
+                    Navigator.pop(ctx, {'amount': amountCtrl.text.trim()});
                   },
                   child: const Text('Create'),
                 ),
@@ -1543,9 +1615,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     final amount = double.tryParse(result['amount'] as String? ?? '');
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Enter a valid amount')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
       return;
     }
 
@@ -1558,9 +1630,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final state = AppState.instance;
     if (state.wallet == null) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Wallet not connected')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Wallet not connected')));
       return;
     }
 
@@ -1589,9 +1661,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Failed to create check: $e')),
-      );
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text('Failed to create check: $e')));
       return;
     }
 
@@ -1648,8 +1720,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             type: MessageType.check,
             timestamp: DateTime.parse(result['timestamp'] as String),
             isMe: true,
-            deliveryStatus:
-                _parseDeliveryStatus(result['delivery_status'] as String? ?? 'sent'),
+            deliveryStatus: _parseDeliveryStatus(
+              result['delivery_status'] as String? ?? 'sent',
+            ),
             replyToId: replyTo?.id,
             replyToContent: replyTo?.content,
             replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1805,7 +1878,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
   }
 
-  Future<void> _sendVoiceMessage(File audioFile, int durationMs, List<double> waveform) async {
+  Future<void> _sendVoiceMessage(
+    File audioFile,
+    int durationMs,
+    List<double> waveform,
+  ) async {
     if (!mounted) return;
     final replyTo = _replyingToMessage;
     setState(() {
@@ -1821,7 +1898,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         final fileUrl = uploadResult['file_url'] as String?;
         final sizeStr = uploadResult['file_size'] as String? ?? '';
 
-        final waveformJson = waveform.map((v) => v.toStringAsFixed(3)).join(',');
+        final waveformJson = waveform
+            .map((v) => v.toStringAsFixed(3))
+            .join(',');
 
         final sendResult = await ApiService.sendMessage(
           widget.chatId,
@@ -1835,7 +1914,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         );
 
         if (sendResult != null && mounted) {
-          final sentWaveform = _parseWaveform(sendResult['voice_waveform'] as String?);
+          final sentWaveform = _parseWaveform(
+            sendResult['voice_waveform'] as String?,
+          );
           setState(() {
             _messages.add(
               MessageModel(
@@ -1847,9 +1928,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 isMe: true,
                 fileName: 'voice_message.m4a',
                 fileSize: sizeStr,
-                voiceDurationMs: sendResult['voice_duration_ms'] as int? ?? durationMs,
+                voiceDurationMs:
+                    sendResult['voice_duration_ms'] as int? ?? durationMs,
                 voiceWaveform: sentWaveform,
-                deliveryStatus: _parseDeliveryStatus(sendResult['delivery_status'] as String? ?? 'sent'),
+                deliveryStatus: _parseDeliveryStatus(
+                  sendResult['delivery_status'] as String? ?? 'sent',
+                ),
                 replyToId: replyTo?.id,
                 replyToContent: replyTo?.content,
                 replyToSenderName: replyTo?.isMe == true ? 'You' : null,
@@ -1879,21 +1963,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   List<Reaction> _parseReactions(dynamic data) {
     if (data == null || data is! List) return [];
-    return data.map((r) {
-      final reaction = r as Map<String, dynamic>;
-      final usersList = (reaction['users'] as List?) ?? [];
-      return Reaction(
-        emoji: reaction['emoji'] as String? ?? '',
-        users: usersList.map((u) {
-          final user = u as Map<String, dynamic>;
-          return ReactionUser(
-            userId: user['user_id'] as String? ?? '',
-            displayName: user['display_name'] as String? ?? '',
-            avatarUrl: user['avatar_url'] as String? ?? '',
+    return data
+        .map((r) {
+          final reaction = r as Map<String, dynamic>;
+          final usersList = (reaction['users'] as List?) ?? [];
+          return Reaction(
+            emoji: reaction['emoji'] as String? ?? '',
+            users: usersList.map((u) {
+              final user = u as Map<String, dynamic>;
+              return ReactionUser(
+                userId: user['user_id'] as String? ?? '',
+                displayName: user['display_name'] as String? ?? '',
+                avatarUrl: user['avatar_url'] as String? ?? '',
+              );
+            }).toList(),
           );
-        }).toList(),
-      );
-    }).where((r) => r.emoji.isNotEmpty).toList();
+        })
+        .where((r) => r.emoji.isNotEmpty)
+        .toList();
   }
 
   ForwardedFromInfo? _parseForwardedFrom(Map<String, dynamic>? data) {
@@ -1951,7 +2038,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isMuted ? 'Notifications muted' : 'Notifications unmuted'),
+          content: Text(
+            _isMuted ? 'Notifications muted' : 'Notifications unmuted',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1983,7 +2072,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void _nextMatch() {
     if (_searchMatchIndices.isEmpty) return;
     setState(() {
-      _currentMatchIndex = (_currentMatchIndex + 1) % _searchMatchIndices.length;
+      _currentMatchIndex =
+          (_currentMatchIndex + 1) % _searchMatchIndices.length;
     });
     _scrollToMatch(_searchMatchIndices[_currentMatchIndex]);
   }
@@ -1991,7 +2081,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   void _prevMatch() {
     if (_searchMatchIndices.isEmpty) return;
     setState(() {
-      _currentMatchIndex = (_currentMatchIndex - 1 + _searchMatchIndices.length) % _searchMatchIndices.length;
+      _currentMatchIndex =
+          (_currentMatchIndex - 1 + _searchMatchIndices.length) %
+          _searchMatchIndices.length;
     });
     _scrollToMatch(_searchMatchIndices[_currentMatchIndex]);
   }
@@ -2017,7 +2109,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildSearchHighlight(String text, String query, TextStyle style, bool isCurrent) {
+  Widget _buildSearchHighlight(
+    String text,
+    String query,
+    TextStyle style,
+    bool isCurrent,
+  ) {
     if (query.isEmpty) return Text(text, style: style);
     final lowerText = text.toLowerCase();
     final lowerQuery = query.toLowerCase();
@@ -2035,16 +2132,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (index > start) {
         spans.add(TextSpan(text: text.substring(start, index), style: style));
       }
-      spans.add(TextSpan(
-        text: text.substring(index, index + query.length),
-        style: style.copyWith(
-          backgroundColor: isCurrent
-              ? const Color(0xFFFFEB3B)
-              : const Color(0xFFFFEB3B).withValues(alpha: 0.5),
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + query.length),
+          style: style.copyWith(
+            backgroundColor: isCurrent
+                ? const Color(0xFFFFEB3B)
+                : const Color(0xFFFFEB3B).withValues(alpha: 0.5),
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ));
+      );
       start = index + query.length;
     }
 
@@ -2083,9 +2182,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                   style: TextStyle(fontSize: 14, color: cs.onSurface),
                   decoration: InputDecoration(
                     hintText: 'Search...',
-                    hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
+                    hintStyle: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onChanged: _onSearchQueryChanged,
                 ),
@@ -2134,7 +2239,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         decoration: BoxDecoration(
           color: cs.surface,
           border: Border(
-            top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+            top: BorderSide(
+              color: cs.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
         ),
         child: Row(
@@ -2167,11 +2275,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                   _buildSearchHighlight(
                     msg.content,
                     _searchQuery,
-                    TextStyle(
-                      fontSize: 13,
-                      color: cs.onSurface,
-                      height: 1.3,
-                    ),
+                    TextStyle(fontSize: 13, color: cs.onSurface, height: 1.3),
                     true,
                   ),
                 ],
@@ -2267,8 +2371,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             onSelected: (value) {
               if (value == 'search') _toggleSearch();
               if (value == 'mute') _toggleMute();
-              if (value == 'pinned') _showPinnedMessagesSheet(Theme.of(context).colorScheme);
-              if (value == 'scheduled') _showScheduledMessagesSheet(Theme.of(context).colorScheme);
+              if (value == 'pinned')
+                _showPinnedMessagesSheet(Theme.of(context).colorScheme);
+              if (value == 'scheduled')
+                _showScheduledMessagesSheet(Theme.of(context).colorScheme);
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'search', child: Text('Search')),
@@ -2299,7 +2405,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 child: Row(
                   children: [
                     Icon(
-                      _isMuted ? Icons.notifications_active : Icons.notifications_off,
+                      _isMuted
+                          ? Icons.notifications_active
+                          : Icons.notifications_off,
                       size: 20,
                       color: _isMuted ? Colors.green : null,
                     ),
@@ -2470,7 +2578,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           onForward: () => _forwardMessage(message),
           onPin: () => _pinMessage(message),
           onUnpin: () => _unpinMessage(message),
-          onKeyboardButton: (callbackData) => _handleKeyboardCallback(message.id, callbackData),
+          onKeyboardButton: (callbackData) =>
+              _handleKeyboardCallback(message.id, callbackData),
           onKeyboardSendMessage: (text) => _handleKeyboardSendMessage(text),
           onInvoicePaid: (messageId, newContent) {
             final idx = _messages.indexWhere((m) => m.id == messageId);
@@ -2481,7 +2590,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             }
           },
           searchQuery: _isSearchingInChat ? _searchQuery : null,
-          isCurrentSearchMatch: _isSearchingInChat &&
+          isCurrentSearchMatch:
+              _isSearchingInChat &&
               _currentMatchIndex >= 0 &&
               _currentMatchIndex < _searchMatchIndices.length &&
               _searchMatchIndices[_currentMatchIndex] == index,
@@ -2620,7 +2730,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     itemBuilder: (ctx, index) {
                       final pin = _pinnedMessages[index];
                       final content = pin['content'] as String? ?? '';
-                      final pinnedByName = pin['pinned_by_name'] as String? ?? '';
+                      final pinnedByName =
+                          pin['pinned_by_name'] as String? ?? '';
                       final isMe = pin['is_me'] as bool? ?? false;
                       final msgType = pin['type'] as String? ?? 'text';
 
@@ -2637,10 +2748,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           msgType == 'image'
                               ? '📷 Photo'
                               : msgType == 'voice'
-                                  ? '🎤 Voice message'
-                                  : msgType == 'file'
-                                      ? '📎 File'
-                                      : content,
+                              ? '🎤 Voice message'
+                              : msgType == 'file'
+                              ? '📎 File'
+                              : content,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 14, color: cs.onSurface),
@@ -2655,7 +2766,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                               )
                             : null,
                         trailing: IconButton(
-                          icon: Icon(Icons.push_pin, size: 18, color: cs.onSurfaceVariant),
+                          icon: Icon(
+                            Icons.push_pin,
+                            size: 18,
+                            color: cs.onSurfaceVariant,
+                          ),
                           onPressed: () async {
                             final msgId = pin['message_id'] as String?;
                             if (msgId == null) return;
@@ -2663,9 +2778,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                             if (!mounted) return;
                             setState(() {
                               _pinnedMessages.removeAt(index);
-                              final msgIdx = _messages.indexWhere((m) => m.id == msgId);
+                              final msgIdx = _messages.indexWhere(
+                                (m) => m.id == msgId,
+                              );
                               if (msgIdx != -1) {
-                                _messages[msgIdx] = _messages[msgIdx].copyWith(isPinned: false);
+                                _messages[msgIdx] = _messages[msgIdx].copyWith(
+                                  isPinned: false,
+                                );
                               }
                             });
                             if (_pinnedMessages.isEmpty && mounted) {
@@ -2694,15 +2813,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isBot) ...[
-            Icon(Icons.smart_toy_outlined, size: 48, color: cs.onSurfaceVariant.withValues(alpha: 0.4)),
+            Icon(
+              Icons.smart_toy_outlined,
+              size: 48,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 12),
             Text(
               _botInfo!['display_name'] as String? ?? 'Bot',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: cs.onSurface),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
-              _botInfo!['description'] as String? ?? 'Press the button below to start',
+              _botInfo!['description'] as String? ??
+                  'Press the button below to start',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
             ),
@@ -2710,10 +2838,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () {
-                  context.push('/mini-app', extra: {
-                    'url': miniAppUrl,
-                    'title': _botInfo!['display_name'] as String? ?? 'Mini App',
-                  });
+                  context.push(
+                    '/mini-app',
+                    extra: {
+                      'url': miniAppUrl,
+                      'title':
+                          _botInfo!['display_name'] as String? ?? 'Mini App',
+                    },
+                  );
                 },
                 icon: const Icon(Icons.open_in_browser, size: 20),
                 label: const Text('Open Mini App'),
@@ -2723,7 +2855,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             Text(
               'No messages yet\nStart a conversation!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: cs.onSurfaceVariant, height: 1.5),
+              style: TextStyle(
+                fontSize: 15,
+                color: cs.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ],
         ],
@@ -2760,18 +2896,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 height: 48,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                  context.push('/mini-app', extra: {
-                    'url': miniAppUrl,
-                    'title': _botInfo!['display_name'] as String? ?? 'Mini App',
-                  });
+                    context.push(
+                      '/mini-app',
+                      extra: {
+                        'url': miniAppUrl,
+                        'title':
+                            _botInfo!['display_name'] as String? ?? 'Mini App',
+                      },
+                    );
                   },
                   icon: const Icon(Icons.open_in_browser, size: 20),
                   label: Text(
                     'Open Mini App',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -2784,10 +2929,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 icon: const Icon(Icons.play_arrow, size: 22),
                 label: Text(
                   btnText,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -2804,9 +2954,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (_showStickerPicker)
-          StickerPicker(
-            onStickerSelected: (url) => _sendSticker(url),
-          ),
+          StickerPicker(onStickerSelected: (url) => _sendSticker(url)),
         Listener(
           behavior: HitTestBehavior.translucent,
           onPointerMove: _handleRecordingPointerMove,
@@ -2834,7 +2982,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 transitionBuilder: (child, animation) => FadeTransition(
                   opacity: animation,
                   child: ScaleTransition(
-                    scale: Tween<double>(begin: 0.98, end: 1).animate(animation),
+                    scale: Tween<double>(
+                      begin: 0.98,
+                      end: 1,
+                    ).animate(animation),
                     child: child,
                   ),
                 ),
@@ -2875,9 +3026,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: cs.primary.withValues(alpha: 0.08),
-              border: Border(
-                left: BorderSide(color: cs.primary, width: 3),
-              ),
+              border: Border(left: BorderSide(color: cs.primary, width: 3)),
             ),
             child: Row(
               children: [
@@ -2895,7 +3044,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 ),
                 GestureDetector(
                   onTap: _cancelEdit,
-                  child: Icon(Icons.close, size: 20, color: cs.onSurfaceVariant),
+                  child: Icon(
+                    Icons.close,
+                    size: 20,
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -2905,9 +3058,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: cs.primary.withValues(alpha: 0.06),
-              border: Border(
-                left: BorderSide(color: cs.primary, width: 3),
-              ),
+              border: Border(left: BorderSide(color: cs.primary, width: 3)),
             ),
             child: Row(
               children: [
@@ -2942,7 +3093,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 ),
                 GestureDetector(
                   onTap: _cancelReply,
-                  child: Icon(Icons.close, size: 20, color: cs.onSurfaceVariant),
+                  child: Icon(
+                    Icons.close,
+                    size: 20,
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -2950,16 +3105,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         Row(
           children: [
             if (_botInfo != null &&
-                (_botInfo!['mini_app_url'] as String?)?.trim().isNotEmpty == true)
+                (_botInfo!['mini_app_url'] as String?)?.trim().isNotEmpty ==
+                    true)
               IconButton(
                 icon: Icon(Icons.open_in_browser, color: cs.primary),
                 onPressed: (_sending || isEditing)
                     ? null
                     : () {
-                        context.push('/mini-app', extra: {
-                          'url': _botInfo!['mini_app_url'],
-                          'title': _botInfo!['display_name'] as String? ?? 'Mini App',
-                        });
+                        context.push(
+                          '/mini-app',
+                          extra: {
+                            'url': _botInfo!['mini_app_url'],
+                            'title':
+                                _botInfo!['display_name'] as String? ??
+                                'Mini App',
+                          },
+                        );
                       },
               )
             else
@@ -2975,11 +3136,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               onPressed: (_sending || isEditing)
                   ? null
                   : () => setState(() {
-                        _showStickerPicker = !_showStickerPicker;
-                        if (_showStickerPicker) {
-                          _messageFocusNode.unfocus();
-                        }
-                      }),
+                      _showStickerPicker = !_showStickerPicker;
+                      if (_showStickerPicker) {
+                        _messageFocusNode.unfocus();
+                      }
+                    }),
             ),
             Expanded(
               child: Container(
@@ -3004,8 +3165,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     hintText: isEditing
                         ? 'Edit message...'
                         : isReplying
-                            ? 'Reply...'
-                            : 'Message...',
+                        ? 'Reply...'
+                        : 'Message...',
                     hintStyle: TextStyle(color: cs.onSurfaceVariant),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
@@ -3049,8 +3210,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                   padding: EdgeInsets.zero,
                 ),
               ),
-            ]
-            else if (!isEditing)
+            ] else if (!isEditing)
               GestureDetector(
                 onLongPressStart: _startRecording,
                 child: Container(

@@ -160,9 +160,9 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$label copied')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$label copied')));
     }
   }
 
@@ -244,7 +244,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
       if (mounted) {
         setState(() {
           _transferring = false;
-              _error =
+          _error =
               'Recipient doesn\'t have an account for this NFT. Send them some SOL first.';
         });
       }
@@ -292,8 +292,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
         const SizedBox(height: 20),
         Text(
           nft.name,
-          style:
-              const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         if (nft.symbol.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -340,7 +339,11 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
           _DetailRow(
             label: 'Category',
             value:
-                '${nft.isAudio ? 'Audio' : nft.isVideo ? 'Video' : '—'} · ${nft.mediaFile!.type}',
+                '${nft.isAudio
+                    ? 'Audio'
+                    : nft.isVideo
+                    ? 'Video'
+                    : '—'} · ${nft.mediaFile!.type}',
             onCopy: () => _copy(nft.mediaFile!.uri, 'Media URI'),
           ),
         if (_error != null) ...[
@@ -375,10 +378,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 5,
-          child: _buildMedia(context),
-        ),
+        Expanded(flex: 5, child: _buildMedia(context)),
         const SizedBox(width: 24),
         Expanded(
           flex: 6,
@@ -388,14 +388,15 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               Text(
                 nft.name,
                 style: const TextStyle(
-                    fontSize: 26, fontWeight: FontWeight.bold),
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (nft.symbol.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
                   nft.symbol,
-                  style:
-                      TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                  style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
                 ),
               ],
               if (nft.description.isNotEmpty) ...[
@@ -409,8 +410,7 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               if (nft.attributes.isNotEmpty) ...[
                 const Text(
                   'Attributes',
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -419,7 +419,9 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
                   children: [
                     for (final attr in nft.attributes)
                       _AttributeChip(
-                          traitType: attr.traitType, value: attr.value),
+                        traitType: attr.traitType,
+                        value: attr.value,
+                      ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -437,7 +439,12 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
               if (nft.hasMedia && nft.mediaFile != null)
                 _DetailRow(
                   label: 'Category',
-                  value: '${nft.isAudio ? 'Audio' : nft.isVideo ? 'Video' : '—'} · ${nft.mediaFile!.type}',
+                  value:
+                      '${nft.isAudio
+                          ? 'Audio'
+                          : nft.isVideo
+                          ? 'Video'
+                          : '—'} · ${nft.mediaFile!.type}',
                   onCopy: () => _copy(nft.mediaFile!.uri, 'Media URI'),
                 ),
               if (_error != null) ...[
@@ -460,8 +467,10 @@ class _NftDetailScreenState extends State<NftDetailScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
                     : const Icon(Icons.send_rounded),
-                label: const Text('Transfer NFT',
-                    style: TextStyle(fontSize: 16)),
+                label: const Text(
+                  'Transfer NFT',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),

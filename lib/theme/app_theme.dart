@@ -24,26 +24,27 @@ class AppTheme {
   }
 
   static ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
-    final textTheme = const TextTheme(
-      displayLarge: TextStyle(fontFamily: _fontFamily),
-      displayMedium: TextStyle(fontFamily: _fontFamily),
-      displaySmall: TextStyle(fontFamily: _fontFamily),
-      headlineLarge: TextStyle(fontFamily: _fontFamily),
-      headlineMedium: TextStyle(fontFamily: _fontFamily),
-      headlineSmall: TextStyle(fontFamily: _fontFamily),
-      titleLarge: TextStyle(fontFamily: _fontFamily),
-      titleMedium: TextStyle(fontFamily: _fontFamily),
-      titleSmall: TextStyle(fontFamily: _fontFamily),
-      bodyLarge: TextStyle(fontFamily: _fontFamily),
-      bodyMedium: TextStyle(fontFamily: _fontFamily),
-      bodySmall: TextStyle(fontFamily: _fontFamily),
-      labelLarge: TextStyle(fontFamily: _fontFamily),
-      labelMedium: TextStyle(fontFamily: _fontFamily),
-      labelSmall: TextStyle(fontFamily: _fontFamily),
-    ).apply(
-      bodyColor: colorScheme.onSurface,
-      displayColor: colorScheme.onSurface,
-    );
+    final textTheme =
+        const TextTheme(
+          displayLarge: TextStyle(fontFamily: _fontFamily),
+          displayMedium: TextStyle(fontFamily: _fontFamily),
+          displaySmall: TextStyle(fontFamily: _fontFamily),
+          headlineLarge: TextStyle(fontFamily: _fontFamily),
+          headlineMedium: TextStyle(fontFamily: _fontFamily),
+          headlineSmall: TextStyle(fontFamily: _fontFamily),
+          titleLarge: TextStyle(fontFamily: _fontFamily),
+          titleMedium: TextStyle(fontFamily: _fontFamily),
+          titleSmall: TextStyle(fontFamily: _fontFamily),
+          bodyLarge: TextStyle(fontFamily: _fontFamily),
+          bodyMedium: TextStyle(fontFamily: _fontFamily),
+          bodySmall: TextStyle(fontFamily: _fontFamily),
+          labelLarge: TextStyle(fontFamily: _fontFamily),
+          labelMedium: TextStyle(fontFamily: _fontFamily),
+          labelSmall: TextStyle(fontFamily: _fontFamily),
+        ).apply(
+          bodyColor: colorScheme.onSurface,
+          displayColor: colorScheme.onSurface,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -67,9 +68,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: colorScheme.surfaceContainerLow,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -91,8 +90,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -169,26 +170,20 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: colorScheme.inverseSurface,
         contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: colorScheme.primary,
         labelStyle: TextStyle(color: colorScheme.onSurface),
         padding: const EdgeInsets.symmetric(horizontal: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }

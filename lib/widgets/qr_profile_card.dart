@@ -66,7 +66,10 @@ class QrProfileCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(
-              padding.left, padding.top, padding.right, 0,
+              padding.left,
+              padding.top,
+              padding.right,
+              0,
             ),
             child: SvgPicture.asset(
               'assets/images/file.svg',
@@ -87,12 +90,8 @@ class QrProfileCard extends StatelessWidget {
                     qrImage: qrImage,
                     decoration: PrettyQrDecoration(
                       shape: PrettyQrShape.custom(
-                        PrettyQrSmoothSymbol(
-                          color: qrColor,
-                        ),
-                        finderPattern: PrettyQrSmoothSymbol(
-                          color: eyeColor,
-                        ),
+                        PrettyQrSmoothSymbol(color: qrColor),
+                        finderPattern: PrettyQrSmoothSymbol(color: eyeColor),
                       ),
                     ),
                   ),
@@ -309,11 +308,7 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF0D2137),
-                Color(0xFF1A3A4A),
-                Color(0xFF0F2A38),
-              ],
+              colors: [Color(0xFF0D2137), Color(0xFF1A3A4A), Color(0xFF0F2A38)],
             ),
           ),
           child: SafeArea(
@@ -358,7 +353,11 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
                           color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
@@ -445,9 +444,7 @@ class _ActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: Column(
             children: [

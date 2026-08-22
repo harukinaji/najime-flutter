@@ -48,9 +48,7 @@ class _SwapScreenState extends State<SwapScreen> {
 
   Future<void> _init() async {
     final state = context.read<AppState>();
-    final known = state.tokenRegistry.values
-        .where((t) => !t.isSol)
-        .toList();
+    final known = state.tokenRegistry.values.where((t) => !t.isSol).toList();
     setState(() {
       _tokens = [kSolToken, ...known];
       _toToken = known.isNotEmpty ? known.first : kSolToken;
@@ -78,7 +76,8 @@ class _SwapScreenState extends State<SwapScreen> {
       );
       pools = pools.where((p) => p.swapEnabled).toList();
       if (pools.isEmpty) {
-        if (mounted) setState(() => _error = 'Pool for this pair not found on devnet.');
+        if (mounted)
+          setState(() => _error = 'Pool for this pair not found on devnet.');
       } else {
         final pool = await _firstWithLiquidity(raydium, pools);
         final config = await raydium.getAmmConfig(pool);
@@ -168,7 +167,12 @@ class _SwapScreenState extends State<SwapScreen> {
     final pool = _pool;
     final config = _config;
     final quote = _quote;
-    if (wallet == null || pool == null || config == null || quote == null || _swapping) return;
+    if (wallet == null ||
+        pool == null ||
+        config == null ||
+        quote == null ||
+        _swapping)
+      return;
 
     setState(() {
       _swapping = true;
@@ -254,8 +258,9 @@ class _SwapScreenState extends State<SwapScreen> {
     );
   }
 
-  String _short(String s) =>
-      s.length > 24 ? '${s.substring(0, 10)}...${s.substring(s.length - 8)}' : s;
+  String _short(String s) => s.length > 24
+      ? '${s.substring(0, 10)}...${s.substring(s.length - 8)}'
+      : s;
 
   @override
   Widget build(BuildContext context) {
@@ -275,8 +280,9 @@ class _SwapScreenState extends State<SwapScreen> {
               TextField(
                 controller: _amountController,
                 enabled: !_swapping,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 onChanged: (_) => _refreshQuote(),
                 decoration: InputDecoration(
                   labelText: 'Amount (${_fromToken.symbol})',
@@ -384,7 +390,9 @@ class _SwapScreenState extends State<SwapScreen> {
                   Text(
                     token.symbol,
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     token.name,
@@ -430,7 +438,9 @@ class _SwapScreenState extends State<SwapScreen> {
           child: Center(
             child: Text(
               'Enter an amount to calculate',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
@@ -450,15 +460,18 @@ class _SwapScreenState extends State<SwapScreen> {
             Text(
               '${_fmt.format(inUi)} ${_fromToken.symbol} → '
               '${_fmt.format(outUi)} ${_toToken!.symbol}',
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
             _quoteRow('Fee', '${_fmt.format(feeUi)} ${_fromToken.symbol}'),
-            _quoteRow('Price (impact)',
-                '${(quote.priceImpactBps / 100).toStringAsFixed(2)}%'),
-            _quoteRow('Minimum output',
-                '${_fmt.format(minOutUi)} ${_toToken!.symbol}'),
+            _quoteRow(
+              'Price (impact)',
+              '${(quote.priceImpactBps / 100).toStringAsFixed(2)}%',
+            ),
+            _quoteRow(
+              'Minimum output',
+              '${_fmt.format(minOutUi)} ${_toToken!.symbol}',
+            ),
           ],
         ),
       ),

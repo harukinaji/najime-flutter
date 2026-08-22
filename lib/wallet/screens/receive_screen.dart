@@ -59,7 +59,10 @@ class ReceiveScreen extends StatelessWidget {
                     child: SelectableText(
                       wallet.address,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),

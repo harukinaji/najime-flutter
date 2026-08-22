@@ -33,10 +33,7 @@ final reactionStories = [
   Story(
     name: 'Reactions/Picker',
     builder: (context) => const Center(
-      child: ReactionPicker(
-        messageId: 'test1',
-        onReaction: _noopStr,
-      ),
+      child: ReactionPicker(messageId: 'test1', onReaction: _noopStr),
     ),
   ),
   Story(
@@ -65,11 +62,7 @@ final reactionStories = [
     name: 'Reactions/Display - Empty',
     builder: (context) => const Padding(
       padding: EdgeInsets.all(16),
-      child: ReactionDisplay(
-        reactions: [],
-        isMe: false,
-        onTap: _noopStr,
-      ),
+      child: ReactionDisplay(reactions: [], isMe: false, onTap: _noopStr),
     ),
   ),
 ];

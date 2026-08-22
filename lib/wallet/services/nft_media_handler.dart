@@ -52,22 +52,14 @@ class NftMediaHandler extends BaseAudioHandler with SeekHandler {
   }) async {
     _videoSession = false;
     mediaItem.add(
-      MediaItem(
-        id: uri,
-        title: title,
-        artist: artist,
-        artUri: artUri,
-      ),
+      MediaItem(id: uri, title: title, artist: artist, artUri: artUri),
     );
     queue.add([
       MediaItem(id: uri, title: title, artist: artist, artUri: artUri),
     ]);
     playbackState.add(
       playbackState.value.copyWith(
-        controls: [
-          MediaControl.pause,
-          MediaControl.stop,
-        ],
+        controls: [MediaControl.pause, MediaControl.stop],
         androidCompactActionIndices: const [0, 1],
         systemActions: const {MediaAction.seek},
         processingState: AudioProcessingState.loading,
@@ -118,12 +110,18 @@ class NftMediaHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Updates the playing/position state published for the active video NFT.
-  void updateVideoState({required bool playing, Duration position = Duration.zero}) {
+  void updateVideoState({
+    required bool playing,
+    Duration position = Duration.zero,
+  }) {
     if (!_videoSession) return;
     _emitVideoState(playing: playing, position: position);
   }
 
-  void _emitVideoState({required bool playing, Duration position = Duration.zero}) {
+  void _emitVideoState({
+    required bool playing,
+    Duration position = Duration.zero,
+  }) {
     playbackState.add(
       PlaybackState(
         controls: [

@@ -49,7 +49,11 @@ class StoryService {
     return [];
   }
 
-  void setCurrentUser({required String id, required String name, String? avatarUrl}) {
+  void setCurrentUser({
+    required String id,
+    required String name,
+    String? avatarUrl,
+  }) {
     _myUserId = id;
     _myUserName = name;
     _myAvatarUrl = avatarUrl;
@@ -90,7 +94,8 @@ class StoryService {
         final userId = u['user_id'] as String;
         final stories = (u['stories'] as List).map((s) {
           final sMap = s as Map<String, dynamic>;
-          final viewerIds = (sMap['viewers'] as List?)
+          final viewerIds =
+              (sMap['viewers'] as List?)
                   ?.map((v) => (v as Map<String, dynamic>)['user_id'] as String)
                   .toList() ??
               [];
@@ -102,12 +107,15 @@ class StoryService {
             id: sMap['id'] as String,
             userId: userId,
             userName: u['user_name'] as String? ?? '',
-            userAvatar: u['user_avatar'] != null ? _resolveUrl(u['user_avatar'] as String) : null,
+            userAvatar: u['user_avatar'] != null
+                ? _resolveUrl(u['user_avatar'] as String)
+                : null,
             mediaPath: _resolveUrl(sMap['media_path'] as String),
             mediaType: sMap['media_type'] == 'video'
                 ? StoryMediaType.video
                 : StoryMediaType.image,
-            timestamp: DateTime.tryParse(sMap['timestamp'] as String? ?? '') ??
+            timestamp:
+                DateTime.tryParse(sMap['timestamp'] as String? ?? '') ??
                 DateTime.now(),
             caption: sMap['caption'] as String?,
             viewerIds: viewerIds,

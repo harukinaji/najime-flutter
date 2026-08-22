@@ -32,9 +32,7 @@ class StorybookScreen extends StatelessWidget {
 }
 
 void openStorybook(BuildContext context) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => const StorybookScreen(),
-    ),
-  );
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const StorybookScreen()));
 }

@@ -35,7 +35,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() {
       _messageNotifications = prefs.getBool('notif_messages') ?? true;
       _callNotifications = prefs.getBool('notif_calls') ?? true;
-      _groupMessageNotifications = prefs.getBool('notif_group_messages') ?? true;
+      _groupMessageNotifications =
+          prefs.getBool('notif_group_messages') ?? true;
       _sound = prefs.getBool('notif_sound') ?? true;
       _vibration = prefs.getBool('notif_vibration') ?? true;
       _loading = false;
@@ -101,72 +102,72 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     activeTrackColor: AppColors.primary,
                   ),
                 ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          SettingsTile(
-            icon: Icons.volume_up_outlined,
-            title: 'Sound',
-            subtitle: 'Play sound for notifications',
-            iconColor: AppColors.warning,
-            trailing: Switch(
-              value: _sound,
-              onChanged: (v) {
-                setState(() => _sound = v);
-                _saveSetting('notif_sound', v);
-              },
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.primary,
-            ),
-          ),
-          SettingsTile(
-            icon: Icons.vibration,
-            title: 'Vibration',
-            subtitle: 'Vibrate for notifications',
-            iconColor: AppColors.error,
-            trailing: Switch(
-              value: _vibration,
-              onChanged: (v) {
-                setState(() => _vibration = v);
-                _saveSetting('notif_vibration', v);
-              },
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: AppColors.primary,
-                      size: 20,
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                SettingsTile(
+                  icon: Icons.volume_up_outlined,
+                  title: 'Sound',
+                  subtitle: 'Play sound for notifications',
+                  iconColor: AppColors.warning,
+                  trailing: Switch(
+                    value: _sound,
+                    onChanged: (v) {
+                      setState(() => _sound = v);
+                      _saveSetting('notif_sound', v);
+                    },
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: AppColors.primary,
+                  ),
+                ),
+                SettingsTile(
+                  icon: Icons.vibration,
+                  title: 'Vibration',
+                  subtitle: 'Vibrate for notifications',
+                  iconColor: AppColors.error,
+                  trailing: Switch(
+                    value: _vibration,
+                    onChanged: (v) {
+                      setState(() => _vibration = v);
+                      _saveSetting('notif_vibration', v);
+                    },
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Notification preferences are saved locally on this device. '
-                        'Push notifications require system-level permissions.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                          height: 1.4,
-                        ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Notification preferences are saved locally on this device. '
+                              'Push notifications require system-level permissions.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

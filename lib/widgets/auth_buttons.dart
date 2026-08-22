@@ -49,20 +49,16 @@ class GoogleSignInButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/google_g.png',
-              width: 28,
-              height: 28,
-            ),
+            Image.asset('assets/images/google_g.png', width: 28, height: 28),
             const SizedBox(width: 12),
             _LoadingButton(
               loading: loading,
               child: Text(
                 'Continue with Google',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1F1F1F),
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F1F1F),
+                ),
               ),
             ),
           ],
@@ -106,9 +102,9 @@ class AppleSignInButton extends StatelessWidget {
               child: Text(
                 'Continue with Apple',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.black : Colors.white,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.black : Colors.white,
+                ),
               ),
             ),
           ],
@@ -117,4 +113,3 @@ class AppleSignInButton extends StatelessWidget {
     );
   }
 }
-

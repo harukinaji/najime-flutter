@@ -9,7 +9,8 @@ class PasswordCrypto {
   static const int _saltLen = 16;
   static const int _iterations = 600000;
 
-  static final crypto_lib.Xchacha20 _chacha = crypto_lib.Xchacha20.poly1305Aead();
+  static final crypto_lib.Xchacha20 _chacha =
+      crypto_lib.Xchacha20.poly1305Aead();
 
   static Uint8List _pbkdf2Sha256(
     Uint8List password,
@@ -77,7 +78,10 @@ class PasswordCrypto {
     return diff == 0;
   }
 
-  static Future<Map<String, String>> encryptPhone(String phoneNumber, String password) async {
+  static Future<Map<String, String>> encryptPhone(
+    String phoneNumber,
+    String password,
+  ) async {
     final salt = _randomBytes(_saltLen);
     final key = _deriveKey(password, salt);
     final nonce = _randomBytes(24);

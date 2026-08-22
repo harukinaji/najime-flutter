@@ -60,7 +60,8 @@ class _StickerPickerState extends State<StickerPicker> {
     final detail = await ApiService.getStickerPack(pack.id);
     if (!mounted) return;
     if (detail != null) {
-      final stickers = (detail['stickers'] as List?)
+      final stickers =
+          (detail['stickers'] as List?)
               ?.map((s) => Sticker.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [];
@@ -102,13 +103,12 @@ class _StickerPickerState extends State<StickerPicker> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _packs.isEmpty
-                    ? _buildEmptyState(cs)
-                    : _selectedPackIndex >= 0 &&
-                            _selectedPackIndex < _packs.length
-                        ? _loadingStickers
-                            ? const Center(child: CircularProgressIndicator())
-                            : _buildStickerGrid(_stickers, cs)
-                        : _buildEmptyState(cs),
+                ? _buildEmptyState(cs)
+                : _selectedPackIndex >= 0 && _selectedPackIndex < _packs.length
+                ? _loadingStickers
+                      ? const Center(child: CircularProgressIndicator())
+                      : _buildStickerGrid(_stickers, cs)
+                : _buildEmptyState(cs),
           ),
         ],
       ),
@@ -128,9 +128,7 @@ class _StickerPickerState extends State<StickerPicker> {
               widget.onManagePacks?.call();
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const StickerPackScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const StickerPackScreen()),
               ).then((_) => _loadPacks());
             },
             child: Container(
@@ -201,19 +199,14 @@ class _StickerPickerState extends State<StickerPicker> {
           const SizedBox(height: 12),
           Text(
             'No sticker packs installed',
-            style: TextStyle(
-              fontSize: 14,
-              color: cs.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           FilledButton.tonalIcon(
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const StickerPackScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const StickerPackScreen()),
               ).then((_) => _loadPacks());
             },
             icon: const Icon(Icons.add, size: 18),

@@ -92,7 +92,10 @@ class _GoogleIconPainter extends CustomPainter {
 
     final greenPath = Path()
       ..moveTo(cx, cy + r)
-      ..arcToPoint(Offset(cx + r, cy + r * 0.3), radius: Radius.circular(r * 0.5))
+      ..arcToPoint(
+        Offset(cx + r, cy + r * 0.3),
+        radius: Radius.circular(r * 0.5),
+      )
       ..lineTo(cx + r * 0.3, cy + r * 0.3)
       ..arcToPoint(
         Offset(cx, cy + r),

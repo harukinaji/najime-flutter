@@ -48,15 +48,13 @@ class AppKeyClient extends http.BaseClient {
 /// Certificate SHA-256 fingerprint pin for the backend server.
 /// Extract with: openssl s_client -connect najime.org:5000 < /dev/null 2>/dev/null | openssl x509 -fingerprint -sha256 -noout
 /// Format: "AA:BB:CC:..." (uppercase hex, colon-separated)
-const _kCertPin = String.fromEnvironment(
-  'CERT_PIN',
-  defaultValue: '',
-);
+const _kCertPin = String.fromEnvironment('CERT_PIN', defaultValue: '');
 
 /// HTTP client that automatically signs every request with per-device
 /// attestation headers (HMAC-SHA256 signature, timestamp, nonce).
 class SignedHttpClient extends http.BaseClient {
-  SignedHttpClient({http.Client? inner}) : _inner = inner ?? _createPinnedClient();
+  SignedHttpClient({http.Client? inner})
+    : _inner = inner ?? _createPinnedClient();
 
   final http.Client _inner;
   final _attestation = AppAttestation.instance;
@@ -69,7 +67,11 @@ class SignedHttpClient extends http.BaseClient {
 
   /// Shared certificate validation used by both the HTTP and WebSocket
   /// transports. Returns true when the presented certificate is acceptable.
-  static bool verifyServerCertificate(X509Certificate cert, String host, int port) {
+  static bool verifyServerCertificate(
+    X509Certificate cert,
+    String host,
+    int port,
+  ) {
     // In debug mode, allow all certificates for development.
     if (kDebugMode) return true;
 
@@ -122,7 +124,8 @@ class SignedHttpClient extends http.BaseClient {
     // Sign the request.
     // Include the query string in the canonical path to match the backend's
     // attestation verification (backend appends ?query to the path).
-    final fullPath = request.url.path +
+    final fullPath =
+        request.url.path +
         (request.url.query.isNotEmpty ? '?${request.url.query}' : '');
 
     // For multipart requests the body is streamed and cannot be read
@@ -157,15 +160,19 @@ class SignedHttpClient extends http.BaseClient {
     }
 
     if (kDebugMode) {
-      debugPrint('[HTTP] ${request.method} ${request.url.path}'
-          ' (device_id: ${sigHeaders['X-App-Device-Id'] ?? 'none'})');
+      debugPrint(
+        '[HTTP] ${request.method} ${request.url.path}'
+        ' (device_id: ${sigHeaders['X-App-Device-Id'] ?? 'none'})',
+      );
     }
 
     final response = await _inner.send(request);
 
     if (response.statusCode == 403 && !_retried) {
-      debugPrint('[HTTP] 403 on ${request.method} ${request.url.path}'
-          ' — re-registering attestation key and retrying');
+      debugPrint(
+        '[HTTP] 403 on ${request.method} ${request.url.path}'
+        ' — re-registering attestation key and retrying',
+      );
       _attestation.invalidateRegistration();
       _retried = true;
       try {

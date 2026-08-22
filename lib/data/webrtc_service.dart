@@ -31,7 +31,11 @@ class ParticipantStream {
   final String userId;
   final String displayName;
   final MediaStream? stream;
-  ParticipantStream({required this.userId, required this.displayName, this.stream});
+  ParticipantStream({
+    required this.userId,
+    required this.displayName,
+    this.stream,
+  });
 }
 
 class WebRTCService {
@@ -68,8 +72,10 @@ class WebRTCService {
       await Helper.ensureAudioSession();
     } catch (_) {}
     try {
-      await Helper.setAppleAudioIOMode(AppleAudioIOMode.localAndRemote,
-          preferSpeakerOutput: true);
+      await Helper.setAppleAudioIOMode(
+        AppleAudioIOMode.localAndRemote,
+        preferSpeakerOutput: true,
+      );
     } catch (_) {}
     try {
       await Helper.setSpeakerphoneOn(true);
@@ -95,18 +101,22 @@ class WebRTCService {
   static List<ParticipantStream> get participants {
     final list = <ParticipantStream>[];
     for (final entry in _remoteStreams.entries) {
-      list.add(ParticipantStream(
-        userId: entry.key,
-        displayName: _participantNames[entry.key] ?? entry.key,
-        stream: entry.value,
-      ));
+      list.add(
+        ParticipantStream(
+          userId: entry.key,
+          displayName: _participantNames[entry.key] ?? entry.key,
+          stream: entry.value,
+        ),
+      );
     }
     for (final entry in _conferenceRemoteStreams.entries) {
-      list.add(ParticipantStream(
-        userId: entry.key,
-        displayName: _conferenceParticipantNames[entry.key] ?? entry.key,
-        stream: entry.value,
-      ));
+      list.add(
+        ParticipantStream(
+          userId: entry.key,
+          displayName: _conferenceParticipantNames[entry.key] ?? entry.key,
+          stream: entry.value,
+        ),
+      );
     }
     return list;
   }
@@ -119,7 +129,8 @@ class WebRTCService {
   }
 
   static bool get isGroupCall => _isGroupCall;
-  static int get conferenceParticipantCount => _conferenceParticipantNames.length;
+  static int get conferenceParticipantCount =>
+      _conferenceParticipantNames.length;
   static String? get conferenceId => _conferenceId;
   static Map<String, MediaStream> get conferenceRemoteStreams =>
       Map.unmodifiable(_conferenceRemoteStreams);
@@ -145,10 +156,12 @@ class WebRTCService {
     });
   }
 
-  static Future<RTCPeerConnection> _createPeerConnection(String peerId,
-      {required bool video,
-      required void Function(MediaStream) onStream,
-      void Function()? onDisconnect}) async {
+  static Future<RTCPeerConnection> _createPeerConnection(
+    String peerId, {
+    required bool video,
+    required void Function(MediaStream) onStream,
+    void Function()? onDisconnect,
+  }) async {
     final pc = await createPeerConnection({'iceServers': iceServers});
 
     if (_localStream != null) {
@@ -208,13 +221,15 @@ class WebRTCService {
 
     _localStream = await _getLocalStream(video);
 
-    final pc = await _createPeerConnection(contactId,
-        video: video,
-        onStream: (stream) {
-          _remoteStreams[contactId] = stream;
-          onRemoteStream(stream);
-        },
-        onDisconnect: onDisconnect);
+    final pc = await _createPeerConnection(
+      contactId,
+      video: video,
+      onStream: (stream) {
+        _remoteStreams[contactId] = stream;
+        onRemoteStream(stream);
+      },
+      onDisconnect: onDisconnect,
+    );
     _peerConnections[contactId] = pc;
 
     final offer = await pc.createOffer();
@@ -278,12 +293,16 @@ class WebRTCService {
     };
   }
 
-  static Future<void> handleInvitedToConference(Map<String, dynamic> data) async {
+  static Future<void> handleInvitedToConference(
+    Map<String, dynamic> data,
+  ) async {
     final conferenceId = data['conference_id'] as String;
     final video = data['video'] as bool? ?? false;
     final hostId = data['host_id'] as String?;
-    final participantNames = (data['participant_names'] as Map<String, dynamic>?)
-            ?.map((k, v) => MapEntry(k, v as String)) ??
+    final participantNames =
+        (data['participant_names'] as Map<String, dynamic>?)?.map(
+          (k, v) => MapEntry(k, v as String),
+        ) ??
         <String, String>{};
 
     await _cleanup();
@@ -294,8 +313,7 @@ class WebRTCService {
     _isCaller = false;
 
     if (hostId != null) {
-      _conferenceParticipantNames[hostId] =
-          participantNames[hostId] ?? hostId;
+      _conferenceParticipantNames[hostId] = participantNames[hostId] ?? hostId;
     }
     _conferenceParticipantNames.addAll(participantNames);
 
@@ -308,14 +326,16 @@ class WebRTCService {
     });
 
     final hostName = participantNames[hostId] ?? hostId ?? 'Unknown';
-    onIncomingCall?.call(IncomingCallData(
-      contactId: hostId ?? '',
-      contactName: hostName,
-      video: video,
-      isGroupCall: true,
-      conferenceId: conferenceId,
-      participantNames: participantNames,
-    ));
+    onIncomingCall?.call(
+      IncomingCallData(
+        contactId: hostId ?? '',
+        contactName: hostName,
+        video: video,
+        isGroupCall: true,
+        conferenceId: conferenceId,
+        participantNames: participantNames,
+      ),
+    );
   }
 
   static Future<void> handleConferenceCreated(Map<String, dynamic> data) async {
@@ -350,7 +370,9 @@ class WebRTCService {
     });
   }
 
-  static Future<void> handleConferenceIceCandidate(Map<String, dynamic> data) async {
+  static Future<void> handleConferenceIceCandidate(
+    Map<String, dynamic> data,
+  ) async {
     if (_conferencePc == null) return;
     final c = data['candidate'] as Map<String, dynamic>;
     await _conferencePc!.addCandidate(
@@ -405,15 +427,17 @@ class WebRTCService {
       return;
     }
 
-    final pc = await _createPeerConnection(contactId,
-        video: video,
-        onStream: (stream) {
-          _remoteStreams[contactId] = stream;
-          _onParticipantAdded?.call(contactId);
-        },
-        onDisconnect: () {
-          removeParticipant(contactId);
-        });
+    final pc = await _createPeerConnection(
+      contactId,
+      video: video,
+      onStream: (stream) {
+        _remoteStreams[contactId] = stream;
+        _onParticipantAdded?.call(contactId);
+      },
+      onDisconnect: () {
+        removeParticipant(contactId);
+      },
+    );
     _peerConnections[contactId] = pc;
 
     final offer = await pc.createOffer();
@@ -470,17 +494,21 @@ class WebRTCService {
 
     _localStream = await _getLocalStream(data['video'] as bool? ?? false);
 
-    final pc = await _createPeerConnection(callerId,
-        video: data['video'] as bool? ?? false,
-        onStream: (stream) {
-          _remoteStreams[callerId] = stream;
-          onRemoteStream(stream);
-        },
-        onDisconnect: onDisconnect);
+    final pc = await _createPeerConnection(
+      callerId,
+      video: data['video'] as bool? ?? false,
+      onStream: (stream) {
+        _remoteStreams[callerId] = stream;
+        onRemoteStream(stream);
+      },
+      onDisconnect: onDisconnect,
+    );
     _peerConnections[callerId] = pc;
 
     final sdp = RTCSessionDescription(
-        data['sdp']['sdp'] as String, data['sdp']['type'] as String);
+      data['sdp']['sdp'] as String,
+      data['sdp']['type'] as String,
+    );
     await pc.setRemoteDescription(sdp);
     final answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
@@ -504,7 +532,8 @@ class WebRTCService {
   }
 
   static Future<void> handleAnswer(Map<String, dynamic> data) async {
-    final pid = data['participant_id'] as String? ?? data['contact_id'] as String?;
+    final pid =
+        data['participant_id'] as String? ?? data['contact_id'] as String?;
     final pc = pid != null ? _peerConnections[pid] : null;
     if (pc == null) return;
     final sdp = RTCSessionDescription(
@@ -515,7 +544,8 @@ class WebRTCService {
   }
 
   static Future<void> handleIceCandidate(Map<String, dynamic> data) async {
-    final pid = data['sender_id'] as String? ??
+    final pid =
+        data['sender_id'] as String? ??
         data['participant_id'] as String? ??
         data['contact_id'] as String?;
     final pc = pid != null ? _peerConnections[pid] : null;
@@ -537,9 +567,7 @@ class WebRTCService {
       });
     } else {
       for (final pid in _peerConnections.keys) {
-        WebSocketService.sendSignal('call_end', {
-          'contact_id': pid,
-        });
+        WebSocketService.sendSignal('call_end', {'contact_id': pid});
       }
     }
     _onDisconnect?.call();
@@ -553,9 +581,7 @@ class WebRTCService {
       _onParticipantRemoved?.call(userId);
       return;
     }
-    WebSocketService.sendSignal('call_end', {
-      'contact_id': userId,
-    });
+    WebSocketService.sendSignal('call_end', {'contact_id': userId});
     final pc = _peerConnections.remove(userId);
     if (pc != null) {
       pc.close();

@@ -1,9 +1,5 @@
 class TokenMetadata {
-  const TokenMetadata({
-    required this.name,
-    required this.symbol,
-    this.uri,
-  });
+  const TokenMetadata({required this.name, required this.symbol, this.uri});
 
   final String name;
   final String symbol;

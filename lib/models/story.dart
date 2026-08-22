@@ -50,28 +50,28 @@ class StoryModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userId': userId,
-        'userName': userName,
-        'userAvatar': userAvatar,
-        'mediaPath': mediaPath,
-        'mediaType': mediaType.name,
-        'timestamp': timestamp.toIso8601String(),
-        'caption': caption,
-        'viewerIds': viewerIds,
-      };
+    'id': id,
+    'userId': userId,
+    'userName': userName,
+    'userAvatar': userAvatar,
+    'mediaPath': mediaPath,
+    'mediaType': mediaType.name,
+    'timestamp': timestamp.toIso8601String(),
+    'caption': caption,
+    'viewerIds': viewerIds,
+  };
 
   factory StoryModel.fromJson(Map<String, dynamic> json) => StoryModel(
-        id: json['id'] as String,
-        userId: json['userId'] as String,
-        userName: json['userName'] as String,
-        userAvatar: json['userAvatar'] as String?,
-        mediaPath: json['mediaPath'] as String,
-        mediaType: StoryMediaType.values.firstWhere(
-          (e) => e.name == json['mediaType'],
-        ),
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        caption: json['caption'] as String?,
-        viewerIds: (json['viewerIds'] as List?)?.cast<String>() ?? [],
-      );
+    id: json['id'] as String,
+    userId: json['userId'] as String,
+    userName: json['userName'] as String,
+    userAvatar: json['userAvatar'] as String?,
+    mediaPath: json['mediaPath'] as String,
+    mediaType: StoryMediaType.values.firstWhere(
+      (e) => e.name == json['mediaType'],
+    ),
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    caption: json['caption'] as String?,
+    viewerIds: (json['viewerIds'] as List?)?.cast<String>() ?? [],
+  );
 }

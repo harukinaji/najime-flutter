@@ -174,8 +174,8 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
           color: hasFocus
               ? cs.primary
               : hasText
-                  ? cs.outline
-                  : cs.outlineVariant,
+              ? cs.outline
+              : cs.outlineVariant,
           width: hasFocus ? 1.5 : 1,
         ),
       ),
@@ -219,9 +219,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verification'),
-      ),
+      appBar: AppBar(title: const Text('Verification')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
@@ -234,11 +232,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
                 color: cs.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.shield_outlined,
-                size: 36,
-                color: cs.primary,
-              ),
+              child: Icon(Icons.shield_outlined, size: 36, color: cs.primary),
             ),
             const SizedBox(height: 24),
             Text(
@@ -252,10 +246,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
             const SizedBox(height: 8),
             Text(
               'Enter the 8-digit code sent to',
-              style: TextStyle(
-                fontSize: 14,
-                color: cs.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: 4),
             Text(
@@ -274,7 +265,10 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
                 side: BorderSide(color: cs.outlineVariant),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 20,
+                ),
                 child: FittedBox(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -291,7 +285,10 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
                           ),
                         ),
                       ),
-                      ...List.generate(4, (index) => _buildDigitBox(index + 4, cs)),
+                      ...List.generate(
+                        4,
+                        (index) => _buildDigitBox(index + 4, cs),
+                      ),
                     ],
                   ),
                 ),
@@ -331,10 +328,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
             if (_secondsRemaining > 0)
               Text(
                 'Code expires in $_formattedTime',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: cs.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
               )
             else
               Text(
@@ -348,8 +342,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
             if (widget.password != null) ...[
               const SizedBox(height: 16),
               TextButton(
-                onPressed:
-                    _resending || _secondsRemaining > 0 ? null : _resend,
+                onPressed: _resending || _secondsRemaining > 0 ? null : _resend,
                 child: _resending
                     ? const SizedBox(
                         height: 16,
@@ -357,9 +350,7 @@ class _LoginVerifyScreenState extends State<LoginVerifyScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Text(
-                        _secondsRemaining > 0
-                            ? 'Resend code'
-                            : 'Send new code',
+                        _secondsRemaining > 0 ? 'Resend code' : 'Send new code',
                         style: TextStyle(
                           color: cs.primary,
                           fontWeight: FontWeight.w500,

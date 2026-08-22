@@ -206,19 +206,18 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       );
       Navigator.of(context).pop();
     } else {
-      setState(() => _error = linkResult.message ?? 'Failed to link phone number.');
+      setState(
+        () => _error = linkResult.message ?? 'Failed to link phone number.',
+      );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_codeSent ? 'Verify Code' : 'Phone Number'),
-      ),
+      appBar: AppBar(title: Text(_codeSent ? 'Verify Code' : 'Phone Number')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: _codeSent ? _buildOtpView(cs) : _buildPhoneView(cs),
@@ -264,8 +263,14 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           onTap: () => _phoneTouched = true,
           decoration: InputDecoration(
             hintText: '+1 (555) 123-4567',
-            hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
-            prefixIcon: Icon(Icons.phone_outlined, color: cs.onSurfaceVariant, size: 22),
+            hintStyle: TextStyle(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
+            prefixIcon: Icon(
+              Icons.phone_outlined,
+              color: cs.onSurfaceVariant,
+              size: 22,
+            ),
             errorText: _phoneError,
             errorStyle: TextStyle(fontSize: 12),
             border: OutlineInputBorder(
@@ -274,7 +279,9 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+              borderSide: BorderSide(
+                color: cs.outlineVariant.withValues(alpha: 0.5),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -291,7 +298,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: cs.error, width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
         if (_error != null) ...[
@@ -305,15 +315,23 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           child: FilledButton(
             onPressed: _loading ? null : _sendCode,
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: _loading
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   )
-                : const Text('Send Code', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                : const Text(
+                    'Send Code',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
           ),
         ),
       ],
@@ -339,11 +357,18 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         Text.rich(
           TextSpan(
             text: 'A 6-digit code was sent to ',
-            style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant, height: 1.4),
+            style: TextStyle(
+              fontSize: 14,
+              color: cs.onSurfaceVariant,
+              height: 1.4,
+            ),
             children: [
               TextSpan(
                 text: _fullPhone,
-                style: TextStyle(fontWeight: FontWeight.w600, color: cs.onSurface),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
               ),
             ],
           ),
@@ -361,7 +386,11 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 maxLength: 1,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: cs.onSurface),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface,
+                ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   counterText: '',
@@ -401,7 +430,12 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
-          Center(child: Text(_error!, style: TextStyle(color: cs.error, fontSize: 13))),
+          Center(
+            child: Text(
+              _error!,
+              style: TextStyle(color: cs.error, fontSize: 13),
+            ),
+          ),
         ],
         const SizedBox(height: 28),
         SizedBox(
@@ -410,15 +444,23 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           child: FilledButton(
             onPressed: _loading ? null : _verifyCode,
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: _loading
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
                   )
-                : const Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                : const Text(
+                    'Verify',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
           ),
         ),
         const SizedBox(height: 16),
@@ -432,7 +474,11 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   onPressed: _loading ? null : _sendCode,
                   child: Text(
                     'Resend code',
-                    style: TextStyle(fontSize: 14, color: cs.primary, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: cs.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
         ),
@@ -448,7 +494,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                 c.clear();
               }
             },
-            child: Text('Change phone number', style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant)),
+            child: Text(
+              'Change phone number',
+              style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+            ),
           ),
         ),
       ],

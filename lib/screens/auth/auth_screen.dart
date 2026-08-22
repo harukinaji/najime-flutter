@@ -32,7 +32,8 @@ class _AuthScreenState extends State<AuthScreen>
 
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email'],
-    serverClientId: '18846067823-8g31lqvrvnkcbitnau6ga8kuad783as9.apps.googleusercontent.com',
+    serverClientId:
+        '18846067823-8g31lqvrvnkcbitnau6ga8kuad783as9.apps.googleusercontent.com',
   );
 
   void _navigateToHome() {
@@ -136,9 +137,7 @@ class _AuthScreenState extends State<AuthScreen>
       setState(() => _googleLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Google Sign-In failed. Please try again.',
-          ),
+          content: Text('Google Sign-In failed. Please try again.'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -165,10 +164,7 @@ class _AuthScreenState extends State<AuthScreen>
       AuthCredentials.authTicket = result.authTicket;
       context.push(
         '/auth/verify',
-        extra: {
-          'username': result.username,
-          'emailHint': result.emailHint,
-        },
+        extra: {'username': result.username, 'emailHint': result.emailHint},
       );
     } else if (result.require2fa && result.authMethod == 'mobile_approval') {
       AuthCredentials.pollSecret = result.pollSecret;

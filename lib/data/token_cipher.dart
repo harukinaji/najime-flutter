@@ -5,8 +5,9 @@ import 'package:flutter/services.dart';
 class TokenCipher {
   TokenCipher._();
 
-  static const MethodChannel _channel =
-      MethodChannel('com.naji.najimessenger/token');
+  static const MethodChannel _channel = MethodChannel(
+    'com.naji.najimessenger/token',
+  );
 
   static Future<String?> encrypt(String plaintext) async {
     try {

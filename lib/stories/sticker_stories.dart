@@ -27,19 +27,13 @@ final stickerStories = [
   Story(
     name: 'Stickers/StickerThumb - Loading',
     builder: (context) => const Center(
-      child: StickerThumb(
-        url: '/uploads/stickers/animation.tgs',
-        size: 80,
-      ),
+      child: StickerThumb(url: '/uploads/stickers/animation.tgs', size: 80),
     ),
   ),
   Story(
     name: 'Stickers/StickerThumb - Broken',
     builder: (context) => const Center(
-      child: StickerThumb(
-        url: '/uploads/stickers/nonexistent.png',
-        size: 80,
-      ),
+      child: StickerThumb(url: '/uploads/stickers/nonexistent.png', size: 80),
     ),
   ),
 ];

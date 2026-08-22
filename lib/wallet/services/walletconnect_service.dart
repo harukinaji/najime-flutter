@@ -99,42 +99,38 @@ class WalletConnectClient {
   bool get isInitialized => _initialized;
 
   /// The active session, if any.
-  WalletConnectSession? get session =>
-      _address == null
-          ? null
-          : WalletConnectSession(
-              peerName: _peerName ?? 'Wallet',
-              primaryAccount: _address,
-            );
+  WalletConnectSession? get session => _address == null
+      ? null
+      : WalletConnectSession(
+          peerName: _peerName ?? 'Wallet',
+          primaryAccount: _address,
+        );
 
   // ── Per-wallet protocol constants ───────────────────────────────────
 
   String get _host =>
       _wallet == SolanaWalletKind.solflare ? 'solflare.com' : 'phantom.app';
 
-  String get _requestParam =>
-      _wallet == SolanaWalletKind.solflare
-          ? 'solflareRequest'
-          : 'phantomRequest';
+  String get _requestParam => _wallet == SolanaWalletKind.solflare
+      ? 'solflareRequest'
+      : 'phantomRequest';
 
-  String get _encryptionKeyParam =>
-      _wallet == SolanaWalletKind.solflare
-          ? 'solflare_encryption_public_key'
-          : 'phantom_encryption_public_key';
+  String get _encryptionKeyParam => _wallet == SolanaWalletKind.solflare
+      ? 'solflare_encryption_public_key'
+      : 'phantom_encryption_public_key';
 
   String _peerNameFor(SolanaWalletKind wallet) =>
       wallet == SolanaWalletKind.solflare ? 'Solflare' : 'Phantom';
 
-  String get _dappPublicKey =>
-      base58encode(_keyPair!.publicKey.asTypedList);
+  String get _dappPublicKey => base58encode(_keyPair!.publicKey.asTypedList);
 
-  String get _redirectBase =>
-      config.metadata.redirectNative.isNotEmpty
-          ? config.metadata.redirectNative
-          : 'najime://';
+  String get _redirectBase => config.metadata.redirectNative.isNotEmpty
+      ? config.metadata.redirectNative
+      : 'najime://';
 
-  String get _appUrl =>
-      config.metadata.url.isNotEmpty ? config.metadata.url : 'https://najime.app';
+  String get _appUrl => config.metadata.url.isNotEmpty
+      ? config.metadata.url
+      : 'https://najime.app';
 
   // ── Lifecycle ───────────────────────────────────────────────────────
 
@@ -166,8 +162,9 @@ class WalletConnectClient {
     }
     _box = pncl.Box(
       myPrivateKey: _keyPair!,
-      theirPublicKey:
-          pncl.PublicKey(Uint8List.fromList(base58decode(remoteKey))),
+      theirPublicKey: pncl.PublicKey(
+        Uint8List.fromList(base58decode(remoteKey)),
+      ),
     );
 
     final payload = _decrypt(params);
@@ -189,17 +186,26 @@ class WalletConnectClient {
       if (walletName == null) return false;
       final privateKey = await _secureStorage.read(key: 'naji_dl.private_key');
       final remoteKey = await _secureStorage.read(key: 'naji_dl.remote_key');
-      final sessionToken = await _secureStorage.read(key: 'naji_dl.session_token');
+      final sessionToken = await _secureStorage.read(
+        key: 'naji_dl.session_token',
+      );
       final address = await _secureStorage.read(key: 'naji_dl.address');
       final peerName = await _secureStorage.read(key: 'naji_dl.peer_name');
-      if (privateKey == null || remoteKey == null || sessionToken == null || address == null) {
+      if (privateKey == null ||
+          remoteKey == null ||
+          sessionToken == null ||
+          address == null) {
         return false;
       }
-      _wallet = walletName == 'solflare' ? SolanaWalletKind.solflare : SolanaWalletKind.phantom;
+      _wallet = walletName == 'solflare'
+          ? SolanaWalletKind.solflare
+          : SolanaWalletKind.phantom;
       _keyPair = pncl.PrivateKey(Uint8List.fromList(base58decode(privateKey)));
       _box = pncl.Box(
         myPrivateKey: _keyPair!,
-        theirPublicKey: pncl.PublicKey(Uint8List.fromList(base58decode(remoteKey))),
+        theirPublicKey: pncl.PublicKey(
+          Uint8List.fromList(base58decode(remoteKey)),
+        ),
       );
       _sessionToken = sessionToken;
       _address = address;
@@ -270,8 +276,10 @@ class WalletConnectClient {
     final payload = _decrypt(params);
     final txid =
         (payload['signature'] ??
-            payload['transaction_id'] ??
-            payload['transaction'])?.toString() ?? '';
+                payload['transaction_id'] ??
+                payload['transaction'])
+            ?.toString() ??
+        '';
     if (txid.isEmpty) {
       throw StateError('Missing transaction id in response');
     }
@@ -429,18 +437,31 @@ class WalletConnectClient {
   }
 
   Future<void> _persist({required String remoteKey}) async {
-    await _secureStorage.write(key: 'naji_dl.wallet', value: _wallet == SolanaWalletKind.solflare ? 'solflare' : 'phantom');
-    await _secureStorage.write(key: 'naji_dl.private_key', value: base58encode(_keyPair!.asTypedList));
+    await _secureStorage.write(
+      key: 'naji_dl.wallet',
+      value: _wallet == SolanaWalletKind.solflare ? 'solflare' : 'phantom',
+    );
+    await _secureStorage.write(
+      key: 'naji_dl.private_key',
+      value: base58encode(_keyPair!.asTypedList),
+    );
     await _secureStorage.write(key: 'naji_dl.remote_key', value: remoteKey);
-    await _secureStorage.write(key: 'naji_dl.session_token', value: _sessionToken!);
+    await _secureStorage.write(
+      key: 'naji_dl.session_token',
+      value: _sessionToken!,
+    );
     await _secureStorage.write(key: 'naji_dl.address', value: _address!);
     await _secureStorage.write(key: 'naji_dl.peer_name', value: _peerName!);
   }
 
   Future<void> _clearPersisted() async {
     for (final key in const [
-      'naji_dl.wallet', 'naji_dl.private_key', 'naji_dl.remote_key',
-      'naji_dl.session_token', 'naji_dl.address', 'naji_dl.peer_name',
+      'naji_dl.wallet',
+      'naji_dl.private_key',
+      'naji_dl.remote_key',
+      'naji_dl.session_token',
+      'naji_dl.address',
+      'naji_dl.peer_name',
     ]) {
       await _secureStorage.delete(key: key);
     }

@@ -41,12 +41,11 @@ class StakingService {
   static Future<Ed25519HDPublicKey> deriveStakeAddress(
     Ed25519HDPublicKey wallet,
     int index,
-  ) =>
-      Ed25519HDPublicKey.createWithSeed(
-        fromPublicKey: wallet,
-        seed: '$_seedPrefix:$index',
-        programId: StakeProgram.id,
-      );
+  ) => Ed25519HDPublicKey.createWithSeed(
+    fromPublicKey: wallet,
+    seed: '$_seedPrefix:$index',
+    programId: StakeProgram.id,
+  );
 
   /// Returns the current active validators (vote accounts) so the user can
   /// choose where to delegate.
@@ -65,8 +64,10 @@ class StakingService {
     required int amountLamports,
     required int index,
   }) async {
-    final stakeAddress =
-        await deriveStakeAddress(wallet.keyPair.publicKey, index);
+    final stakeAddress = await deriveStakeAddress(
+      wallet.keyPair.publicKey,
+      index,
+    );
 
     // The delegated amount is (funded lamports - rent-exempt reserve) because
     // the reserve is locked to keep the account rent-exempt. Devnet enforces a
@@ -77,7 +78,8 @@ class StakingService {
     );
     final delegated = amountLamports - reserve;
     if (delegated < minimalDelegationLamports) {
-      final needed = (minimalDelegationLamports + reserve) / WalletConfig.lamportsPerSol;
+      final needed =
+          (minimalDelegationLamports + reserve) / WalletConfig.lamportsPerSol;
       throw ArgumentError(
         'Insufficient SOL for staking: requires minimum '
         '${needed.toStringAsFixed(4)} SOL (reserve $reserve), '
@@ -101,10 +103,7 @@ class StakingService {
         space: StakeProgram.neededAccountSpace,
         owner: StakeProgram.id,
       ),
-      StakeInstruction.initialize(
-        stake: stakeAddress,
-        authorized: authorized,
-      ),
+      StakeInstruction.initialize(stake: stakeAddress, authorized: authorized),
       StakeInstruction.delegateStake(
         stake: stakeAddress,
         vote: Ed25519HDPublicKey.fromBase58(vote),
@@ -177,7 +176,11 @@ class StakingService {
     return value;
   }
 
-  Future<SignedTx> _sign(Message message, String blockhash, Wallet wallet) async {
+  Future<SignedTx> _sign(
+    Message message,
+    String blockhash,
+    Wallet wallet,
+  ) async {
     final compiled = message.compile(
       recentBlockhash: blockhash,
       feePayer: wallet.keyPair.publicKey,

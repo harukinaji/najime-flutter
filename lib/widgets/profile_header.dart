@@ -25,10 +25,7 @@ class ProfileHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primary,
-            AppColors.primaryDark,
-          ],
+          colors: [AppColors.primary, AppColors.primaryDark],
         ),
       ),
       child: SafeArea(
@@ -85,10 +82,7 @@ class ProfileHeader extends StatelessWidget {
               '@${user.username}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
             if (user.bio.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -96,10 +90,7 @@ class ProfileHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
                   user.bio,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white60, fontSize: 14),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -110,7 +101,10 @@ class ProfileHeader extends StatelessWidget {
             GestureDetector(
               onTap: onQrTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -159,10 +153,7 @@ class ProfileHeader extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 3),
-          image: DecorationImage(
-            image: _avatarImage(),
-            fit: BoxFit.cover,
-          ),
+          image: DecorationImage(image: _avatarImage(), fit: BoxFit.cover),
         ),
       );
     }
@@ -177,9 +168,7 @@ class ProfileHeader extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          user.displayName.isNotEmpty
-              ? user.displayName[0].toUpperCase()
-              : '?',
+          user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 40,

@@ -44,57 +44,59 @@ class _NftScreenState extends State<NftScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : _nfts!.isEmpty
-                ? ListView(
-                    children: [
-                      const SizedBox(height: 120),
-                      Icon(Icons.image_not_supported_outlined,
-                          size: 56, color: cs.onSurfaceVariant),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No NFTs yet',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Responsive columns: 2 on phones, more on desktop.
-                      final width = constraints.maxWidth;
-                      final columns = width >= 1400
-                          ? 5
-                          : width >= 1100
-                              ? 4
-                              : width >= 700
-                                  ? 3
-                                  : 2;
-
-                      // On very wide screens cap the grid width so cards stay
-                      // a reasonable size, then center the grid.
-                      final maxWidth = width >= 1400 ? 1200.0 : width;
-
-                      return Align(
-                        alignment: Alignment.topCenter,
-                        child: SizedBox(
-                          width: maxWidth,
-                          child: GridView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columns,
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              childAspectRatio: 0.78,
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _nfts!.length,
-                            itemBuilder: (context, index) =>
-                                _NftCard(nft: _nfts![index]),
-                          ),
-                        ),
-                      );
-                    },
+            ? ListView(
+                children: [
+                  const SizedBox(height: 120),
+                  Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 56,
+                    color: cs.onSurfaceVariant,
                   ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No NFTs yet',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  // Responsive columns: 2 on phones, more on desktop.
+                  final width = constraints.maxWidth;
+                  final columns = width >= 1400
+                      ? 5
+                      : width >= 1100
+                      ? 4
+                      : width >= 700
+                      ? 3
+                      : 2;
+
+                  // On very wide screens cap the grid width so cards stay
+                  // a reasonable size, then center the grid.
+                  final maxWidth = width >= 1400 ? 1200.0 : width;
+
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: maxWidth,
+                      child: GridView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.78,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _nfts!.length,
+                        itemBuilder: (context, index) =>
+                            _NftCard(nft: _nfts![index]),
+                      ),
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }

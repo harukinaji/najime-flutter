@@ -34,9 +34,10 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _blurAnimation = Tween<double>(begin: 8.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _blurAnimation = Tween<double>(
+      begin: 8.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     if (_isUnlocked) _controller.value = 1.0;
   }
 
@@ -167,14 +168,13 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                             child: OutlinedButton(
                               onPressed: _handleUnlock,
                               style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                side: BorderSide(
-                                  color: cs.outlineVariant,
-                                ),
+                                side: BorderSide(color: cs.outlineVariant),
                               ),
                               child: const Text('Cancel'),
                             ),
@@ -186,8 +186,9 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: cs.primary,
                                 foregroundColor: cs.onPrimary,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),

@@ -88,7 +88,8 @@ class AppAttestation {
     if (_hmacKey == null) return;
     final hexKey = _hexEncode(_hmacKey!);
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/attestation/register');
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 10);
     try {
       final request = await client.postUrl(uri);
       request.headers.contentType = ContentType.json;
@@ -99,10 +100,7 @@ class AppAttestation {
       if (appKey.isNotEmpty) {
         request.headers.set(appKeyHeaderName, appKey);
       }
-      request.write(jsonEncode({
-        'device_id': deviceId,
-        'key_hex': hexKey,
-      }));
+      request.write(jsonEncode({'device_id': deviceId, 'key_hex': hexKey}));
       final response = await request.close();
       await response.drain();
       if (response.statusCode != 200) {
@@ -152,7 +150,8 @@ class AppAttestation {
     }
     if (_hmacKey == null) return {};
 
-    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000)
+        .toString();
     final nonce = _generateNonce();
     final bodyHash = body != null && body.isNotEmpty
         ? sha256.convert(utf8.encode(body)).toString()
@@ -190,7 +189,9 @@ class AppAttestation {
   Future<Uint8List> _loadOrCreateKey() async {
     // Try loading from Keystore/Keychain via native channel
     try {
-      final existing = await _attestChannel.invokeMethod<Uint8List>('getAttestationKey');
+      final existing = await _attestChannel.invokeMethod<Uint8List>(
+        'getAttestationKey',
+      );
       if (existing != null && existing.length == 32) return existing;
     } catch (_) {}
 

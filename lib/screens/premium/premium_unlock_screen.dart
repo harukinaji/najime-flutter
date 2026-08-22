@@ -48,9 +48,10 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _blurAnim = Tween<double>(begin: 10.0, end: 0.0).animate(
-      CurvedAnimation(parent: _blurController, curve: Curves.easeOut),
-    );
+    _blurAnim = Tween<double>(
+      begin: 10.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _blurController, curve: Curves.easeOut));
 
     _successController = AnimationController(
       vsync: this,
@@ -148,7 +149,10 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
         builder: (context, child) => ImageFiltered(
           imageFilter: _isUnlocked
               ? ImageFilter.blur(sigmaX: 0, sigmaY: 0)
-              : ImageFilter.blur(sigmaX: _blurAnim.value, sigmaY: _blurAnim.value),
+              : ImageFilter.blur(
+                  sigmaX: _blurAnim.value,
+                  sigmaY: _blurAnim.value,
+                ),
           child: child,
         ),
         child: Container(
@@ -185,8 +189,10 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
               if (!_isUnlocked) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
@@ -258,9 +264,7 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: isSelected
-                            ? Colors.white
-                            : _cs.onSurface,
+                        color: isSelected ? Colors.white : _cs.onSurface,
                       ),
                     ),
                   ],
@@ -304,10 +308,7 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
           const SizedBox(height: 4),
           Text(
             '≈ \$${(_info.amount * 170).toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 14,
-              color: _cs.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 14, color: _cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -331,10 +332,7 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
               children: [
                 Text(
                   'From',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _cs.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 12, color: _cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -360,7 +358,9 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
       decoration: BoxDecoration(
         color: const Color(0xFF22C55E).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         children: [
@@ -378,10 +378,7 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
           Text(
             'You now have access to ${widget.contentTitle ?? 'this premium content'}',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: _cs.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 14, color: _cs.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           Container(
@@ -514,11 +511,7 @@ class _PremiumUnlockScreenState extends State<PremiumUnlockScreen>
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.check,
-                  size: 60,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.check, size: 60, color: Colors.white),
               ),
             ),
           ),

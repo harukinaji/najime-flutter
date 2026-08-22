@@ -42,13 +42,16 @@ class WalletDeepLinks {
     try {
       final appLinks = AppLinks();
       _appLinks = appLinks;
-      appLinks.uriLinkStream.listen((Uri? uri) {
-        if (uri == null) return;
-        if (!_isTrustedLink(uri)) return;
-        AppState.instance.dispatchWalletLink(uri.toString());
-      }, onError: (Object e) {
-        _lastError = e;
-      });
+      appLinks.uriLinkStream.listen(
+        (Uri? uri) {
+          if (uri == null) return;
+          if (!_isTrustedLink(uri)) return;
+          AppState.instance.dispatchWalletLink(uri.toString());
+        },
+        onError: (Object e) {
+          _lastError = e;
+        },
+      );
     } catch (e) {
       _lastError = e;
     }

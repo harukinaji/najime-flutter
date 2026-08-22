@@ -27,8 +27,9 @@ class VoiceRecordingService {
   Stream<AmplitudeLevel> get amplitudeStream => _amplitudeController.stream;
 
   bool get isRecording => _isRecording;
-  Duration get currentDuration =>
-      _startTime != null ? DateTime.now().difference(_startTime!) : Duration.zero;
+  Duration get currentDuration => _startTime != null
+      ? DateTime.now().difference(_startTime!)
+      : Duration.zero;
 
   Future<bool> _requestPermission() async {
     final status = await Permission.microphone.request();
@@ -61,14 +62,13 @@ class VoiceRecordingService {
     });
 
     _ampSub?.cancel();
-    _ampSub = _recorder.onAmplitudeChanged(const Duration(milliseconds: 80)).listen(
-      (amp) {
-        _amplitudeController.add(AmplitudeLevel(
-          current: amp.current,
-          max: amp.max,
-        ));
-      },
-    );
+    _ampSub = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 80))
+        .listen((amp) {
+          _amplitudeController.add(
+            AmplitudeLevel(current: amp.current, max: amp.max),
+          );
+        });
 
     return true;
   }
@@ -102,7 +102,8 @@ class VoiceRecordingService {
 
     final dir = await getTemporaryDirectory();
     final files = dir.listSync().whereType<File>().where(
-        (f) => f.path.contains('voice_') && f.path.endsWith('.m4a'));
+      (f) => f.path.contains('voice_') && f.path.endsWith('.m4a'),
+    );
     for (final f in files) {
       await f.delete();
     }

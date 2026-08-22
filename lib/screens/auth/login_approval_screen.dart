@@ -98,10 +98,10 @@ class _LoginApprovalScreenState extends State<LoginApprovalScreen> {
 
     if (result.emailHint != null) {
       _cancelTimers();
-      context.push('/auth/verify', extra: {
-        'username': widget.username,
-        'emailHint': result.emailHint,
-      });
+      context.push(
+        '/auth/verify',
+        extra: {'username': widget.username, 'emailHint': result.emailHint},
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

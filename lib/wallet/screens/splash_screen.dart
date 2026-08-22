@@ -18,10 +18,17 @@ class SplashScreen extends StatelessWidget {
                 color: scheme.primary,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 44),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: 44,
+              ),
             ),
             const SizedBox(height: 20),
-            const Text('Naji Wallet', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Naji Wallet',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             Text(
               'Solana Devnet',

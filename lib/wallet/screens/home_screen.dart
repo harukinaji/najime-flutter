@@ -62,7 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
         wallet.address,
         known: state.tokenRegistry,
       );
-      final history = await state.solana.getTransactionHistory(wallet.address, limit: 20);
+      final history = await state.solana.getTransactionHistory(
+        wallet.address,
+        limit: 20,
+      );
       final nfts = await state.solana.getNfts(wallet.address);
       if (mounted) {
         setState(() {
@@ -85,7 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() => _airdropping = true);
     try {
-      await state.solana.requestAirdrop(wallet.address, 2 * WalletConfig.lamportsPerSol);
+      await state.solana.requestAirdrop(
+        wallet.address,
+        2 * WalletConfig.lamportsPerSol,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Airdrop completed: +2 SOL (devnet)')),
@@ -108,16 +114,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final wallet = context.read<AppState>().wallet;
     if (wallet == null) return;
     Clipboard.setData(ClipboardData(text: wallet.address));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Address copied')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Address copied')));
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final wallet = state.wallet!;
-    final sol = _lamports == null ? null : _lamports! / WalletConfig.lamportsPerSol;
+    final sol = _lamports == null
+        ? null
+        : _lamports! / WalletConfig.lamportsPerSol;
 
     return Scaffold(
       body: SafeArea(
@@ -150,7 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       sliver: SliverList.builder(
                         itemCount: _history.length,
-                        itemBuilder: (context, index) => _buildHistoryTile(context, _history[index]),
+                        itemBuilder: (context, index) =>
+                            _buildHistoryTile(context, _history[index]),
                       ),
                     ),
                 ],
@@ -208,7 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
             color: session != null ? cs.primary : cs.onSurfaceVariant,
           ),
           title: Text(
-            session != null ? 'External wallet: ${session.peerName}' : 'Connect external wallet',
+            session != null
+                ? 'External wallet: ${session.peerName}'
+                : 'Connect external wallet',
           ),
           subtitle: Text(
             session != null
@@ -237,7 +248,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, size: 18, color: Colors.orange.shade700),
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 18,
+              color: Colors.orange.shade700,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -421,7 +436,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              const Text('Tokens', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text(
+                'Tokens',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
               IconButton(
                 tooltip: 'Add token',
@@ -445,7 +463,10 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              const Text('NFT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text(
+                'NFT',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               const Spacer(),
               if (_nfts.isNotEmpty)
                 Text(
@@ -455,7 +476,11 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 tooltip: 'Open NFT collection',
                 onPressed: _openNftCollection,
-                icon: Icon(Icons.arrow_forward_ios, size: 16, color: _cs.onSurfaceVariant),
+                icon: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: _cs.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -469,13 +494,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(Icons.image_not_supported_outlined,
-                          color: _cs.onSurfaceVariant, size: 20),
+                      Icon(
+                        Icons.image_not_supported_outlined,
+                        color: _cs.onSurfaceVariant,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
                           'You don\'t have any NFTs yet. Open collection.',
-                          style: TextStyle(color: _cs.onSurfaceVariant, fontSize: 14),
+                          style: TextStyle(
+                            color: _cs.onSurfaceVariant,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -558,7 +589,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _TokenRow(
           mint: token.mint,
           symbol: token.tokenSymbol,
-          name: token.tokenName.isNotEmpty ? token.tokenName : (info?.name ?? token.tokenSymbol),
+          name: token.tokenName.isNotEmpty
+              ? token.tokenName
+              : (info?.name ?? token.tokenSymbol),
           amountText: _formatUiAmount(token.uiAmountString),
           isCustom: isCustom,
           onTap: () => _openSend(
@@ -586,8 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     programId: token.programId,
                   ),
           ),
-          onLongPress:
-              isCustom ? () => _confirmRemoveToken(token.mint) : null,
+          onLongPress: isCustom ? () => _confirmRemoveToken(token.mint) : null,
         ),
       );
     }
@@ -683,8 +715,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: decimalsController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Decimal places'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Decimal places',
+                  ),
                 ),
                 if (error != null) ...[
                   const SizedBox(height: 12),
@@ -715,12 +751,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
                 if (decimals == null || decimals < 0 || decimals > 19) {
                   setDialogState(
-                      () => error = 'Invalid number of decimal places');
+                    () => error = 'Invalid number of decimal places',
+                  );
                   return;
                 }
                 final state = context.read<AppState>();
                 if (state.tokenRegistry.containsKey(mint)) {
-                  setDialogState(() => error = 'This token is already in the list');
+                  setDialogState(
+                    () => error = 'This token is already in the list',
+                  );
                   return;
                 }
                 state.addCustomToken(
@@ -784,7 +823,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history, size: 56, color: _cs.onSurfaceVariant.withValues(alpha: 0.6)),
+          Icon(
+            Icons.history,
+            size: 56,
+            color: _cs.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
           const SizedBox(height: 12),
           Text(
             'No transactions yet.\nGet SOL via Airdrop.',
@@ -802,7 +845,9 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: (isSuccess ? Colors.green : _cs.error).withValues(alpha: 0.15),
+          backgroundColor: (isSuccess ? Colors.green : _cs.error).withValues(
+            alpha: 0.15,
+          ),
           child: Icon(
             isSuccess ? Icons.check : Icons.error_outline,
             color: isSuccess ? Colors.green : _cs.error,
@@ -822,10 +867,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         trailing: isSuccess
             ? Icon(Icons.chevron_right, color: _cs.onSurfaceVariant)
-            : Text(
-                'error',
-                style: TextStyle(color: _cs.error, fontSize: 12),
-              ),
+            : Text('error', style: TextStyle(color: _cs.error, fontSize: 12)),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
@@ -878,7 +920,10 @@ class _TokenRow extends StatelessWidget {
                 amountText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

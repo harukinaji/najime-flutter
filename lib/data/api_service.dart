@@ -80,10 +80,7 @@ class ApiService {
               redirectNative: 'najime://',
               redirectUniversal: 'https://najime.app',
             );
-      return WalletConnectConfig(
-        relayUrl: relayUrl,
-        metadata: metadata,
-      );
+      return WalletConnectConfig(relayUrl: relayUrl, metadata: metadata);
     } catch (_) {
       return null;
     }
@@ -91,7 +88,8 @@ class ApiService {
 
   /// Plain client for auth endpoints — no attestation headers, only cert
   /// pinning + the shared application key.
-  static http.Client get _authClient => _authClientCached ??= AppKeyClient(_createPlainClient());
+  static http.Client get _authClient =>
+      _authClientCached ??= AppKeyClient(_createPlainClient());
   static http.Client? _authClientCached;
   static http.Client _createPlainClient() {
     final httpClient = HttpClient()
@@ -538,7 +536,9 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> searchGroups(String query) async {
     try {
       final response = await _client.get(
-        Uri.parse('$_baseUrl/api/groups/search?q=${Uri.encodeComponent(query)}'),
+        Uri.parse(
+          '$_baseUrl/api/groups/search?q=${Uri.encodeComponent(query)}',
+        ),
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
@@ -556,7 +556,9 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> searchMessages(String query) async {
     try {
       final response = await _client.get(
-        Uri.parse('$_baseUrl/api/messages/search?q=${Uri.encodeComponent(query)}'),
+        Uri.parse(
+          '$_baseUrl/api/messages/search?q=${Uri.encodeComponent(query)}',
+        ),
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
@@ -697,7 +699,10 @@ class ApiService {
 
   /// Marks an invoice message as paid (with the on-chain tx signature) so the
   /// sender and receiver both see the "Оплачено" state.
-  static Future<bool> markInvoicePaid(String messageId, String txSignature) async {
+  static Future<bool> markInvoicePaid(
+    String messageId,
+    String txSignature,
+  ) async {
     try {
       if (kDebugMode) debugPrint('[API] markInvoicePaid');
       final response = await _client.post(
@@ -708,7 +713,8 @@ class ApiService {
         },
         body: jsonEncode({'tx_signature': txSignature}),
       );
-      if (kDebugMode) debugPrint('[API] markInvoicePaid status=${response.statusCode}');
+      if (kDebugMode)
+        debugPrint('[API] markInvoicePaid status=${response.statusCode}');
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       return response.statusCode == 200 && body['success'] == true;
     } catch (e) {
@@ -745,7 +751,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> redeemCheck(String checkId, {String? txSignature}) async {
+  static Future<Map<String, dynamic>?> redeemCheck(
+    String checkId, {
+    String? txSignature,
+  }) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/checks/$checkId/redeem'),
@@ -753,7 +762,9 @@ class ApiService {
           'Content-Type': 'application/json',
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-        body: txSignature != null ? jsonEncode({'tx_signature': txSignature}) : null,
+        body: txSignature != null
+            ? jsonEncode({'tx_signature': txSignature})
+            : null,
       );
       return jsonDecode(response.body) as Map<String, dynamic>?;
     } catch (_) {
@@ -980,7 +991,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> addReaction(String messageId, String emoji) async {
+  static Future<Map<String, dynamic>?> addReaction(
+    String messageId,
+    String emoji,
+  ) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/messages/$messageId/reactions'),
@@ -1000,7 +1014,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> removeReaction(String messageId, String emoji) async {
+  static Future<Map<String, dynamic>?> removeReaction(
+    String messageId,
+    String emoji,
+  ) async {
     try {
       final response = await _client.delete(
         Uri.parse('$_baseUrl/api/messages/$messageId/reactions/$emoji'),
@@ -1133,7 +1150,9 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getPinnedMessages(String chatId) async {
+  static Future<List<Map<String, dynamic>>> getPinnedMessages(
+    String chatId,
+  ) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/chats/$chatId/pinned'),
@@ -1190,7 +1209,9 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getScheduledMessages(String chatId) async {
+  static Future<List<Map<String, dynamic>>> getScheduledMessages(
+    String chatId,
+  ) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/chats/$chatId/scheduled'),
@@ -1300,7 +1321,9 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getGroupMembers(String chatId) async {
+  static Future<List<Map<String, dynamic>>> getGroupMembers(
+    String chatId,
+  ) async {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/chats/group/$chatId/members'),
@@ -1354,10 +1377,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-        body: jsonEncode({
-          'chat_id': chatId,
-          'user_id': userId,
-        }),
+        body: jsonEncode({'chat_id': chatId, 'user_id': userId}),
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       return response.statusCode == 200 && body['success'] == true;
@@ -1611,7 +1631,8 @@ class ApiService {
     }
   }
 
-  static Future<bool> updateBot(String botId, {
+  static Future<bool> updateBot(
+    String botId, {
     String? displayName,
     String? description,
     String? avatarUrl,
@@ -1747,7 +1768,10 @@ class ApiService {
     }
   }
 
-  static Future<bool> sendCallback(String messageId, String callbackData) async {
+  static Future<bool> sendCallback(
+    String messageId,
+    String callbackData,
+  ) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/messages/$messageId/callback'),
@@ -1770,7 +1794,9 @@ class ApiService {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/miniapp/wallet'),
-        headers: {if (_accessToken != null) 'Authorization': 'Bearer $_accessToken'},
+        headers: {
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
@@ -1802,7 +1828,9 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> createMultiplayerRoom({int maxPlayers = 8}) async {
+  static Future<Map<String, dynamic>?> createMultiplayerRoom({
+    int maxPlayers = 8,
+  }) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/miniapp/multiplayer/room'),
@@ -1822,7 +1850,9 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> joinMultiplayerRoom(String roomId) async {
+  static Future<Map<String, dynamic>?> joinMultiplayerRoom(
+    String roomId,
+  ) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/miniapp/multiplayer/join'),
@@ -1863,7 +1893,9 @@ class ApiService {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/miniapp/multiplayer/rooms'),
-        headers: {if (_accessToken != null) 'Authorization': 'Bearer $_accessToken'},
+        headers: {
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
@@ -1910,7 +1942,10 @@ class ApiService {
     }
   }
 
-  static Future<bool> updateMultiplayerState(String roomId, Map<String, dynamic> state) async {
+  static Future<bool> updateMultiplayerState(
+    String roomId,
+    Map<String, dynamic> state,
+  ) async {
     try {
       final response = await _client.put(
         Uri.parse('$_baseUrl/api/miniapp/multiplayer/state'),
@@ -1931,7 +1966,9 @@ class ApiService {
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/miniapp/voice/channels'),
-        headers: {if (_accessToken != null) 'Authorization': 'Bearer $_accessToken'},
+        headers: {
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
@@ -2154,10 +2191,14 @@ class ApiService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> searchStickerPacks(String query) async {
+  static Future<List<Map<String, dynamic>>> searchStickerPacks(
+    String query,
+  ) async {
     try {
       final response = await _client.get(
-        Uri.parse('$_baseUrl/api/stickers/search?q=${Uri.encodeComponent(query)}'),
+        Uri.parse(
+          '$_baseUrl/api/stickers/search?q=${Uri.encodeComponent(query)}',
+        ),
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
@@ -2192,7 +2233,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> sendSticker(String chatId, String stickerId) async {
+  static Future<Map<String, dynamic>?> sendSticker(
+    String chatId,
+    String stickerId,
+  ) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/chats/$chatId/messages'),
@@ -2200,10 +2244,7 @@ class ApiService {
           'Content-Type': 'application/json',
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-        body: jsonEncode({
-          'content': stickerId,
-          'type': 'sticker',
-        }),
+        body: jsonEncode({'content': stickerId, 'type': 'sticker'}),
       );
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
@@ -2322,10 +2363,7 @@ class WalletConnectConfig {
   final String relayUrl;
   final WalletConnectMetadata metadata;
 
-  const WalletConnectConfig({
-    required this.relayUrl,
-    required this.metadata,
-  });
+  const WalletConnectConfig({required this.relayUrl, required this.metadata});
 }
 
 /// Reown AppKit metadata used to build WalletConnect pairings and the
@@ -2358,8 +2396,7 @@ class WalletConnectMetadata {
       icons: icons is List
           ? icons.whereType<String>().where((i) => i.isNotEmpty).toList()
           : const [],
-      redirectNative:
-          redirectMap['native'] as String? ?? 'najime://',
+      redirectNative: redirectMap['native'] as String? ?? 'najime://',
       redirectUniversal:
           redirectMap['universal'] as String? ?? 'https://najime.app',
     );

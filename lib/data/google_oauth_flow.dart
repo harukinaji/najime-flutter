@@ -28,8 +28,10 @@ class GoogleOAuthResult {
 class GoogleOAuthFlow {
   GoogleOAuthFlow._();
 
-  static String get _clientId => (dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? '').trim();
-  static const String _exchangeEndpoint = '${AppConfig.apiBaseUrl}/api/oauth/google/exchange';
+  static String get _clientId =>
+      (dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? '').trim();
+  static const String _exchangeEndpoint =
+      '${AppConfig.apiBaseUrl}/api/oauth/google/exchange';
   static const String _authEndpoint =
       'https://accounts.google.com/o/oauth2/v2/auth';
 
@@ -55,16 +57,18 @@ class GoogleOAuthFlow {
     );
     final state = _generateCodeVerifier();
 
-    final authUrl = Uri.parse(_authEndpoint).replace(queryParameters: {
-      'client_id': _clientId,
-      'redirect_uri': redirectUri,
-      'response_type': 'code',
-      'scope': 'openid email profile',
-      'code_challenge': codeChallenge,
-      'code_challenge_method': 'S256',
-      'state': state,
-      'prompt': 'select_account',
-    });
+    final authUrl = Uri.parse(_authEndpoint).replace(
+      queryParameters: {
+        'client_id': _clientId,
+        'redirect_uri': redirectUri,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'code_challenge': codeChallenge,
+        'code_challenge_method': 'S256',
+        'state': state,
+        'prompt': 'select_account',
+      },
+    );
 
     final callback = Completer<HttpRequest>();
 
@@ -95,8 +99,7 @@ class GoogleOAuthFlow {
         return null;
       }
 
-      final request = await callback.future
-          .timeout(const Duration(minutes: 5));
+      final request = await callback.future.timeout(const Duration(minutes: 5));
       final params = request.uri.queryParameters;
 
       if (params['state'] != state) return null;
@@ -114,8 +117,10 @@ class GoogleOAuthFlow {
       );
 
       if (tokenResp.statusCode != 200) {
-        debugPrint('Google token exchange failed: ${tokenResp.statusCode} '
-            '${tokenResp.body}');
+        debugPrint(
+          'Google token exchange failed: ${tokenResp.statusCode} '
+          '${tokenResp.body}',
+        );
         return null;
       }
 

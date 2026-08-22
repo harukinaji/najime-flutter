@@ -1,0 +1,132 @@
+name: Nightly heavy builds
+
+# Heavy desktop/iOS builds. Runs on a schedule and manually — NOT on every PR
+# (keeps PR checks fast; see ci.yml).
+on:
+  schedule:
+    - cron: '0 3 * * *' # daily 03:00 UTC
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.44.3'
+
+jobs:
+  # ── iOS + macOS ───────────────────────────────────────────────────
+  ios-macos:
+    name: iOS + macOS build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: CocoaPods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cocoapods
+            ios/Pods
+            macos/Pods
+          key: pods-${{ hashFiles('**/pubspec.lock') }}
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build iOS (unsigned)
+        run: flutter build ios --release --no-codesign
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: warn
+      - name: Build macOS (unsigned)
+        run: flutter build macos --release
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: build/macos/Build/Products/Release/*.app
+          if-no-files-found: warn
+
+  # ── Windows desktop ───────────────────────────────────────────────
+  windows:
+    name: Windows desktop build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Windows
+        run: flutter build windows --release
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: warn
+
+  # ── Linux desktop ────────────────────────────────────────────────
+  linux:
+    name: Linux desktop build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build Linux
+        run: flutter build linux --release
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: build/linux/x64/release/bundle/
+          if-no-files-found: warn
+
+  # ── Integration smoke (devnet, optional) ─────────────────────────
+  # Gate real on-chain integration behind a manual dispatch. Uses devnet-only
+  # keys — never commit/mainnet secrets here.
+  integration-devnet:
+    name: Integration (Solana devnet)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    env:
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      APP_KEY: ${{ secrets.APP_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Run devnet-gated integration tests
+        run: |
+          if [ -d test/integration_devnet ]; then
+            flutter test test/integration_devnet --coverage
+          else
+            echo "No integration tests yet — nothing to run."
+          fi
+      - name: Upload integration coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore

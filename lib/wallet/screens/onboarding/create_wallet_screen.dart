@@ -51,7 +51,11 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_mnemonic == null) ...[
-                const Icon(Icons.shield_outlined, size: 56, color: Colors.amber),
+                const Icon(
+                  Icons.shield_outlined,
+                  size: 56,
+                  color: Colors.amber,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Your seed phrase is the only way to recover your wallet. '
@@ -66,7 +70,9 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                 FilledButton(
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   onPressed: _creating ? null : _create,
                   child: _creating
@@ -75,7 +81,10 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2.5),
                         )
-                      : const Text('Generate seed phrase', style: TextStyle(fontSize: 16)),
+                      : const Text(
+                          'Generate seed phrase',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
               ] else ...[
                 if (!_confirmed) ...[
@@ -91,16 +100,24 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: scheme.primary.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: _revealed
                         ? Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              for (var i = 0; i < _mnemonic!.split(' ').length; i++)
+                              for (
+                                var i = 0;
+                                i < _mnemonic!.split(' ').length;
+                                i++
+                              )
                                 Chip(
-                                  label: Text('${i + 1}. ${_mnemonic!.split(' ')[i]}'),
+                                  label: Text(
+                                    '${i + 1}. ${_mnemonic!.split(' ')[i]}',
+                                  ),
                                   backgroundColor: scheme.surface,
                                 ),
                             ],
@@ -126,7 +143,8 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                     onPressed: () async {
                       final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (_) => _MnemonicConfirmDialog(mnemonic: _mnemonic!),
+                        builder: (_) =>
+                            _MnemonicConfirmDialog(mnemonic: _mnemonic!),
                       );
                       if (confirmed == true && mounted) {
                         _onConfirmed();
@@ -147,12 +165,17 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                   FilledButton(
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
-                    child: const Text('Go to wallet', style: TextStyle(fontSize: 16)),
+                    child: const Text(
+                      'Go to wallet',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ],
               ],
@@ -222,10 +245,7 @@ class _MnemonicConfirmDialogState extends State<_MnemonicConfirmDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _verify,
-              child: const Text('Check'),
-            ),
+            FilledButton(onPressed: _verify, child: const Text('Check')),
           ],
         ),
       ),

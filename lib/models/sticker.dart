@@ -24,12 +24,12 @@ class Sticker {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'pack_id': packId,
-        'image_url': imageUrl,
-        if (emoji != null) 'emoji': emoji,
-        'sort_order': sortOrder,
-      };
+    'id': id,
+    'pack_id': packId,
+    'image_url': imageUrl,
+    if (emoji != null) 'emoji': emoji,
+    'sort_order': sortOrder,
+  };
 }
 
 class StickerPack {
@@ -67,7 +67,8 @@ class StickerPack {
       creatorName: json['creator_name'] as String? ?? '',
       isInstalled: json['is_installed'] as bool? ?? false,
       stickerCount: json['sticker_count'] as int? ?? 0,
-      stickers: (json['stickers'] as List?)
+      stickers:
+          (json['stickers'] as List?)
               ?.map((s) => Sticker.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [],
@@ -78,17 +79,17 @@ class StickerPack {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        if (description != null) 'description': description,
-        if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
-        'creator_id': creatorId,
-        'creator_name': creatorName,
-        'is_installed': isInstalled,
-        'sticker_count': stickerCount,
-        'stickers': stickers.map((s) => s.toJson()).toList(),
-        'created_at': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    if (description != null) 'description': description,
+    if (thumbnailUrl != null) 'thumbnail_url': thumbnailUrl,
+    'creator_id': creatorId,
+    'creator_name': creatorName,
+    'is_installed': isInstalled,
+    'sticker_count': stickerCount,
+    'stickers': stickers.map((s) => s.toJson()).toList(),
+    'created_at': createdAt.toIso8601String(),
+  };
 
   StickerPack copyWith({
     String? name,

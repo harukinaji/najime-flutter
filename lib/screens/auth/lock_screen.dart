@@ -42,7 +42,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
 
   Future<void> _checkBiometric() async {
     final lock = LockService.instance;
-    debugPrint('[LockScreen] _checkBiometric: canUseBiometric=${lock.canUseBiometric}, method=${lock.method}');
+    debugPrint(
+      '[LockScreen] _checkBiometric: canUseBiometric=${lock.canUseBiometric}, method=${lock.method}',
+    );
     if (!lock.canUseBiometric) return;
     setState(() => _biometricAvailable = true);
     await Future.delayed(const Duration(milliseconds: 300));
@@ -58,7 +60,9 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
     debugPrint('[LockScreen] _tryBiometric: starting');
     try {
       final success = await LockService.instance.authenticateWithBiometric();
-      debugPrint('[LockScreen] _tryBiometric: result=$success, mounted=$mounted');
+      debugPrint(
+        '[LockScreen] _tryBiometric: result=$success, mounted=$mounted',
+      );
       if (success) {
         HapticFeedback.lightImpact();
         debugPrint('[LockScreen] calling onUnlocked...');
@@ -118,11 +122,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
         child: Column(
           children: [
             const Spacer(flex: 2),
-            Icon(
-              Icons.lock_outline,
-              size: 48,
-              color: AppColors.primary,
-            ),
+            Icon(Icons.lock_outline, size: 48, color: AppColors.primary),
             const SizedBox(height: 24),
             Text(
               'Enter PIN',
@@ -138,10 +138,7 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
               const SizedBox(height: 12),
               Text(
                 'Wrong PIN, try again',
-                style: TextStyle(
-                  color: AppColors.error,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.error, fontSize: 14),
               ),
             ],
             const Spacer(flex: 1),
@@ -162,12 +159,12 @@ class _LockScreenState extends State<LockScreen> with TickerProviderStateMixin {
       animation: _shakeAnimation,
       builder: (context, child) {
         final offset = _error
-            ? Offset(_shakeAnimation.value * 10 * (1 - _shakeAnimation.value), 0)
+            ? Offset(
+                _shakeAnimation.value * 10 * (1 - _shakeAnimation.value),
+                0,
+              )
             : Offset.zero;
-        return Transform.translate(
-          offset: offset,
-          child: child,
-        );
+        return Transform.translate(offset: offset, child: child);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

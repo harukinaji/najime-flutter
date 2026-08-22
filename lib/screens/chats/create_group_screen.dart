@@ -89,9 +89,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Future<void> _createGroup() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a group name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter a group name')));
       return;
     }
 
@@ -120,9 +120,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         }
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create group')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to create group')));
     }
   }
 
@@ -162,8 +162,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             child: _searchLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _searchResults.isEmpty
-                    ? _buildEmptyState(cs)
-                    : _buildSearchResults(cs),
+                ? _buildEmptyState(cs)
+                : _buildSearchResults(cs),
           ),
         ],
       ),
@@ -239,7 +239,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           final base64Data = contact.avatarUrl!.split(',').last;
           final bytes = base64Decode(base64Data);
           return ClipOval(
-            child: Image.memory(bytes, width: 24, height: 24, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: 24,
+              height: 24,
+              fit: BoxFit.cover,
+            ),
           );
         } catch (_) {}
       } else {
@@ -249,7 +254,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             width: 24,
             height: 24,
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => _buildAvatarFallback(contact, cs, size: 24),
+            errorBuilder: (_, _, _) =>
+                _buildAvatarFallback(contact, cs, size: 24),
           ),
         );
       }
@@ -280,7 +286,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               horizontal: 16,
               vertical: 10,
             ),
-            prefixIcon: Icon(Icons.search, color: cs.onSurfaceVariant, size: 20),
+            prefixIcon: Icon(
+              Icons.search,
+              color: cs.onSurfaceVariant,
+              size: 20,
+            ),
           ),
         ),
       ),
@@ -302,7 +312,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         final isSelected = _selectedContacts.any((c) => c.id == user.id);
         return ListTile(
           onTap: () => _toggleContact(user),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
           leading: _buildUserAvatar(user, cs, size: 44),
           title: Text(
             user.displayName,
@@ -361,7 +374,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           final base64Data = user.avatarUrl!.split(',').last;
           final bytes = base64Decode(base64Data);
           return ClipOval(
-            child: Image.memory(bytes, width: size, height: size, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+            ),
           );
         } catch (_) {}
       } else {
@@ -371,7 +389,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             width: size,
             height: size,
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => _buildAvatarFallback(user, cs, size: size),
+            errorBuilder: (_, _, _) =>
+                _buildAvatarFallback(user, cs, size: size),
           ),
         );
       }

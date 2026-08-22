@@ -60,14 +60,17 @@ class SolanaPayService {
         recipient: payRequest.recipient.toBase58(),
         amount: payRequest.amount,
         splToken: payRequest.splToken?.toBase58(),
-        reference: (payRequest.reference ?? const []).map((e) => e.toBase58()).toList(),
+        reference: (payRequest.reference ?? const [])
+            .map((e) => e.toBase58())
+            .toList(),
         label: payRequest.label,
         message: payRequest.message,
         memo: payRequest.memo,
       );
     }
 
-    final txRequest = SolanaTransactionRequest.tryParse(trimmed) ??
+    final txRequest =
+        SolanaTransactionRequest.tryParse(trimmed) ??
         _legacyTransactionRequest(trimmed);
     if (txRequest != null) {
       return SolanaPayInfo(
@@ -95,8 +98,9 @@ class SolanaPayService {
     }
 
     final recipient = Ed25519HDPublicKey.fromBase58(info.recipient);
-    final splToken =
-        info.splToken == null ? null : Ed25519HDPublicKey.fromBase58(info.splToken!);
+    final splToken = info.splToken == null
+        ? null
+        : Ed25519HDPublicKey.fromBase58(info.splToken!);
 
     final message = await _client.createSolanaPayMessage(
       payer: wallet.keyPair,
@@ -111,7 +115,11 @@ class SolanaPayService {
     final blockhash = await _client.rpcClient.getLatestBlockhash(
       commitment: Commitment.finalized,
     );
-    final signed = await _sign(message, blockhash.value.blockhash, wallet.keyPair);
+    final signed = await _sign(
+      message,
+      blockhash.value.blockhash,
+      wallet.keyPair,
+    );
 
     return _sendAndReturn(signed);
   }
@@ -183,11 +191,16 @@ class SolanaPayService {
   }
 
   Future<SignedTx> _resign(SignedTx tx, Wallet wallet) async {
-    final signature = await wallet.keyPair.sign(tx.compiledMessage.toByteArray());
+    final signature = await wallet.keyPair.sign(
+      tx.compiledMessage.toByteArray(),
+    );
     final signatures = tx.signatures
         .map((s) => s.publicKey == wallet.keyPair.publicKey ? signature : s)
         .toList();
-    return SignedTx(compiledMessage: tx.compiledMessage, signatures: signatures);
+    return SignedTx(
+      compiledMessage: tx.compiledMessage,
+      signatures: signatures,
+    );
   }
 
   Future<String> _sendAndReturn(SignedTx signed) async {

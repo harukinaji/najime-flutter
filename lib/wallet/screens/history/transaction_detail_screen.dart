@@ -11,7 +11,8 @@ class TransactionDetailScreen extends StatefulWidget {
   final TransactionRecord record;
 
   @override
-  State<TransactionDetailScreen> createState() => _TransactionDetailScreenState();
+  State<TransactionDetailScreen> createState() =>
+      _TransactionDetailScreenState();
 }
 
 class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
@@ -26,10 +27,9 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   Future<void> _load() async {
     try {
-      final details = await context
-          .read<AppState>()
-          .solana
-          .getTransaction(widget.record.signature);
+      final details = await context.read<AppState>().solana.getTransaction(
+        widget.record.signature,
+      );
       if (mounted) {
         setState(() {
           _details = details;
@@ -55,12 +55,15 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: (record.isSuccess ? Colors.green : Colors.red).withValues(alpha: 0.15),
+                  color: (record.isSuccess ? Colors.green : Colors.red)
+                      .withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   record.isSuccess ? Icons.check : Icons.error_outline,
-                  color: record.isSuccess ? Colors.greenAccent : Colors.redAccent,
+                  color: record.isSuccess
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
                   size: 40,
                 ),
               ),
@@ -72,7 +75,9 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: record.isSuccess ? Colors.greenAccent : Colors.redAccent,
+                  color: record.isSuccess
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
                 ),
               ),
             ),
@@ -82,14 +87,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               value: record.signature,
               monospace: true,
             ),
-            _InfoRow(
-              label: 'Status',
-              value: record.status?.name ?? '—',
-            ),
-            _InfoRow(
-              label: 'Slot',
-              value: '${record.slot}',
-            ),
+            _InfoRow(label: 'Status', value: record.status?.name ?? '—'),
+            _InfoRow(label: 'Slot', value: '${record.slot}'),
             _InfoRow(
               label: 'Time',
               value: record.date != null
@@ -107,7 +106,9 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+                child: Center(
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
               )
             else if (_details != null)
               _InfoRow(

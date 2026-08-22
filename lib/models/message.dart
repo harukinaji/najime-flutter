@@ -75,7 +75,12 @@ class InlineKeyboardButton {
   final String? url;
   final String? sendMessage;
 
-  const InlineKeyboardButton({required this.text, this.callbackData, this.url, this.sendMessage});
+  const InlineKeyboardButton({
+    required this.text,
+    this.callbackData,
+    this.url,
+    this.sendMessage,
+  });
 
   factory InlineKeyboardButton.fromJson(Map<String, dynamic> json) {
     return InlineKeyboardButton(
@@ -97,9 +102,13 @@ class InlineKeyboard {
     final rows = <List<InlineKeyboardButton>>[];
     for (final row in json) {
       if (row is List) {
-        rows.add(row
-            .map((b) => InlineKeyboardButton.fromJson(b as Map<String, dynamic>))
-            .toList());
+        rows.add(
+          row
+              .map(
+                (b) => InlineKeyboardButton.fromJson(b as Map<String, dynamic>),
+              )
+              .toList(),
+        );
       }
     }
     return InlineKeyboard(rows: rows);
@@ -221,13 +230,13 @@ class InvoiceData {
       currency.toUpperCase() == 'SOL' ? (amount * 1e9).round() : null;
 
   Map<String, dynamic> toJson() => {
-        'amount': amount,
-        'currency': currency,
-        'recipient': recipient,
-        if (memo != null) 'memo': memo,
-        'status': status,
-        if (txSignature != null) 'tx_signature': txSignature,
-      };
+    'amount': amount,
+    'currency': currency,
+    'recipient': recipient,
+    if (memo != null) 'memo': memo,
+    'status': status,
+    if (txSignature != null) 'tx_signature': txSignature,
+  };
 
   static InvoiceData? tryParse(String content) {
     try {
@@ -296,15 +305,15 @@ class CheckData {
       currency.toUpperCase() == 'SOL' ? (amount * 1e9).round() : null;
 
   Map<String, dynamic> toJson() => {
-        'amount': amount,
-        'currency': currency,
-        'creator_id': creatorId,
-        'status': status,
-        if (redeemerId != null) 'redeemer_id': redeemerId,
-        if (checkId != null) 'check_id': checkId,
-        if (txSignature != null) 'tx_signature': txSignature,
-        if (creatorAddress != null) 'creator_address': creatorAddress,
-      };
+    'amount': amount,
+    'currency': currency,
+    'creator_id': creatorId,
+    'status': status,
+    if (redeemerId != null) 'redeemer_id': redeemerId,
+    if (checkId != null) 'check_id': checkId,
+    if (txSignature != null) 'tx_signature': txSignature,
+    if (creatorAddress != null) 'creator_address': creatorAddress,
+  };
 
   static CheckData? tryParse(String content) {
     try {

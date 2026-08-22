@@ -149,11 +149,19 @@ class _PasswordCreationScreenState extends State<PasswordCreationScreen> {
               style: TextStyle(fontSize: 15, color: cs.onSurface),
               decoration: InputDecoration(
                 hintText: 'At least 6 characters',
-                hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
-                prefixIcon: Icon(Icons.lock_outline, color: cs.onSurfaceVariant, size: 22),
+                hintStyle: TextStyle(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                prefixIcon: Icon(
+                  Icons.lock_outline,
+                  color: cs.onSurfaceVariant,
+                  size: 22,
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscure1 ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscure1
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: cs.onSurfaceVariant,
                     size: 22,
                   ),
@@ -165,13 +173,18 @@ class _PasswordCreationScreenState extends State<PasswordCreationScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  borderSide: BorderSide(
+                    color: cs.outlineVariant.withValues(alpha: 0.5),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(color: cs.primary, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
             if (_passwordController.text.isNotEmpty) ...[
@@ -208,11 +221,19 @@ class _PasswordCreationScreenState extends State<PasswordCreationScreen> {
               style: TextStyle(fontSize: 15, color: cs.onSurface),
               decoration: InputDecoration(
                 hintText: 'Confirm password',
-                hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
-                prefixIcon: Icon(Icons.lock_outline, color: cs.onSurfaceVariant, size: 22),
+                hintStyle: TextStyle(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                prefixIcon: Icon(
+                  Icons.lock_outline,
+                  color: cs.onSurfaceVariant,
+                  size: 22,
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscure2 ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscure2
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: cs.onSurfaceVariant,
                     size: 22,
                   ),
@@ -224,21 +245,23 @@ class _PasswordCreationScreenState extends State<PasswordCreationScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  borderSide: BorderSide(
+                    color: cs.outlineVariant.withValues(alpha: 0.5),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(color: cs.primary, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: TextStyle(color: cs.error, fontSize: 13),
-              ),
+              Text(_error!, style: TextStyle(color: cs.error, fontSize: 13)),
             ],
             const SizedBox(height: 28),
             SizedBox(
@@ -255,11 +278,17 @@ class _PasswordCreationScreenState extends State<PasswordCreationScreen> {
                     ? const SizedBox(
                         width: 22,
                         height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text(
                         'Save Password',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               ),
             ),

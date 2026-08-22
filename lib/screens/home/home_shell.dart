@@ -71,9 +71,7 @@ class _HomeShellState extends State<HomeShell>
               builder: (_) => CallScreen(
                 contactId: callerId,
                 contactName: chatName.isNotEmpty ? chatName : callerName,
-                callType: callType == 'video'
-                    ? CallType.video
-                    : CallType.voice,
+                callType: callType == 'video' ? CallType.video : CallType.voice,
                 isIncoming: true,
                 autoAccept: true,
                 useSFU: true,
@@ -109,17 +107,11 @@ class _HomeShellState extends State<HomeShell>
       },
       transitionBuilder: (ctx, animation, secondaryAnimation, child) {
         return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          )),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
+          child: FadeTransition(opacity: animation, child: child),
         );
       },
     );
@@ -300,8 +292,9 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
   @override
   Widget build(BuildContext context) {
     final isVideo = widget.callType == 'video';
-    final displayName =
-        widget.chatName.isNotEmpty ? widget.chatName : widget.callerName;
+    final displayName = widget.chatName.isNotEmpty
+        ? widget.chatName
+        : widget.callerName;
 
     return Material(
       color: Colors.black54,
@@ -316,8 +309,10 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
                   animation: _pulseAnim,
                   builder: (context, child) {
                     final scale = 1.0 + _pulseAnim.value * 0.15;
-                    final alpha =
-                        (0.2 - _pulseAnim.value * 0.12).clamp(0.0, 1.0);
+                    final alpha = (0.2 - _pulseAnim.value * 0.12).clamp(
+                      0.0,
+                      1.0,
+                    );
                     return Container(
                       width: 180 * scale,
                       height: 180 * scale,
@@ -381,8 +376,7 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
             ),
             const SizedBox(height: 12),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
@@ -476,10 +470,7 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF0D1B2A),
-            const Color(0xFF000000),
-          ],
+          colors: [const Color(0xFF0D1B2A), const Color(0xFF000000)],
         ),
       ),
       child: SafeArea(
@@ -495,7 +486,10 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                     animation: _pulseAnim,
                     builder: (context, child) {
                       final scale = 1.0 + _pulseAnim.value * 0.15;
-                      final alpha = (0.2 - _pulseAnim.value * 0.12).clamp(0.0, 1.0);
+                      final alpha = (0.2 - _pulseAnim.value * 0.12).clamp(
+                        0.0,
+                        1.0,
+                      );
                       return Container(
                         width: 180 * scale,
                         height: 180 * scale,
@@ -550,7 +544,10 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
@@ -654,10 +651,7 @@ class _IncomingCallButton extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: color.withValues(alpha: 0.2),
-              border: Border.all(
-                color: color.withValues(alpha: 0.3),
-                width: 2,
-              ),
+              border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
               boxShadow: [
                 BoxShadow(
                   color: color.withValues(alpha: 0.3),

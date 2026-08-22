@@ -6,10 +6,8 @@ import '../widgets/auth_buttons.dart';
 final authStories = [
   Story(
     name: 'Auth/Google Sign In',
-    builder: (context) => const Padding(
-      padding: EdgeInsets.all(16),
-      child: GoogleSignInButton(),
-    ),
+    builder: (context) =>
+        const Padding(padding: EdgeInsets.all(16), child: GoogleSignInButton()),
   ),
   Story(
     name: 'Auth/Google Sign In Loading',
@@ -20,10 +18,8 @@ final authStories = [
   ),
   Story(
     name: 'Auth/Apple Sign In',
-    builder: (context) => const Padding(
-      padding: EdgeInsets.all(16),
-      child: AppleSignInButton(),
-    ),
+    builder: (context) =>
+        const Padding(padding: EdgeInsets.all(16), child: AppleSignInButton()),
   ),
   Story(
     name: 'Auth/Apple Sign In Loading',

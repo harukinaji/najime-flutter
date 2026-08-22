@@ -15,7 +15,11 @@ class Wallet {
 
   /// Restores a wallet from a 12/24-word mnemonic phrase.
   static Future<Wallet> fromMnemonic(String mnemonic) async {
-    final trimmed = mnemonic.trim().toLowerCase().split(RegExp(r'\s+')).join(' ');
+    final trimmed = mnemonic
+        .trim()
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .join(' ');
     final keyPair = await Ed25519HDKeyPair.fromMnemonic(trimmed);
     return Wallet(mnemonic: trimmed, keyPair: keyPair);
   }
@@ -32,9 +36,13 @@ class Wallet {
     } else if (bytes.length == 32) {
       seed = bytes;
     } else {
-      throw const FormatException('Invalid private key length, expected 32 or 64 bytes');
+      throw const FormatException(
+        'Invalid private key length, expected 32 or 64 bytes',
+      );
     }
-    final keyPair = await Ed25519HDKeyPair.fromPrivateKeyBytes(privateKey: seed);
+    final keyPair = await Ed25519HDKeyPair.fromPrivateKeyBytes(
+      privateKey: seed,
+    );
     return Wallet(mnemonic: '', keyPair: keyPair);
   }
 

@@ -192,7 +192,8 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                       validator: (v) {
                         if ((v ?? '').trim().isNotEmpty) {
                           final url = v!.trim();
-                          if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                          if (!url.startsWith('http://') &&
+                              !url.startsWith('https://')) {
                             return 'URL must start with http:// or https://';
                           }
                         }
@@ -213,8 +214,14 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                                   username: usernameCtrl.text.trim(),
                                   displayName: displayNameCtrl.text.trim(),
                                   description: descCtrl.text.trim(),
-                                  startButtonText: startBtnCtrl.text.trim().isNotEmpty ? startBtnCtrl.text.trim() : 'Start',
-                                  startCommand: startCmdCtrl.text.trim().isNotEmpty ? startCmdCtrl.text.trim() : '/start',
+                                  startButtonText:
+                                      startBtnCtrl.text.trim().isNotEmpty
+                                      ? startBtnCtrl.text.trim()
+                                      : 'Start',
+                                  startCommand:
+                                      startCmdCtrl.text.trim().isNotEmpty
+                                      ? startCmdCtrl.text.trim()
+                                      : '/start',
                                   miniAppUrl: miniAppUrlCtrl.text.trim(),
                                 );
                                 setSheetState(() => creating = false);
@@ -226,7 +233,9 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Failed to create bot. Username may be taken.'),
+                                      content: Text(
+                                        'Failed to create bot. Username may be taken.',
+                                      ),
                                     ),
                                   );
                                 }
@@ -235,7 +244,9 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Create Bot'),
                       ),
@@ -298,7 +309,9 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
   void _showBotDetails(Map<String, dynamic> bot) {
     final cs = Theme.of(context).colorScheme;
     final token = bot['token'] as String? ?? '';
-    final shortToken = token.length > 20 ? '${token.substring(0, 12)}...${token.substring(token.length - 6)}' : token;
+    final shortToken = token.length > 20
+        ? '${token.substring(0, 12)}...${token.substring(token.length - 6)}'
+        : token;
 
     showModalBottomSheet(
       context: context,
@@ -330,25 +343,39 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                     backgroundColor: cs.primaryContainer,
                     backgroundImage: NetworkImage(bot['avatar_url'] ?? ''),
                     onBackgroundImageError: (_, __) {},
-                    child: bot['avatar_url'] == null || (bot['avatar_url'] as String).isEmpty
-                        ? Icon(Icons.smart_toy, size: 36, color: cs.onPrimaryContainer)
+                    child:
+                        bot['avatar_url'] == null ||
+                            (bot['avatar_url'] as String).isEmpty
+                        ? Icon(
+                            Icons.smart_toy,
+                            size: 36,
+                            color: cs.onPrimaryContainer,
+                          )
                         : null,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     bot['display_name'] ?? '',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: cs.onSurface),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
                   ),
                   Text(
                     '@${bot['username'] ?? ''}',
                     style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
                   ),
-                  if (bot['description'] != null && (bot['description'] as String).isNotEmpty) ...[
+                  if (bot['description'] != null &&
+                      (bot['description'] as String).isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       bot['description'],
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -365,7 +392,11 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                         Expanded(
                           child: Text(
                             shortToken,
-                            style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: cs.onSurface),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                              color: cs.onSurface,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -384,10 +415,15 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                   // Active toggle
                   SwitchListTile(
                     title: const Text('Active'),
-                    subtitle: Text(isActive ? 'Bot is searchable' : 'Bot is hidden'),
+                    subtitle: Text(
+                      isActive ? 'Bot is searchable' : 'Bot is hidden',
+                    ),
                     value: isActive,
                     onChanged: (val) async {
-                      final ok = await ApiService.updateBot(bot['id'], isActive: val);
+                      final ok = await ApiService.updateBot(
+                        bot['id'],
+                        isActive: val,
+                      );
                       if (ok && mounted) {
                         setState(() {
                           bot['is_active'] = val;
@@ -426,9 +462,14 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                                 'Button text',
                                 bot['start_button_text'] ?? 'Start',
                                 (val) async {
-                                  final ok = await ApiService.updateBot(bot['id'], startButtonText: val);
+                                  final ok = await ApiService.updateBot(
+                                    bot['id'],
+                                    startButtonText: val,
+                                  );
                                   if (ok) {
-                                    setState(() => bot['start_button_text'] = val);
+                                    setState(
+                                      () => bot['start_button_text'] = val,
+                                    );
                                     setSheetState(() {});
                                     _loadBots();
                                   }
@@ -442,7 +483,10 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                                 'Command',
                                 bot['start_command'] ?? '/start',
                                 (val) async {
-                                  final ok = await ApiService.updateBot(bot['id'], startCommand: val);
+                                  final ok = await ApiService.updateBot(
+                                    bot['id'],
+                                    startCommand: val,
+                                  );
                                   if (ok) {
                                     setState(() => bot['start_command'] = val);
                                     setSheetState(() {});
@@ -470,7 +514,11 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.open_in_browser, size: 16, color: cs.primary),
+                            Icon(
+                              Icons.open_in_browser,
+                              size: 16,
+                              color: cs.primary,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               'Mini App',
@@ -490,7 +538,10 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                               ? bot['mini_app_url'] as String
                               : 'Not set',
                           (val) async {
-                            final ok = await ApiService.updateBot(bot['id'], miniAppUrl: val);
+                            final ok = await ApiService.updateBot(
+                              bot['id'],
+                              miniAppUrl: val,
+                            );
                             if (ok) {
                               setState(() => bot['mini_app_url'] = val);
                               setSheetState(() {});
@@ -506,9 +557,13 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                   ListTile(
                     leading: Icon(Icons.key, color: cs.primary),
                     title: const Text('Regenerate Token'),
-                    subtitle: const Text('Old token will stop working immediately'),
+                    subtitle: const Text(
+                      'Old token will stop working immediately',
+                    ),
                     onTap: () async {
-                      final newToken = await ApiService.regenerateBotToken(bot['id']);
+                      final newToken = await ApiService.regenerateBotToken(
+                        bot['id'],
+                      );
                       if (newToken != null && mounted) {
                         setState(() {
                           bot['token'] = newToken;
@@ -522,18 +577,29 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
                   // Delete bot
                   ListTile(
                     leading: Icon(Icons.delete_outline, color: cs.error),
-                    title: Text('Delete Bot', style: TextStyle(color: cs.error)),
+                    title: Text(
+                      'Delete Bot',
+                      style: TextStyle(color: cs.error),
+                    ),
                     onTap: () async {
                       final confirm = await showDialog<bool>(
                         context: ctx,
                         builder: (dctx) => AlertDialog(
                           title: const Text('Delete Bot?'),
-                          content: Text('This will permanently delete @${bot['username']}. This cannot be undone.'),
+                          content: Text(
+                            'This will permanently delete @${bot['username']}. This cannot be undone.',
+                          ),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(dctx, false), child: const Text('Cancel')),
+                            TextButton(
+                              onPressed: () => Navigator.pop(dctx, false),
+                              child: const Text('Cancel'),
+                            ),
                             TextButton(
                               onPressed: () => Navigator.pop(dctx, true),
-                              child: Text('Delete', style: TextStyle(color: cs.error)),
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(color: cs.error),
+                              ),
                             ),
                           ],
                         ),
@@ -564,7 +630,12 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
     );
   }
 
-  Widget _editableField(ColorScheme cs, String label, String value, Function(String) onSave) {
+  Widget _editableField(
+    ColorScheme cs,
+    String label,
+    String value,
+    Function(String) onSave,
+  ) {
     return InkWell(
       onTap: () {
         final ctrl = TextEditingController(text: value);
@@ -576,11 +647,16 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
               controller: ctrl,
               decoration: InputDecoration(
                 hintText: label,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dctx), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(dctx),
+                child: const Text('Cancel'),
+              ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(dctx);
@@ -609,7 +685,11 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
             const SizedBox(height: 2),
             Text(
               value,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: cs.onSurface,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -624,10 +704,7 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Bots'),
-        backgroundColor: cs.surface,
-      ),
+      appBar: AppBar(title: const Text('My Bots'), backgroundColor: cs.surface),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateBotSheet,
         child: const Icon(Icons.add),
@@ -635,91 +712,111 @@ class _BotManagerScreenState extends State<BotManagerScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _bots.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.smart_toy_outlined,
+                    size: 64,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No bots yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Tap + to create your first bot',
+                    style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _bots.length,
+              itemBuilder: (context, index) {
+                final bot = _bots[index];
+                final isActive = bot['is_active'] == true;
+                return ListTile(
+                  onTap: () => _showBotDetails(bot),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  leading: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: cs.primaryContainer,
+                    backgroundImage: NetworkImage(bot['avatar_url'] ?? ''),
+                    onBackgroundImageError: (_, __) {},
+                    child:
+                        bot['avatar_url'] == null ||
+                            (bot['avatar_url'] as String).isEmpty
+                        ? Icon(
+                            Icons.smart_toy,
+                            size: 24,
+                            color: cs.onPrimaryContainer,
+                          )
+                        : null,
+                  ),
+                  title: Row(
                     children: [
-                      Icon(Icons.smart_toy_outlined, size: 64, color: cs.onSurfaceVariant.withValues(alpha: 0.4)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No bots yet',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: cs.onSurface),
+                      Flexible(
+                        child: Text(
+                          bot['display_name'] ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: cs.onSurface,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap + to create your first bot',
-                        style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'bot',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onPrimaryContainer,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: _bots.length,
-                  itemBuilder: (context, index) {
-                    final bot = _bots[index];
-                    final isActive = bot['is_active'] == true;
-                    return ListTile(
-                      onTap: () => _showBotDetails(bot),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      leading: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: cs.primaryContainer,
-                        backgroundImage: NetworkImage(bot['avatar_url'] ?? ''),
-                        onBackgroundImageError: (_, __) {},
-                        child: bot['avatar_url'] == null || (bot['avatar_url'] as String).isEmpty
-                            ? Icon(Icons.smart_toy, size: 24, color: cs.onPrimaryContainer)
-                            : null,
-                      ),
-                      title: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              bot['display_name'] ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: cs.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: cs.primaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'bot',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: cs.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Text(
-                        '@${bot['username'] ?? ''}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
-                      ),
-                      trailing: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFF22C55E) : cs.error,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                  subtitle: Text(
+                    '@${bot['username'] ?? ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                  ),
+                  trailing: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: isActive ? const Color(0xFF22C55E) : cs.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

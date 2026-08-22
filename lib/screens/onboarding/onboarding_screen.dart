@@ -166,11 +166,7 @@ class _OnboardingPage extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Colors.white,
                 ),
-                child: Icon(
-                  data.icon,
-                  size: 56,
-                  color: cs.primary,
-                ),
+                child: Icon(data.icon, size: 56, color: cs.primary),
               ),
             ),
           ),

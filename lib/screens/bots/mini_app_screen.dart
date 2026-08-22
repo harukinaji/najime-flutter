@@ -23,8 +23,12 @@ bool _isAllowedMiniAppUrl(String url) {
     final uri = Uri.parse(url);
     if (uri.scheme != 'https') return false;
     final host = uri.host.toLowerCase();
-    if (host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0') return false;
-    if (host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.')) return false;
+    if (host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0')
+      return false;
+    if (host.startsWith('192.168.') ||
+        host.startsWith('10.') ||
+        host.startsWith('172.'))
+      return false;
     if (host == '169.254.169.254') return false;
     return true;
   } catch (_) {
@@ -488,11 +492,7 @@ class MiniAppScreen extends StatefulWidget {
   final String url;
   final String title;
 
-  const MiniAppScreen({
-    super.key,
-    required this.url,
-    this.title = 'Mini App',
-  });
+  const MiniAppScreen({super.key, required this.url, this.title = 'Mini App'});
 
   @override
   State<MiniAppScreen> createState() => _MiniAppScreenState();
@@ -527,13 +527,23 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       !_useWindowsNativeWebView &&
       !_useFlutterWebView;
 
-  static const _gamepadChannel = MethodChannel('com.naji.najimessenger/gamepads');
-  static const _gyroscopeChannel = MethodChannel('com.naji.najimessenger/gyroscope');
-  static const _accelerometerChannel = MethodChannel('com.naji.najimessenger/accelerometer');
-  static const _vibratorChannel = MethodChannel('com.naji.najimessenger/vibrator');
+  static const _gamepadChannel = MethodChannel(
+    'com.naji.najimessenger/gamepads',
+  );
+  static const _gyroscopeChannel = MethodChannel(
+    'com.naji.najimessenger/gyroscope',
+  );
+  static const _accelerometerChannel = MethodChannel(
+    'com.naji.najimessenger/accelerometer',
+  );
+  static const _vibratorChannel = MethodChannel(
+    'com.naji.najimessenger/vibrator',
+  );
   static const _nfcChannel = MethodChannel('com.naji.najimessenger/nfc');
   static const _cameraChannel = MethodChannel('com.naji.najimessenger/camera');
-  static const _bluetoothChannel = MethodChannel('com.naji.najimessenger/bluetooth');
+  static const _bluetoothChannel = MethodChannel(
+    'com.naji.najimessenger/bluetooth',
+  );
   List<Map<String, dynamic>> _nativeGamepads = [];
   Map<String, dynamic>? _lastGyroscopeData;
   Map<String, dynamic>? _lastAccelerometerData;
@@ -592,7 +602,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       if (!_isAllowedMiniAppUrl(widget.url)) {
         if (mounted) {
           setState(() {
-            _error = 'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
+            _error =
+                'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
             _loading = false;
           });
         }
@@ -643,7 +654,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       if (!_isAllowedMiniAppUrl(widget.url)) {
         if (mounted) {
           setState(() {
-            _error = 'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
+            _error =
+                'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
             _loading = false;
           });
         }
@@ -671,7 +683,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     if (!_isAllowedMiniAppUrl(widget.url)) {
       if (mounted) {
         setState(() {
-          _error = 'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
+          _error =
+              'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
           _loading = false;
         });
       }
@@ -785,7 +798,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         _handleSolanaPayment(payload);
         break;
       case 'CREATE_INVOICE_SPARKS':
-        _respondError(payload, 'This payment method is not available on this platform');
+        _respondError(
+          payload,
+          'This payment method is not available on this platform',
+        );
         break;
       case 'MINIAPP_WALLET_GET_BINDING':
         _handleWalletGetBinding(payload);
@@ -917,7 +933,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
       try {
         final result = await _gamepadChannel.invokeMethod<List>('getGamepads');
-        _nativeGamepads = (result ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _nativeGamepads = (result ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } catch (_) {}
       final hasGamepads = _nativeGamepads.isNotEmpty;
 
@@ -945,7 +963,13 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Map<String, dynamic> _fallbackInitData() {
     return {
-      'user': {'id': 'anonymous', 'name': 'User', 'username': '', 'avatar': '', 'is_premium': false},
+      'user': {
+        'id': 'anonymous',
+        'name': 'User',
+        'username': '',
+        'avatar': '',
+        'is_premium': false,
+      },
       'theme': 'light',
       'platform': _getPlatform(),
       'permissions': {},
@@ -972,7 +996,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
       try {
         final result = await _gamepadChannel.invokeMethod<List>('getGamepads');
-        _nativeGamepads = (result ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _nativeGamepads = (result ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       } catch (_) {}
       final hasGamepads = _nativeGamepads.isNotEmpty;
 
@@ -1104,7 +1130,11 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleStorageKeys(Map<String, dynamic> payload) async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('miniapp_')).map((k) => k.substring(8)).toList();
+    final keys = prefs
+        .getKeys()
+        .where((k) => k.startsWith('miniapp_'))
+        .map((k) => k.substring(8))
+        .toList();
     _respond(payload, keys);
   }
 
@@ -1123,7 +1153,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
       final requestHeaders = <String, String>{
         'Content-Type': 'application/json',
-        if (ApiService.accessToken != null) 'Authorization': 'Bearer ${ApiService.accessToken}',
+        if (ApiService.accessToken != null)
+          'Authorization': 'Bearer ${ApiService.accessToken}',
         ...headers.map((k, v) => MapEntry(k, v.toString())),
       };
 
@@ -1148,10 +1179,7 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         body = bodyStr;
       }
 
-      _respond(payload, {
-        'status': response.statusCode,
-        'body': body,
-      });
+      _respond(payload, {'status': response.statusCode, 'body': body});
     } catch (e) {
       _respondError(payload, e.toString());
     }
@@ -1179,9 +1207,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   Future<void> _handleToast(Map<String, dynamic> payload) async {
     final message = payload['message'] as String? ?? '';
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
     _respond(payload, true);
   }
 
@@ -1269,22 +1297,26 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     _gamepadChannel.setMethodCallHandler((call) async {
       if (call.method == 'onGamepadsUpdate') {
         final List list = call.arguments as List? ?? [];
-        _nativeGamepads = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _nativeGamepads = list
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         _sendGamepadsToWeb();
       }
     });
   }
 
   void _sendGamepadsToWeb() {
-    _sendToWeb('NATIVE_GAMEPADS_UPDATE', {
-      'gamepads': _nativeGamepads,
-    });
+    _sendToWeb('NATIVE_GAMEPADS_UPDATE', {'gamepads': _nativeGamepads});
   }
 
-  Future<void> _handleNativeGamepadsRequest(Map<String, dynamic> payload) async {
+  Future<void> _handleNativeGamepadsRequest(
+    Map<String, dynamic> payload,
+  ) async {
     try {
       final result = await _gamepadChannel.invokeMethod<List>('getGamepads');
-      _nativeGamepads = (result ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _nativeGamepads = (result ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } catch (_) {
       _nativeGamepads = [];
     }
@@ -1294,7 +1326,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   Future<void> _handleGetGamepads(Map<String, dynamic> payload) async {
     try {
       final result = await _gamepadChannel.invokeMethod<List>('getGamepads');
-      _nativeGamepads = (result ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _nativeGamepads = (result ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } catch (_) {}
     _sendGamepadsToWeb();
     _respond(payload, _nativeGamepads);
@@ -1305,8 +1339,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   void _setupNativeGyroscopeListener() {
     _gyroscopeChannel.setMethodCallHandler((call) async {
       if (call.method == 'onGyroscopeUpdate') {
-        _lastGyroscopeData = (call.arguments as Map<dynamic, dynamic>?)
-            ?.map((k, v) => MapEntry(k.toString(), v));
+        _lastGyroscopeData = (call.arguments as Map<dynamic, dynamic>?)?.map(
+          (k, v) => MapEntry(k.toString(), v),
+        );
         _sendToWeb('NAJI_EVENT', {
           'eventName': 'gyroscopeChanged',
           'payload': _lastGyroscopeData,
@@ -1317,9 +1352,12 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleGyroscopeGetState(Map<String, dynamic> payload) async {
     try {
-      final result = await _gyroscopeChannel.invokeMethod<Map>('getGyroscopeState');
-      _lastGyroscopeData = (result as Map<dynamic, dynamic>?)
-          ?.map((k, v) => MapEntry(k.toString(), v));
+      final result = await _gyroscopeChannel.invokeMethod<Map>(
+        'getGyroscopeState',
+      );
+      _lastGyroscopeData = (result as Map<dynamic, dynamic>?)?.map(
+        (k, v) => MapEntry(k.toString(), v),
+      );
     } catch (_) {}
     _respond(payload, _lastGyroscopeData);
   }
@@ -1351,11 +1389,16 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     });
   }
 
-  Future<void> _handleAccelerometerGetState(Map<String, dynamic> payload) async {
+  Future<void> _handleAccelerometerGetState(
+    Map<String, dynamic> payload,
+  ) async {
     try {
-      final result = await _accelerometerChannel.invokeMethod<Map>('getAccelerometerState');
-      _lastAccelerometerData = (result as Map<dynamic, dynamic>?)
-          ?.map((k, v) => MapEntry(k.toString(), v));
+      final result = await _accelerometerChannel.invokeMethod<Map>(
+        'getAccelerometerState',
+      );
+      _lastAccelerometerData = (result as Map<dynamic, dynamic>?)?.map(
+        (k, v) => MapEntry(k.toString(), v),
+      );
     } catch (_) {}
     _respond(payload, _lastAccelerometerData);
   }
@@ -1378,8 +1421,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     _nfcChannel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onNfcTagRead':
-          final data = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final data = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           final reqId = _nfcPendingReqId;
           _nfcPendingReqId = null;
           if (reqId != null) {
@@ -1399,17 +1443,21 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
           }
           break;
         case 'onNfcError':
-          final error = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final error = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           final reqId = _nfcPendingReqId;
           _nfcPendingReqId = null;
           if (reqId != null) {
-            _respondError({'reqId': reqId}, error?['error']?.toString() ?? 'nfc error');
+            _respondError({
+              'reqId': reqId,
+            }, error?['error']?.toString() ?? 'nfc error');
           }
           break;
         case 'onIsoDepConnected':
-          final isoData = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final isoData = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           final isoReqId = _nfcPendingReqId;
           _nfcPendingReqId = null;
           if (isoReqId != null) {
@@ -1422,7 +1470,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleNfcIsAvailable(Map<String, dynamic> payload) async {
     try {
-      final available = await _nfcChannel.invokeMethod<bool>('isNfcAvailable') ?? false;
+      final available =
+          await _nfcChannel.invokeMethod<bool>('isNfcAvailable') ?? false;
       _respond(payload, {'available': available});
     } catch (_) {
       _respond(payload, {'available': false});
@@ -1431,7 +1480,8 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleNfcIsEnabled(Map<String, dynamic> payload) async {
     try {
-      final enabled = await _nfcChannel.invokeMethod<bool>('isNfcEnabled') ?? false;
+      final enabled =
+          await _nfcChannel.invokeMethod<bool>('isNfcEnabled') ?? false;
       _respond(payload, {'enabled': enabled});
     } catch (_) {
       _respond(payload, {'enabled': false});
@@ -1510,7 +1560,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   Future<void> _handleNfcTransceive(Map<String, dynamic> payload) async {
     try {
       final command = payload['command'] as String? ?? '';
-      final result = await _nfcChannel.invokeMethod<String>('transceive', {'command': command});
+      final result = await _nfcChannel.invokeMethod<String>('transceive', {
+        'command': command,
+      });
       _respond(payload, result);
     } catch (e) {
       _respondError(payload, e.toString());
@@ -1541,8 +1593,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       debugPrint('[Bluetooth] ${call.method}: ${call.arguments}');
       switch (call.method) {
         case 'onDeviceFound':
-          final device = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final device = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           if (device?['error'] != null) {
             debugPrint('[Bluetooth] Device error: ${device?['error']}');
           }
@@ -1552,8 +1605,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
           });
           break;
         case 'onBluetoothError':
-          final errorData = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final errorData = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           debugPrint('[Bluetooth] Native error: $errorData');
           _sendToWeb('NAJI_EVENT', {
             'eventName': 'bluetoothDeviceFound',
@@ -1561,16 +1615,18 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
           });
           break;
         case 'onDataReceived':
-          final data = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final data = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           _sendToWeb('NAJI_EVENT', {
             'eventName': 'bluetoothDataReceived',
             'payload': data,
           });
           break;
         case 'onConnectionStateChanged':
-          final state = (call.arguments as Map<dynamic, dynamic>?)
-              ?.map((k, v) => MapEntry(k.toString(), v));
+          final state = (call.arguments as Map<dynamic, dynamic>?)?.map(
+            (k, v) => MapEntry(k.toString(), v),
+          );
           _sendToWeb('NAJI_EVENT', {
             'eventName': 'bluetoothConnectionStateChanged',
             'payload': state,
@@ -1613,9 +1669,14 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     }
   }
 
-  Future<void> _handleBluetoothDiscoverServices(Map<String, dynamic> payload) async {
+  Future<void> _handleBluetoothDiscoverServices(
+    Map<String, dynamic> payload,
+  ) async {
     try {
-      final result = await _bluetoothChannel.invokeMethod('discoverServices', payload);
+      final result = await _bluetoothChannel.invokeMethod(
+        'discoverServices',
+        payload,
+      );
       _respond(payload, result);
     } catch (e) {
       _respondError(payload, e.toString());
@@ -1633,7 +1694,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleBluetoothUnsubscribe(Map<String, dynamic> payload) async {
     try {
-      final result = await _bluetoothChannel.invokeMethod('unsubscribe', payload);
+      final result = await _bluetoothChannel.invokeMethod(
+        'unsubscribe',
+        payload,
+      );
       _respond(payload, result);
     } catch (e) {
       _respondError(payload, e.toString());
@@ -1736,7 +1800,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     }
   }
 
-  Future<void> _handleWalletSignTransaction(Map<String, dynamic> payload) async {
+  Future<void> _handleWalletSignTransaction(
+    Map<String, dynamic> payload,
+  ) async {
     final transaction = payload['transaction'];
     if (transaction is! String || transaction.isEmpty) {
       _respondError(payload, 'Missing transaction');
@@ -1823,9 +1889,12 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   ///   recipient  string  base58 destination — required (alias: address)
   ///   memo       string  optional on-chain memo
   Future<void> _handleSolanaPayment(Map<String, dynamic> payload) async {
-    final recipient =
-        (payload['recipient'] ?? payload['address'] ?? '').toString().trim();
-    debugPrint('[miniapp-pay] requested recipient=$recipient amount=${payload['amount']}');
+    final recipient = (payload['recipient'] ?? payload['address'] ?? '')
+        .toString()
+        .trim();
+    debugPrint(
+      '[miniapp-pay] requested recipient=$recipient amount=${payload['amount']}',
+    );
     if (recipient.isEmpty) {
       _respondError(payload, 'Missing recipient');
       return;
@@ -1858,8 +1927,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     try {
       // Ensure a wallet is connected; if not, present Reown connect modal.
       var binding = await _walletProxy.getBinding();
-      debugPrint('[miniapp-pay] initial binding bound=${binding.bound} '
-          'source=${binding.source} pub=${binding.publicKey}');
+      debugPrint(
+        '[miniapp-pay] initial binding bound=${binding.bound} '
+        'source=${binding.source} pub=${binding.publicKey}',
+      );
       if (!binding.bound) {
         if (!mounted) {
           _respondError(payload, 'Mini-app closed');
@@ -1867,8 +1938,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         }
         await AppState.instance.restoreExternalWalletSession(context);
         binding = await _walletProxy.getBinding();
-        debugPrint('[miniapp-pay] after restore bound=${binding.bound} '
-            'source=${binding.source} pub=${binding.publicKey}');
+        debugPrint(
+          '[miniapp-pay] after restore bound=${binding.bound} '
+          'source=${binding.source} pub=${binding.publicKey}',
+        );
       }
       if (!binding.bound) {
         if (!mounted) {
@@ -1878,8 +1951,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         debugPrint('[miniapp-pay] no binding — opening Reown connect modal');
         await AppState.instance.connectExternalWallet(context);
         binding = await _walletProxy.getBinding();
-        debugPrint('[miniapp-pay] after connect modal bound=${binding.bound} '
-            'source=${binding.source} pub=${binding.publicKey}');
+        debugPrint(
+          '[miniapp-pay] after connect modal bound=${binding.bound} '
+          'source=${binding.source} pub=${binding.publicKey}',
+        );
       }
       if (!binding.bound || binding.publicKey == null) {
         _respondError(payload, 'No wallet connected');
@@ -1905,18 +1980,25 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   // ── Contacts ──────────────────────────────────────────────────────
 
-  Future<void> _handleContacts(String type, Map<String, dynamic> payload) async {
+  Future<void> _handleContacts(
+    String type,
+    Map<String, dynamic> payload,
+  ) async {
     if (type == 'MINIAPP_CONTACTS_GET') {
       try {
         final contacts = await NajiContactsService.fetchAndCheck();
-        final result = contacts.map((c) => {
-          'id': c.najiMeUserId ?? '',
-          'name': c.name,
-          'username': c.najiMeUsername ?? '',
-          'avatar': c.najiMeAvatarUrl ?? '',
-          'phone': c.phoneNumber,
-          'is_registered': c.isOnNajiMe,
-        }).toList();
+        final result = contacts
+            .map(
+              (c) => {
+                'id': c.najiMeUserId ?? '',
+                'name': c.name,
+                'username': c.najiMeUsername ?? '',
+                'avatar': c.najiMeAvatarUrl ?? '',
+                'phone': c.phoneNumber,
+                'is_registered': c.isOnNajiMe,
+              },
+            )
+            .toList();
         _respond(payload, result);
       } catch (e) {
         _respond(payload, <dynamic>[]);
@@ -1948,7 +2030,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   }
 
   void _onP2pEvent(
-      String from, String eventName, Map<String, dynamic> payload) {
+    String from,
+    String eventName,
+    Map<String, dynamic> payload,
+  ) {
     if (!mounted) return;
     _sendToWeb('NAJI_EVENT', {
       'eventName': 'multiplayerEvent',
@@ -1956,7 +2041,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     });
   }
 
-  Future<void> _handleMultiplayer(String type, Map<String, dynamic> payload) async {
+  Future<void> _handleMultiplayer(
+    String type,
+    Map<String, dynamic> payload,
+  ) async {
     final p2p = P2PRoomService.instance;
 
     if (type == 'MINIAPP_MULTIPLAYER_GET_STATE') {
@@ -2008,8 +2096,7 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
     if (type == 'MINIAPP_MULTIPLAYER_SEND_EVENT' ||
         type == 'MINIAPP_MULTIPLAYER_SEND_EVENT_FAST') {
       final eventName = payload['eventName'] as String? ?? 'event';
-      final eventPayload =
-          (payload['payload'] as Map<String, dynamic>?) ?? {};
+      final eventPayload = (payload['payload'] as Map<String, dynamic>?) ?? {};
       p2p.sendToPeers(
         eventName,
         eventPayload,
@@ -2078,25 +2165,20 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   void _respond(Map<String, dynamic> payload, dynamic result) {
     final reqId = payload['reqId'] as String?;
     if (reqId == null) return;
-    _sendToWeb('NAJI_ASYNC_RESPONSE', {
-      'reqId': reqId,
-      'result': result,
-    });
+    _sendToWeb('NAJI_ASYNC_RESPONSE', {'reqId': reqId, 'result': result});
   }
 
   void _respondError(Map<String, dynamic> payload, String error) {
     final reqId = payload['reqId'] as String?;
     if (reqId == null) return;
-    _sendToWeb('NAJI_ASYNC_RESPONSE', {
-      'reqId': reqId,
-      'error': error,
-    });
+    _sendToWeb('NAJI_ASYNC_RESPONSE', {'reqId': reqId, 'error': error});
   }
 
   void _retry() {
     if (!_isAllowedMiniAppUrl(widget.url)) {
       setState(() {
-        _error = 'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
+        _error =
+            'URL not allowed: only HTTPS URLs from trusted hosts are permitted';
         _loading = false;
       });
       return;
@@ -2168,7 +2250,9 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: _headerColor == Colors.transparent ? cs.surface : _headerColor,
+        backgroundColor: _headerColor == Colors.transparent
+            ? cs.surface
+            : _headerColor,
         body: SafeArea(
           top: !_fullscreen,
           bottom: !_fullscreen,
@@ -2193,9 +2277,7 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
               else
                 _buildFallback(cs),
               if (_loading)
-                Center(
-                  child: CircularProgressIndicator(color: cs.primary),
-                ),
+                Center(child: CircularProgressIndicator(color: cs.primary)),
               if (_error != null)
                 Center(
                   child: Padding(
@@ -2208,7 +2290,10 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
                         Text(
                           _error!,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         FilledButton.tonal(

@@ -149,9 +149,9 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
   Future<void> _joinVoice() async {
     final ok = await _svc.joinVoice();
     if (mounted && !ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Microphone unavailable')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Microphone unavailable')));
     }
     _refresh();
   }
@@ -244,10 +244,7 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
               Text(
                 'Your ID: ${AuthState.instance.username ?? '-'}',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
               ),
               if (_busy && _status != null) ...[
                 const SizedBox(height: 12),
@@ -285,8 +282,7 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
     Map<String, dynamic> state,
     List<Map<String, dynamic>> peers,
   ) {
-    final connected =
-        peers.where((p) => p['connected'] == true).length;
+    final connected = peers.where((p) => p['connected'] == true).length;
 
     return Container(
       color: cs.surfaceContainerLow,
@@ -299,10 +295,9 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
               Expanded(
                 child: Text(
                   'Room ${state['room_id']}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -354,9 +349,7 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
           tooltip: inVoice ? (muted ? 'Unmute' : 'Mute') : 'Join voice chat',
           onPressed: inVoice ? _toggleMute : _joinVoice,
           icon: Icon(
-            inVoice
-                ? (muted ? Icons.mic_off : Icons.mic)
-                : Icons.mic_none,
+            inVoice ? (muted ? Icons.mic_off : Icons.mic) : Icons.mic_none,
             color: inVoice
                 ? (muted ? cs.onSurfaceVariant : AppColors.success)
                 : cs.onSurfaceVariant,
@@ -426,8 +419,8 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
             latency != null
                 ? '${latency.round()} ms'
                 : connected
-                    ? 'connected'
-                    : peer['state'].toString(),
+                ? 'connected'
+                : peer['state'].toString(),
             style: TextStyle(
               fontSize: 12,
               color: connected ? AppColors.success : cs.onSurfaceVariant,
@@ -439,9 +432,7 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  inVoice
-                      ? (muted ? Icons.mic_off : Icons.mic)
-                      : Icons.mic_off,
+                  inVoice ? (muted ? Icons.mic_off : Icons.mic) : Icons.mic_off,
                   size: 16,
                   color: inVoice
                       ? (muted ? cs.onSurfaceVariant : AppColors.success)
@@ -450,10 +441,7 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
                 const SizedBox(width: 4),
                 Text(
                   inVoice ? (muted ? 'muted' : 'talking') : 'no mic',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -529,17 +517,16 @@ class _P2PRoomScreenState extends State<P2PRoomScreen> {
                   hintText: 'Send a message to all peers...',
                   border: OutlineInputBorder(),
                   isDense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                 ),
                 onSubmitted: (_) => _send(),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filled(
-              onPressed: _send,
-              icon: const Icon(Icons.send),
-            ),
+            IconButton.filled(onPressed: _send, icon: const Icon(Icons.send)),
           ],
         ),
       ),

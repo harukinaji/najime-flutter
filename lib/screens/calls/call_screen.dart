@@ -63,25 +63,40 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _pulseAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))
-      ..repeat(reverse: true);
-    _slideAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _waveAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))
-      ..repeat();
-    _initRenderers().then((_) {
-      if (widget.isIncoming) {
-        setState(() => _connecting = false);
-        if (widget.autoAccept) {
-          _acceptCall().catchError((Object e) {
-            if (mounted) { _errMsg = e.toString(); _endCall(); }
-          });
-        }
-      } else {
-        _startCall().catchError((Object e) {
-          if (mounted) { _errMsg = e.toString(); _endCall(); }
-        });
-      }
-    }).catchError((_) {});
+    _pulseAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _slideAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _waveAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+    _initRenderers()
+        .then((_) {
+          if (widget.isIncoming) {
+            setState(() => _connecting = false);
+            if (widget.autoAccept) {
+              _acceptCall().catchError((Object e) {
+                if (mounted) {
+                  _errMsg = e.toString();
+                  _endCall();
+                }
+              });
+            }
+          } else {
+            _startCall().catchError((Object e) {
+              if (mounted) {
+                _errMsg = e.toString();
+                _endCall();
+              }
+            });
+          }
+        })
+        .catchError((_) {});
     _slideAnim.forward();
     _connectTimer = Timer(const Duration(seconds: 30), () {
       if (mounted && _connecting && !_callEnded) {
@@ -314,7 +329,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       }
     });
 
-    await SFUService.joinRoom(roomId: roomId, video: widget.callType == CallType.video);
+    await SFUService.joinRoom(
+      roomId: roomId,
+      video: widget.callType == CallType.video,
+    );
     _localStream = SFUService.localStream;
     if (_localStream != null) {
       _localRenderer.srcObject = _localStream;
@@ -368,11 +386,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
 
     final contacts = NajiContactsService.cachedContacts
-        .where((c) =>
-            c.isOnNajiMe &&
-            c.najiMeUserId != null &&
-            c.najiMeUserId != widget.contactId &&
-            !_participantIds.contains(c.najiMeUserId))
+        .where(
+          (c) =>
+              c.isOnNajiMe &&
+              c.najiMeUserId != null &&
+              c.najiMeUserId != widget.contactId &&
+              !_participantIds.contains(c.najiMeUserId),
+        )
         .toList();
 
     if (!mounted) return;
@@ -423,7 +443,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     Icon(
                       Icons.people_outline,
                       size: 48,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -437,7 +459,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     Text(
                       'Only NajiMe users can be added',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -520,7 +544,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildAvatar() {
-    final hasAvatar = widget.contactAvatar != null && widget.contactAvatar!.isNotEmpty;
+    final hasAvatar =
+        widget.contactAvatar != null && widget.contactAvatar!.isNotEmpty;
     Widget? avatarImage;
 
     if (hasAvatar) {
@@ -529,12 +554,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           final base64Data = widget.contactAvatar!.split(',').last;
           final bytes = base64.decode(base64Data);
           avatarImage = ClipOval(
-            child: Image.memory(bytes, width: 120, height: 120, fit: BoxFit.cover),
+            child: Image.memory(
+              bytes,
+              width: 120,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
           );
         } catch (_) {}
       } else {
         avatarImage = ClipOval(
-          child: Image.network(widget.contactAvatar!, width: 120, height: 120, fit: BoxFit.cover,
+          child: Image.network(
+            widget.contactAvatar!,
+            width: 120,
+            height: 120,
+            fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         );
@@ -559,8 +593,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: widget.callType == CallType.video
-                      ? Colors.blue.withValues(alpha: 0.15 - _pulseAnim.value * 0.1)
-                      : Colors.green.withValues(alpha: 0.15 - _pulseAnim.value * 0.1),
+                      ? Colors.blue.withValues(
+                          alpha: 0.15 - _pulseAnim.value * 0.1,
+                        )
+                      : Colors.green.withValues(
+                          alpha: 0.15 - _pulseAnim.value * 0.1,
+                        ),
                 ),
               );
             },
@@ -576,20 +614,25 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 : LinearGradient(
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 24,
                 spreadRadius: 2,
               ),
             ],
           ),
-          child: avatarImage ??
+          child:
+              avatarImage ??
               Center(
                 child: Text(
                   initials,
@@ -606,7 +649,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildParticipantChips() {
-    if (_participantIds.isEmpty && !_isGroupCall) return const SizedBox.shrink();
+    if (_participantIds.isEmpty && !_isGroupCall)
+      return const SizedBox.shrink();
 
     final names = _participantNames.entries.toList();
     final count = names.length + 1;
@@ -621,16 +665,24 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.group, size: 14, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.group,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '$count participants',
@@ -648,11 +700,16 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -661,7 +718,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     const SizedBox(width: 6),
                     Text(
                       entry.value,
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -678,7 +738,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       style: TextStyle(
         color: Colors.white.withValues(alpha: _connected ? 0.9 : 0.6),
         fontSize: _connected && !_isGroupCall ? 40 : 16,
-        fontWeight: _connected && !_isGroupCall ? FontWeight.w300 : FontWeight.w400,
+        fontWeight: _connected && !_isGroupCall
+            ? FontWeight.w300
+            : FontWeight.w400,
         letterSpacing: _connected && !_isGroupCall ? 2 : 0,
       ),
     );
@@ -697,7 +759,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             size: const Size(double.infinity, 40),
             painter: _WavePainter(
               value: _waveAnim.value,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.4),
               muted: _muted,
             ),
           );
@@ -758,10 +822,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF0D1B2A),
-              const Color(0xFF000000),
-            ],
+            colors: [const Color(0xFF0D1B2A), const Color(0xFF000000)],
           ),
         ),
         child: SafeArea(
@@ -791,13 +852,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _isGroupCall ? Icons.group : (widget.callType == CallType.video ? Icons.videocam : Icons.phone),
+                                _isGroupCall
+                                    ? Icons.group
+                                    : (widget.callType == CallType.video
+                                          ? Icons.videocam
+                                          : Icons.phone),
                                 size: 14,
                                 color: cs.primary,
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _isGroupCall ? 'Group Call' : (widget.callType == CallType.video ? 'Video Call' : 'Voice Call'),
+                                _isGroupCall
+                                    ? 'Group Call'
+                                    : (widget.callType == CallType.video
+                                          ? 'Video Call'
+                                          : 'Voice Call'),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 12,
@@ -894,8 +963,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                       _buildParticipantChips(),
                     ],
                   ],
-                  if (isVideo || _isGroupCall)
-                    _buildParticipantChips(),
+                  if (isVideo || _isGroupCall) _buildParticipantChips(),
                   const Spacer(flex: 2),
                   if (widget.isIncoming && !_connected && !widget.autoAccept)
                     Padding(
@@ -1008,9 +1076,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(12),
                         child: RTCVideoView(_localRenderer, mirror: true),
                       ),
+                    ),
                   ),
                 ),
-              ),
               if (!isVideo && _remoteStream != null)
                 Positioned(
                   left: 0,
@@ -1041,11 +1109,7 @@ class _WavePainter extends CustomPainter {
   final Color color;
   final bool muted;
 
-  _WavePainter({
-    required this.value,
-    required this.color,
-    required this.muted,
-  });
+  _WavePainter({required this.value, required this.color, required this.muted});
 
   @override
   void paint(Canvas canvas, Size size) {

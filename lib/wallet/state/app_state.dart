@@ -15,15 +15,11 @@ class AppState extends ChangeNotifier {
 
   /// Creates a standalone instance (used only for tests).
   @visibleForTesting
-  AppState({
-    SecureStorageService? storage,
-    SolanaService? solana,
-  })  : _storage = storage ?? SecureStorageService(),
-        _solana = solana ?? SolanaService();
+  AppState({SecureStorageService? storage, SolanaService? solana})
+    : _storage = storage ?? SecureStorageService(),
+      _solana = solana ?? SolanaService();
 
-  AppState._()
-      : _storage = SecureStorageService(),
-        _solana = SolanaService();
+  AppState._() : _storage = SecureStorageService(), _solana = SolanaService();
 
   bool _restored = false;
 
@@ -59,8 +55,8 @@ class AppState extends ChangeNotifier {
 
   /// Combines built-in and user-added tokens, keyed by mint address.
   Map<String, TokenInfo> get tokenRegistry => {
-        for (final token in [...kKnownTokens, ..._customTokens]) token.mint: token,
-      };
+    for (final token in [...kKnownTokens, ..._customTokens]) token.mint: token,
+  };
 
   Future<void> _loadCustomTokens() async {
     _customTokens = await _storage.getCustomTokens();

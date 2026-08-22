@@ -116,7 +116,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                       height: 48,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
+                          colors: [
+                            cs.primary,
+                            cs.primary.withValues(alpha: 0.7),
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),

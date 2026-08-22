@@ -31,18 +31,26 @@ class SFUService {
   static final Map<String, MediaStream> _remoteStreams = {};
   static final Map<String, RTCVideoRenderer> _remoteRenderers = {};
 
-  static final _onParticipantJoinedController = StreamController<SFUParticipantInfo>.broadcast();
-  static final _onParticipantLeftController = StreamController<String>.broadcast();
-  static final _onStreamAddedController = StreamController<MapEntry<String, MediaStream>>.broadcast();
-  static final _onStreamRemovedController = StreamController<String>.broadcast();
+  static final _onParticipantJoinedController =
+      StreamController<SFUParticipantInfo>.broadcast();
+  static final _onParticipantLeftController =
+      StreamController<String>.broadcast();
+  static final _onStreamAddedController =
+      StreamController<MapEntry<String, MediaStream>>.broadcast();
+  static final _onStreamRemovedController =
+      StreamController<String>.broadcast();
   static final _onConnectedController = StreamController<void>.broadcast();
   static final _onDisconnectedController = StreamController<void>.broadcast();
   static final _onErrorController = StreamController<String>.broadcast();
 
-  static Stream<SFUParticipantInfo> get onParticipantJoined => _onParticipantJoinedController.stream;
-  static Stream<String> get onParticipantLeft => _onParticipantLeftController.stream;
-  static Stream<MapEntry<String, MediaStream>> get onStreamAdded => _onStreamAddedController.stream;
-  static Stream<String> get onStreamRemoved => _onStreamRemovedController.stream;
+  static Stream<SFUParticipantInfo> get onParticipantJoined =>
+      _onParticipantJoinedController.stream;
+  static Stream<String> get onParticipantLeft =>
+      _onParticipantLeftController.stream;
+  static Stream<MapEntry<String, MediaStream>> get onStreamAdded =>
+      _onStreamAddedController.stream;
+  static Stream<String> get onStreamRemoved =>
+      _onStreamRemovedController.stream;
   static Stream<void> get onConnected => _onConnectedController.stream;
   static Stream<void> get onDisconnected => _onDisconnectedController.stream;
   static Stream<String> get onError => _onErrorController.stream;
@@ -52,8 +60,10 @@ class SFUService {
   static bool get isMuted => _isMuted;
   static bool get isVideoOff => _isVideoOff;
   static MediaStream? get localStream => _localStream;
-  static Map<String, SFUParticipantInfo> get participants => Map.unmodifiable(_participants);
-  static Map<String, MediaStream> get remoteStreams => Map.unmodifiable(_remoteStreams);
+  static Map<String, SFUParticipantInfo> get participants =>
+      Map.unmodifiable(_participants);
+  static Map<String, MediaStream> get remoteStreams =>
+      Map.unmodifiable(_remoteStreams);
 
   static Future<void> initialize() async {
     if (_isInitialized) return;
@@ -92,7 +102,6 @@ class SFUService {
       'display_name': displayName,
       'video': video,
     });
-
   }
 
   static Future<MediaStream> _getLocalStream(bool video) async {
@@ -159,7 +168,6 @@ class SFUService {
     };
 
     _peerConnection!.onTrack = (event) {
-
       if (event.streams.isNotEmpty) {
         final stream = event.streams.first;
         String? participantId;
@@ -202,38 +210,35 @@ class SFUService {
 
     if (sdp == null || type == null) return;
 
-    _peerConnection?.setRemoteDescription(
-      RTCSessionDescription(sdp, type),
-    ).then((_) async {
-      if (type == 'offer') {
-        if (_localStream != null && _peerConnection != null) {
-          final senders = await _peerConnection!.getSenders();
-          final existingTrackIds = senders
-              .where((s) => s.track != null)
-              .map((s) => s.track!.id)
-              .toSet();
+    _peerConnection
+        ?.setRemoteDescription(RTCSessionDescription(sdp, type))
+        .then((_) async {
+          if (type == 'offer') {
+            if (_localStream != null && _peerConnection != null) {
+              final senders = await _peerConnection!.getSenders();
+              final existingTrackIds = senders
+                  .where((s) => s.track != null)
+                  .map((s) => s.track!.id)
+                  .toSet();
 
-          for (final track in _localStream!.getTracks()) {
-            if (!existingTrackIds.contains(track.id)) {
-              await _peerConnection!.addTrack(track, _localStream!);
+              for (final track in _localStream!.getTracks()) {
+                if (!existingTrackIds.contains(track.id)) {
+                  await _peerConnection!.addTrack(track, _localStream!);
+                }
+              }
             }
+
+            final answer = await _peerConnection!.createAnswer();
+            await _peerConnection!.setLocalDescription(answer);
+
+            WebSocketService.sendSignal('sfu_connect_transport', {
+              'contact_id': '',
+              'room_id': _currentRoomId,
+              'transport_id': 'main',
+              'sdp': {'sdp': answer.sdp, 'type': 'answer'},
+            });
           }
-        }
-
-        final answer = await _peerConnection!.createAnswer();
-        await _peerConnection!.setLocalDescription(answer);
-
-        WebSocketService.sendSignal('sfu_connect_transport', {
-          'contact_id': '',
-          'room_id': _currentRoomId,
-          'transport_id': 'main',
-          'sdp': {
-            'sdp': answer.sdp,
-            'type': 'answer',
-          },
         });
-      }
-    });
   }
 
   static void _onIceCandidate(dynamic data) {
@@ -296,7 +301,10 @@ class SFUService {
     if (data is! Map) return;
     final producerId = data['producer_id'] as String?;
     final producerUid = data['producer_uid'] as String?;
-    if (kDebugMode) debugPrint('[SFU] Consumer created for producer: $producerId from $producerUid');
+    if (kDebugMode)
+      debugPrint(
+        '[SFU] Consumer created for producer: $producerId from $producerUid',
+      );
   }
 
   static void _onProducerPaused(dynamic data) {
@@ -432,5 +440,4 @@ class SFUService {
   static List<SFUParticipantInfo> get participantList {
     return _participants.values.toList();
   }
-
 }

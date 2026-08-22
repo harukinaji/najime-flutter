@@ -15,10 +15,10 @@ import 'wallet_service.dart';
 
 class SolanaService {
   SolanaService()
-      : _client = SolanaClient(
-          rpcUrl: Uri.parse(WalletConfig.rpcUrl),
-          websocketUrl: Uri.parse(WalletConfig.websocketUrl),
-        );
+    : _client = SolanaClient(
+        rpcUrl: Uri.parse(WalletConfig.rpcUrl),
+        websocketUrl: Uri.parse(WalletConfig.websocketUrl),
+      );
 
   static const String tokenMetadataProgramId =
       'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s';
@@ -167,8 +167,16 @@ class SolanaService {
           rawAmount: balance.rawAmount,
           decimals: balance.decimals,
           uiAmountString: balance.uiAmountString,
-          tokenSymbol: _resolveSymbol(balance.mint, metadataById[balance.mint], known),
-          tokenName: _resolveName(balance.mint, metadataById[balance.mint], known),
+          tokenSymbol: _resolveSymbol(
+            balance.mint,
+            metadataById[balance.mint],
+            known,
+          ),
+          tokenName: _resolveName(
+            balance.mint,
+            metadataById[balance.mint],
+            known,
+          ),
           programId: balance.programId,
         ),
     ];
@@ -182,8 +190,17 @@ class SolanaService {
   /// on-chain metadata `uri` when present.
   Future<List<Nft>> getNfts(String address) async {
     // 1. Collect candidate token accounts across both token programs.
-    final candidates = <String, ({String mint, String account, String programId, int decimals, int amount})>{
-    };
+    final candidates =
+        <
+          String,
+          ({
+            String mint,
+            String account,
+            String programId,
+            int decimals,
+            int amount,
+          })
+        >{};
     for (final programId in const [
       TokenProgram.programId,
       Token2022Program.programId,
@@ -238,13 +255,11 @@ class SolanaService {
           metadata.name,
           _tokenSymbol(mint),
         ]);
-        final symbol =
-            _cleanMetadata(offchain?['symbol'] as String?).isNotEmpty
-                ? _cleanMetadata(offchain?['symbol'] as String?)
-                : metadata.symbol;
+        final symbol = _cleanMetadata(offchain?['symbol'] as String?).isNotEmpty
+            ? _cleanMetadata(offchain?['symbol'] as String?)
+            : metadata.symbol;
         final imageUrl = _cleanMetadata(offchain?['image'] as String?);
-        final description =
-            _cleanMetadata(offchain?['description'] as String?);
+        final description = _cleanMetadata(offchain?['description'] as String?);
         final attributes = _parseNftAttributes(offchain?['attributes']);
         final files = _parseNftFiles(offchain?['properties']);
         final category = _parseNftCategory(offchain, files);
@@ -366,11 +381,11 @@ class SolanaService {
   /// Curated icon URLs for known mints that have no on-chain Metaplex
   /// metadata on devnet (e.g. the devnet USDC/EURC faucet mints). Reuses the
   /// respective mainnet token logo.
-static const Map<String, String> _knownTokenIcons = {
+  static const Map<String, String> _knownTokenIcons = {
     // Solana (native token).
     'So11111111111111111111111111111111111111112':
         'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
-// Devnet USD Coin (mapped to the mainnet USDC logo).
+    // Devnet USD Coin (mapped to the mainnet USDC logo).
     '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU':
         'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/assets/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
     // Devnet Marinade staked SOL (mapped to the mainnet mSOL logo).
@@ -405,7 +420,9 @@ static const Map<String, String> _knownTokenIcons = {
   }
 
   /// Fetches and caches the off-chain metadata JSON behind [metadataUri].
-  Future<Map<String, dynamic>?> _fetchOffchainMetadata(String metadataUri) async {
+  Future<Map<String, dynamic>?> _fetchOffchainMetadata(
+    String metadataUri,
+  ) async {
     if (_offchainCache.containsKey(metadataUri)) {
       return _offchainCache[metadataUri];
     }
@@ -484,14 +501,11 @@ static const Map<String, String> _knownTokenIcons = {
   Future<TokenMetadata?> _getMetaplexMetadata(String mint) async {
     try {
       final mintKey = Ed25519HDPublicKey.fromBase58(mint);
-      final metadataProgram =
-          Ed25519HDPublicKey.fromBase58(tokenMetadataProgramId);
+      final metadataProgram = Ed25519HDPublicKey.fromBase58(
+        tokenMetadataProgramId,
+      );
       final metadataAddress = await Ed25519HDPublicKey.findProgramAddress(
-        seeds: [
-          utf8.encode('metadata'),
-          metadataProgram.bytes,
-          mintKey.bytes,
-        ],
+        seeds: [utf8.encode('metadata'), metadataProgram.bytes, mintKey.bytes],
         programId: metadataProgram,
       );
 
@@ -550,8 +564,10 @@ static const Map<String, String> _knownTokenIcons = {
         final length = byteData.getUint32(offset, Endian.little);
         offset += 4;
         final str = utf8
-            .decode(bytes.sublist(offset, offset + length),
-                allowMalformed: true)
+            .decode(
+              bytes.sublist(offset, offset + length),
+              allowMalformed: true,
+            )
             .trim();
         offset += length;
         return _cleanMetadata(str);

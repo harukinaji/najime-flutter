@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 
-
 class TokenBadge extends StatelessWidget {
   final String symbol;
   final double balance;
 
-  const TokenBadge({
-    super.key,
-    required this.symbol,
-    required this.balance,
-  });
+  const TokenBadge({super.key, required this.symbol, required this.balance});
 
   @override
   Widget build(BuildContext context) {

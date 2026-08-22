@@ -64,8 +64,7 @@ class _SendScreenState extends State<SendScreen> {
       final registry = state.tokenRegistry;
       final assets = <TokenInfo>[
         kSolToken,
-        for (final t in tokenBalances)
-          _assetFromBalance(t, registry),
+        for (final t in tokenBalances) _assetFromBalance(t, registry),
       ];
       final balances = <String, int>{
         kSolToken.mint: lamports,
@@ -94,15 +93,16 @@ class _SendScreenState extends State<SendScreen> {
 
   int get _selectedDecimals => _selected.decimals;
 
-  TokenInfo _assetFromBalance(
-    TokenBalance t,
-    Map<String, TokenInfo> registry,
-  ) {
+  TokenInfo _assetFromBalance(TokenBalance t, Map<String, TokenInfo> registry) {
     final known = registry[t.mint];
     return TokenInfo(
       mint: t.mint,
-      symbol: t.tokenSymbol.isNotEmpty ? t.tokenSymbol : (known?.symbol ?? t.tokenSymbol),
-      name: t.tokenName.isNotEmpty ? t.tokenName : (known?.name ?? t.tokenSymbol),
+      symbol: t.tokenSymbol.isNotEmpty
+          ? t.tokenSymbol
+          : (known?.symbol ?? t.tokenSymbol),
+      name: t.tokenName.isNotEmpty
+          ? t.tokenName
+          : (known?.name ?? t.tokenSymbol),
       decimals: known?.decimals ?? t.decimals,
       isCustom: known?.isCustom ?? true,
       programId: t.programId,
@@ -256,8 +256,9 @@ class _SendScreenState extends State<SendScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Amount (${_selected.symbol})',
                   hintText: '0.1',
@@ -337,7 +338,11 @@ class _SendScreenState extends State<SendScreen> {
                   value: asset.mint,
                   child: Row(
                     children: [
-                      TokenIcon(mint: asset.mint, symbol: asset.symbol, size: 24),
+                      TokenIcon(
+                        mint: asset.mint,
+                        symbol: asset.symbol,
+                        size: 24,
+                      ),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(

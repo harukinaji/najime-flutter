@@ -96,7 +96,8 @@ class NotificationService {
         // Check if notifications are enabled
         final prefs = await SharedPreferences.getInstance();
         final messagesEnabled = prefs.getBool('notif_messages') ?? true;
-        final groupMessagesEnabled = prefs.getBool('notif_group_messages') ?? true;
+        final groupMessagesEnabled =
+            prefs.getBool('notif_group_messages') ?? true;
         final isGroup = data['is_group'] == true || data['is_group'] == 'true';
 
         if (!messagesEnabled || (isGroup && !groupMessagesEnabled)) {
@@ -120,7 +121,9 @@ class NotificationService {
   Future<void> _sendDeliveryReceiptForeground(String messageId) async {
     try {
       final success = await ApiService.markMessageDelivered(messageId);
-      debugPrint('[FCM] Foreground delivery receipt sent for $messageId: $success');
+      debugPrint(
+        '[FCM] Foreground delivery receipt sent for $messageId: $success',
+      );
     } catch (e) {
       debugPrint('[FCM] Failed to send foreground delivery receipt: $e');
     }
@@ -207,12 +210,16 @@ Future<void> _sendDeliveryReceiptBackground(String messageId) async {
     if (hmacKey.length != 32) return;
 
     final deviceId = sha256.convert(hmacKey).toString().substring(0, 32);
-    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000)
+        .toString();
     final nonce = _generateNonce();
-    final canonical = 'POST:/api/messages/$messageId/delivered:$timestamp:$nonce:';
+    final canonical =
+        'POST:/api/messages/$messageId/delivered:$timestamp:$nonce:';
     final signature = _hmacSign(hmacKey, canonical);
 
-    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/messages/$messageId/delivered');
+    final uri = Uri.parse(
+      '${AppConfig.apiBaseUrl}/api/messages/$messageId/delivered',
+    );
     final httpClient = HttpClient()
       ..connectionTimeout = const Duration(seconds: 10);
     if (SignedHttpClient.shouldOverrideCertificateVerification) {

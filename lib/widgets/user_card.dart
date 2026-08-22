@@ -72,10 +72,7 @@ class UserCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: cs.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
             ],
           ),
         ),
@@ -103,10 +100,7 @@ class UserCard extends StatelessWidget {
         height: 80,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          image: DecorationImage(
-            image: _avatarImage(),
-            fit: BoxFit.cover,
-          ),
+          image: DecorationImage(image: _avatarImage(), fit: BoxFit.cover),
         ),
       );
     }

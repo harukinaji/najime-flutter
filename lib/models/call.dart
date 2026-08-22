@@ -1,14 +1,6 @@
-enum CallType {
-  voice,
-  video,
-}
+enum CallType { voice, video }
 
-enum CallStatus {
-  incoming,
-  outgoing,
-  missed,
-  answered,
-}
+enum CallStatus { incoming, outgoing, missed, answered }
 
 class CallModel {
   final String id;

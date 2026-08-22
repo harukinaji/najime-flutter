@@ -359,6 +359,44 @@ frontend/
 
 ---
 
+## CI/CD
+
+GitHub Actions, defined in `.github/workflows/`:
+
+| Workflow | Triggers | What it does |
+|---|---|---|
+| `ci.yml` | push to `main`, PRs | `dart format` check, `flutter analyze`, unit + wallet tests with coverage, gitleaks secret scan, dependency review (PRs), Android release APK/AAB build (main only), coverage to Codecov |
+| `codeql.yml` | push/PR to `main`, weekly | GitHub Code Scanning (SAST) |
+| `nightly.yml` | daily + manual | Heavy builds: iOS (unsigned), macOS, Windows, Linux desktop |
+| `release.yml` | tag `v*` | Builds+signs Android release and publishes a GitHub Release with APK/AAB |
+
+### Required repository secrets
+
+Configure these under **Settings → Secrets and variables → Actions**:
+
+| Secret | Required | Purpose |
+|---|---|---|
+| `APP_KEY` | release / integration | Shared application key (`X-App-Key`), must match the backend |
+| `API_BASE_URL` | integration | Backend base URL for devnet/staging integration runs |
+| `ANDROID_KEYSTORE_BASE64` | to sign releases | Base64 of the upload keystore (`base64 -w0 upload-keystore.jks`) |
+| `ANDROID_KEYSTORE_PASSWORD` | to sign releases | Keystore password |
+| `ANDROID_KEY_ALIAS` | to sign releases | Signing key alias |
+| `ANDROID_KEY_PASSWORD` | to sign releases | Signing key password |
+| `GOOGLE_SERVICES_JSON` | optional | Real `google-services.json` (CI falls back to a placeholder) |
+| `CODECOV_TOKEN` | coverage badge | Enable coverage publishing |
+
+> Never store real mainnet seed phrases/keys in secrets — devnet-only test keys.
+
+Also enable in the repo: **Secret scanning** (including push protection) and **Dependabot alerts** (config in `.github/dependabot.yml`).
+
+Trigger a release:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+---
+
 ## Security
 
 NajiMe implements defense-in-depth security across multiple layers:
