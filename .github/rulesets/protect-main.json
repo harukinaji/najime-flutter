@@ -6,7 +6,7 @@
   "conditions": {
     "ref_name": {
       "include": [
-        "~DEFAULT_BRANCH"
+        "refs/heads/main"
       ],
       "exclude": []
     }
