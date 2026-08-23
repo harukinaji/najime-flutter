@@ -271,6 +271,14 @@ flutter build macos --release
 flutter build linux --release
 ```
 
+> **Linux prerequisites** (audio/video plugins need GStreamer + ALSA):
+> ```bash
+> sudo apt-get install -y clang cmake ninja-build pkg-config \
+>   libgtk-3-dev liblzma-dev libstdc++-12-dev \
+>   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+>   libasound2-dev
+> ```
+
 ### Tests
 
 ```bash
