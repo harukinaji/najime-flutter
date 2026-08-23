@@ -328,7 +328,6 @@ class _VideoStickerState extends State<_VideoSticker> {
   VideoPlayerController? _controller;
   bool _ok = false;
   bool _err = false;
-  bool _loading = true;
 
   @override
   void initState() {
@@ -359,7 +358,6 @@ class _VideoStickerState extends State<_VideoSticker> {
               if (mounted)
                 setState(() {
                   _ok = true;
-                  _loading = false;
                   _controller!.play();
                 });
             })
@@ -367,14 +365,12 @@ class _VideoStickerState extends State<_VideoSticker> {
               if (mounted)
                 setState(() {
                   _err = true;
-                  _loading = false;
                 });
             });
     } catch (_) {
       if (mounted)
         setState(() {
           _err = true;
-          _loading = false;
         });
     }
   }

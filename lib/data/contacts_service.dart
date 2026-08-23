@@ -2,7 +2,6 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart' as perm;
 
 import 'api_service.dart';
-import '../models/contact.dart';
 
 class DeviceContactInfo {
   final String name;

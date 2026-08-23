@@ -31,8 +31,6 @@ class StoryService {
 
   List<_StoryUserData> _users = [];
   String _myUserId = '';
-  String _myUserName = '';
-  String? _myAvatarUrl;
 
   List<StoryModel> get stories {
     final all = <StoryModel>[];
@@ -55,8 +53,6 @@ class StoryService {
     String? avatarUrl,
   }) {
     _myUserId = id;
-    _myUserName = name;
-    _myAvatarUrl = avatarUrl;
   }
 
   List<StoryModel> getStoriesForUser(String userId) {

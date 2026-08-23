@@ -500,11 +500,9 @@ class MiniAppScreen extends StatefulWidget {
 
 class _MiniAppScreenState extends State<MiniAppScreen> {
   MethodChannel? _webviewChannel;
-  int? _webviewId;
   WebViewController? _webViewController;
   WebviewController? _windowsController;
   bool _loading = true;
-  bool _ready = false;
   String? _error;
   Color _headerColor = Colors.transparent;
   bool _fullscreen = false;
@@ -677,7 +675,6 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   }
 
   void _onPlatformViewCreated(int id) {
-    _webviewId = id;
     _webviewChannel = MethodChannel('naji_webview_$id');
     _webviewChannel!.setMethodCallHandler(_handleNativeCallback);
     if (!_isAllowedMiniAppUrl(widget.url)) {
@@ -732,7 +729,6 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         _handleSdkInit(payload);
         break;
       case 'APP_READY':
-        setState(() => _ready = true);
         break;
       case 'NAJI_CLOSE_APP':
         _handleClose();
@@ -1355,9 +1351,7 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       final result = await _gyroscopeChannel.invokeMethod<Map>(
         'getGyroscopeState',
       );
-      _lastGyroscopeData = (result as Map<dynamic, dynamic>?)?.map(
-        (k, v) => MapEntry(k.toString(), v),
-      );
+      _lastGyroscopeData = result?.map((k, v) => MapEntry(k.toString(), v));
     } catch (_) {}
     _respond(payload, _lastGyroscopeData);
   }
@@ -1396,9 +1390,7 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
       final result = await _accelerometerChannel.invokeMethod<Map>(
         'getAccelerometerState',
       );
-      _lastAccelerometerData = (result as Map<dynamic, dynamic>?)?.map(
-        (k, v) => MapEntry(k.toString(), v),
-      );
+      _lastAccelerometerData = result?.map((k, v) => MapEntry(k.toString(), v));
     } catch (_) {}
     _respond(payload, _lastAccelerometerData);
   }
@@ -1736,15 +1728,6 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
   }
 
   // ── Wallet ────────────────────────────────────────────────────────
-
-  Future<Map<String, dynamic>> _getSparksBalance() async {
-    final wallet = await ApiService.getMiniAppWallet();
-    return {'balance': wallet?['balance'] ?? 0};
-  }
-
-  Future<Map<String, dynamic>?> _getWalletState() async {
-    return await ApiService.getMiniAppWallet();
-  }
 
   Future<void> _handleWalletState(Map<String, dynamic> payload) async {
     final wallet = await ApiService.getMiniAppWallet();

@@ -89,6 +89,7 @@ class QrProfileCard extends StatelessWidget {
                   child: PrettyQrView(
                     qrImage: qrImage,
                     decoration: PrettyQrDecoration(
+                      // ignore: experimental_member_use
                       shape: PrettyQrShape.custom(
                         PrettyQrSmoothSymbol(color: qrColor),
                         finderPattern: PrettyQrSmoothSymbol(color: eyeColor),

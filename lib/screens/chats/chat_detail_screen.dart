@@ -24,7 +24,6 @@ import '../../wallet/services/check_escrow_service.dart';
 import '../../wallet/state/app_state.dart';
 import 'forward_message_screen.dart';
 import 'package:go_router/go_router.dart';
-import '../../utils/desktop_chat.dart';
 
 const _sentColor = Color(0xFF18A7B5);
 
@@ -562,7 +561,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   String _formatScheduledDate(DateTime dt) {
     final now = DateTime.now();
-    final diff = dt.difference(now);
     String day;
     if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
       day = 'today';
@@ -2105,55 +2103,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
-  String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildSearchHighlight(
-    String text,
-    String query,
-    TextStyle style,
-    bool isCurrent,
-  ) {
-    if (query.isEmpty) return Text(text, style: style);
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final spans = <TextSpan>[];
-    int start = 0;
-
-    while (true) {
-      final index = lowerText.indexOf(lowerQuery, start);
-      if (index == -1) {
-        if (start < text.length) {
-          spans.add(TextSpan(text: text.substring(start), style: style));
-        }
-        break;
-      }
-      if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: style));
-      }
-      spans.add(
-        TextSpan(
-          text: text.substring(index, index + query.length),
-          style: style.copyWith(
-            backgroundColor: isCurrent
-                ? const Color(0xFFFFEB3B)
-                : const Color(0xFFFFEB3B).withValues(alpha: 0.5),
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-      start = index + query.length;
-    }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
   Widget _buildSearchBar(ColorScheme cs) {
     return Container(
       color: cs.surface,
@@ -2222,70 +2171,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               ),
               const SizedBox(width: 8),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFoundMessagePreview(ColorScheme cs) {
-    final msgIndex = _searchMatchIndices[_currentMatchIndex];
-    final msg = _messages[msgIndex];
-
-    return GestureDetector(
-      onTap: () => _scrollToMatch(msgIndex),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          border: Border(
-            top: BorderSide(
-              color: cs.outlineVariant.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              height: 36,
-              decoration: BoxDecoration(
-                color: msg.isMe ? _sentColor : cs.primary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!msg.isMe)
-                    Text(
-                      msg.senderId,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: cs.primary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  _buildSearchHighlight(
-                    msg.content,
-                    _searchQuery,
-                    TextStyle(fontSize: 13, color: cs.onSurface, height: 1.3),
-                    true,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _formatTime(msg.timestamp),
-              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-            ),
           ],
         ),
       ),
@@ -3382,43 +3267,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildLockHint(ColorScheme cs, {required bool locked}) {
-    final color = locked ? cs.primary : cs.onSurfaceVariant;
-
-    return FittedBox(
-      key: ValueKey(locked),
-      fit: BoxFit.scaleDown,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: locked
-              ? cs.primary.withValues(alpha: 0.12)
-              : cs.surfaceContainerHighest.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              locked ? Icons.lock_rounded : Icons.keyboard_arrow_up_rounded,
-              size: 18,
-              color: color,
-            ),
-            const SizedBox(width: 3),
-            Text(
-              locked ? 'Recording locked' : 'Swipe up — to lock',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

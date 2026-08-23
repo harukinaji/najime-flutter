@@ -288,7 +288,7 @@ class WebRTCService {
         }
       }
       userId ??= 'p${_conferenceStreamCounter++}';
-      _conferenceRemoteStreams[userId!] = stream;
+      _conferenceRemoteStreams[userId] = stream;
       _onParticipantAdded?.call(userId);
     };
   }

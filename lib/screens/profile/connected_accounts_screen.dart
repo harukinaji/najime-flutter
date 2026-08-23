@@ -18,7 +18,6 @@ class _ConnectedAccountsScreenState extends State<ConnectedAccountsScreen> {
   String? _error;
   bool _googleConnected = false;
   String? _googleEmail;
-  bool _phoneConnected = false;
   String? _phone;
   bool _phoneVerified = false;
 
@@ -43,7 +42,6 @@ class _ConnectedAccountsScreenState extends State<ConnectedAccountsScreen> {
         _loading = false;
         _googleConnected = result.google?['connected'] == true;
         _googleEmail = result.google?['email'] as String?;
-        _phoneConnected = result.phone?['connected'] == true;
         _phone = result.phone?['phone_number'] as String?;
         _phoneVerified = result.phone?['is_verified'] == true;
       });
