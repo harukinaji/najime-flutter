@@ -406,19 +406,23 @@ Configure these under **Settings → Secrets and variables → Actions**:
 Also enable in the repo: **Secret scanning** (including push protection) and **Dependabot alerts** (config in `.github/dependabot.yml`).
 
 - **Branch ruleset:** import `.github/rulesets/protect-main.json` →
-  **Settings → Rules → Rulesets → New ruleset → Import a ruleset** (or
+  **Settings → Rules → Rulesets → New branch ruleset → Import a ruleset** (or
   **Set up rules** from the branches page). It protects the default branch:
-  require a pull request with 1 approval, require the CI status checks
-  (`Format check`, `Analyze`, `Test (unit + wallet)`,
-  `Secret scan (gitleaks)`, `Dependency review`, `flutter analyze → SARIF`),
-  block force-pushes and deletion, keep branches up to date.
+  every change must go through a **pull request**, force-pushes/deletion are
+  blocked, history stays linear. This is tuned for a **single-maintainer** repo
+  (0 required approvals — an approval "from someone other than the last pusher"
+  is impossible to satisfy solo). When you add a second maintainer, raise it to
+  `required_approving_review_count: 1` in the UI.
+  Add **"Require status checks to pass"** in the UI too: `Format check`,
+  `Analyze`, `Test (unit + wallet)`, `Secret scan (gitleaks)`,
+  `Dependency review`, `flutter analyze → SARIF`.
 - **Release gate:** `release.yml` builds under the `production` GitHub
   **Environment**. Configure **Settings → Environments → production → Required
   reviewers** to force a human/security approval before the release is built and
   signed. Until reviewers are configured the job runs immediately.
-- **PR review:** enable branch protection on `main` (Settings → Branches):
-  *Require a pull request before merging* + *Require status checks* (the
-  `CI` jobs) so every PR is reviewed manually and CI is green before merge.
+- **Manual review workflow:** with the ruleset active, all changes flow through
+  PRs (`docs/*` → `main`), CI runs on the PR, and the maintainer reviews and
+  merges — that is the manual gate.
 
 ### Notes for CI operators
 
