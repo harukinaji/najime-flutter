@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../config.dart';
 import '../../data/api_service.dart';
 import '../../data/sticker_cache.dart';
 import '../../models/sticker.dart';
@@ -379,54 +377,6 @@ class _StickerPackScreenState extends State<StickerPackScreen>
       onTap: () => _openPackDetail(pack),
     );
   }
-
-  Widget _buildImage(String url) {
-    final fullUrl = url.startsWith('/uploads')
-        ? '${AppConfig.apiBaseUrl}$url'
-        : url;
-    if (fullUrl.startsWith('data:image')) {
-      try {
-        final base64Data = fullUrl.split(',').last;
-        final bytes = base64Decode(base64Data);
-        return Image.memory(
-          bytes,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, __, ___) => _brokenIcon(),
-        );
-      } catch (_) {
-        return _brokenIcon();
-      }
-    }
-    return Image.network(
-      fullUrl,
-      fit: BoxFit.cover,
-      gaplessPlayback: true,
-      loadingBuilder: (ctx, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: Colors.grey[200],
-          child: const Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        );
-      },
-      errorBuilder: (_, __, ___) => _brokenIcon(),
-    );
-  }
-
-  Widget _brokenIcon() {
-    return Container(
-      color: Colors.grey[200],
-      child: const Center(
-        child: Icon(Icons.broken_image, size: 24, color: Colors.grey),
-      ),
-    );
-  }
 }
 
 // ── Pack Detail Screen ────────────────────────────────────────
@@ -752,54 +702,6 @@ class _StickerPackDetailScreenState extends State<_StickerPackDetailScreen> {
                   ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildImage(String url) {
-    final fullUrl = url.startsWith('/uploads')
-        ? '${AppConfig.apiBaseUrl}$url'
-        : url;
-    if (fullUrl.startsWith('data:image')) {
-      try {
-        final base64Data = fullUrl.split(',').last;
-        final bytes = base64Decode(base64Data);
-        return Image.memory(
-          bytes,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, __, ___) => _brokenIcon(),
-        );
-      } catch (_) {
-        return _brokenIcon();
-      }
-    }
-    return Image.network(
-      fullUrl,
-      fit: BoxFit.cover,
-      gaplessPlayback: true,
-      loadingBuilder: (ctx, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: Colors.grey[200],
-          child: const Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        );
-      },
-      errorBuilder: (_, __, ___) => _brokenIcon(),
-    );
-  }
-
-  Widget _brokenIcon() {
-    return Container(
-      color: Colors.grey[200],
-      child: const Center(
-        child: Icon(Icons.broken_image, size: 24, color: Colors.grey),
       ),
     );
   }

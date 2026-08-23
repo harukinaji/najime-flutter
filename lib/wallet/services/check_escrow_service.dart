@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:solana/encoder.dart';
 import 'package:solana/solana.dart' hide Wallet;
-import 'package:solana/base58.dart';
 
 import '../../data/api_service.dart';
 import '../services/wallet_service.dart';

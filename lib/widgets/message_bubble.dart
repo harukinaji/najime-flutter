@@ -1565,56 +1565,6 @@ class _MessageBubbleState extends State<MessageBubble> {
     );
   }
 
-  Widget _buildWaveform(bool isMe, double progress) {
-    final barCount = _waveform.length;
-    final playedIndex = (progress * barCount).floor();
-
-    return GestureDetector(
-      onTapDown: (details) async {
-        if (_player == null || _duration.inMilliseconds == 0) return;
-        final box = context.findRenderObject() as RenderBox?;
-        if (box == null) return;
-        final localX = details.localPosition.dx;
-        final waveformWidth = box.size.width;
-        if (waveformWidth <= 0) return;
-        final tapProgress = (localX / waveformWidth).clamp(0.0, 1.0);
-        final seekMs = (tapProgress * _duration.inMilliseconds).round();
-        await _player!.seek(Duration(milliseconds: seekMs));
-      },
-      child: SizedBox(
-        height: 32,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: List.generate(barCount, (i) {
-            final height = _waveform[i] * 28.0 + 4.0;
-            final isPlayed = i <= playedIndex;
-            final barColor = isPlayed
-                ? (isMe ? Colors.white : Theme.of(context).colorScheme.primary)
-                : (isMe
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3));
-
-            return Expanded(
-              child: Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  width: 2.5,
-                  height: height,
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(1.5),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-
   void _openFullScreenImage(BuildContext context, String imageUrl) {
     Navigator.of(context).push(
       MaterialPageRoute(
