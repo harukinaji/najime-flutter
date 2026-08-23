@@ -57,6 +57,11 @@ jobs:
               if not m:
                   continue
               sev = m.group(1)
+              # Only surface actionable diagnostics: warnings and errors.
+              # The analyzer emits ~100+ 'info' style-lint hints that would
+              # otherwise flood Code Scanning with noise (notes).
+              if sev == 'info':
+                  continue
               msg = m.group('msg').strip()
               path = m.group('path')
               line = int(m.group('line'))
