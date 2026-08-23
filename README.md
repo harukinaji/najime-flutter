@@ -405,6 +405,13 @@ Configure these under **Settings → Secrets and variables → Actions**:
 
 Also enable in the repo: **Secret scanning** (including push protection) and **Dependabot alerts** (config in `.github/dependabot.yml`).
 
+- **Branch ruleset:** import `.github/rulesets/protect-main.json` →
+  **Settings → Rules → Rulesets → New ruleset → Import a ruleset** (or
+  **Set up rules** from the branches page). It protects the default branch:
+  require a pull request with 1 approval, require the CI status checks
+  (`Format check`, `Analyze`, `Test (unit + wallet)`,
+  `Secret scan (gitleaks)`, `Dependency review`, `flutter analyze → SARIF`),
+  block force-pushes and deletion, keep branches up to date.
 - **Release gate:** `release.yml` builds under the `production` GitHub
   **Environment**. Configure **Settings → Environments → production → Required
   reviewers** to force a human/security approval before the release is built and
