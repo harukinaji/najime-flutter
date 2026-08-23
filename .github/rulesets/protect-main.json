@@ -33,12 +33,12 @@
       "parameters": {
         "strict": true,
         "checks": [
-          { "context": "Format check" },
-          { "context": "Analyze" },
-          { "context": "Test (unit + wallet)" },
-          { "context": "Secret scan (gitleaks)" },
-          { "context": "Dependency review" },
-          { "context": "flutter analyze \u2192 SARIF" }
+          { "context": "Format check", "integration_id": null },
+          { "context": "Analyze", "integration_id": null },
+          { "context": "Test (unit + wallet)", "integration_id": null },
+          { "context": "Secret scan (gitleaks)", "integration_id": null },
+          { "context": "Dependency review", "integration_id": null },
+          { "context": "flutter analyze \u2192 SARIF", "integration_id": null }
         ]
       }
     }
