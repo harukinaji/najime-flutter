@@ -374,13 +374,15 @@ GitHub Actions, defined in `.github/workflows/`:
 | Workflow | Triggers | What it does |
 |---|---|---|
 | `ci.yml` | push to `main`, PRs | `dart format` check, `flutter analyze`, unit + wallet tests with coverage, gitleaks secret scan, dependency review (PRs, advisory), Android release APK/AAB build (main only), coverage to Codecov |
+| `sast.yml` | push/PR to `main`, weekly | Dart SAST: `flutter analyze` → SARIF → Code Scanning (Security tab) |
 | `nightly.yml` | daily + manual | Heavy builds: iOS (unsigned), macOS, Windows, Linux desktop |
-| `release.yml` | tag `v*` | Builds+signs Android release and publishes a GitHub Release with APK/AAB |
+| `release.yml` | tag `v*` | Builds+signs Android release **behind a manual approval gate** and publishes a GitHub Release with APK/AAB |
 
-> **SAST note:** GitHub CodeQL does not support Dart, so a CodeQL workflow would
-> always fail. Static analysis is instead covered by `flutter analyze` (rules
-> from `analysis_options.yaml`) plus the gitleaks secret scan, PR dependency
-> review, and the secrets/security features you enable in repo settings.
+> **SAST note:** GitHub CodeQL does not support Dart, so instead of a CodeQL
+> workflow a `sast.yml` job runs `flutter analyze`, converts the diagnostics to
+> SARIF and uploads them to GitHub Code Scanning. Static analysis is further
+> covered by gitleaks secret scan, PR dependency review and the security
+> features you enable in repo settings.
 
 ### Required repository secrets
 
@@ -399,7 +401,31 @@ Configure these under **Settings → Secrets and variables → Actions**:
 
 > Never store real mainnet seed phrases/keys in secrets — devnet-only test keys.
 
+### Release approval & PR review (manual gates)
+
 Also enable in the repo: **Secret scanning** (including push protection) and **Dependabot alerts** (config in `.github/dependabot.yml`).
+
+- **Release gate:** `release.yml` builds under the `production` GitHub
+  **Environment**. Configure **Settings → Environments → production → Required
+  reviewers** to force a human/security approval before the release is built and
+  signed. Until reviewers are configured the job runs immediately.
+- **PR review:** enable branch protection on `main` (Settings → Branches):
+  *Require a pull request before merging* + *Require status checks* (the
+  `CI` jobs) so every PR is reviewed manually and CI is green before merge.
+
+### Notes for CI operators
+
+- **`google-services.json` placeholder:** the Firebase Gradle plugin needs the
+  file to exist. CI writes a throwaway placeholder unless the real
+  `GOOGLE_SERVICES_JSON` secret is set. The Firebase services only light up on
+  devices with real config — the placeholder is purely to let the build pass.
+- **Gradle heap `sed`:** `android/gradle.properties` is tuned for local 8G
+  machines; GitHub runners have ~7GB, so CI rewrites the heap to `-Xmx3G` with
+  `sed`. If you change the `-Xmx` line locally, keep CI's `sed` in sync in
+  `ci.yml` / `release.yml`.
+- **Devnet keys only:** the `integration-devnet` job uses `secrets.APP_KEY` /
+  `secrets.API_BASE_URL` against Solana **devnet**. Never store mainnet keys or
+  production credentials in repository secrets.
 
 Trigger a release:
 

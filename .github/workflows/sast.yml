@@ -1,0 +1,107 @@
+name: SAST (Dart)
+
+# GitHub CodeQL does not support Dart, so SAST for the app code is produced by
+# the Dart analyzer and uploaded to Code Scanning (Security tab) as SARIF.
+# This covers the same "code analysis on PR/push/schedule" role CodeQL would.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * 1' # weekly, Monday 04:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  FLUTTER_VERSION: '3.44.3'
+
+jobs:
+  dart:
+    name: flutter analyze → SARIF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Collect diagnostics
+        run: |
+          flutter analyze --no-pub --no-fatal-warnings --no-fatal-infos 2>&1 | tee analyzer.txt || true
+      - name: Convert analyzer output to SARIF
+        run: |
+          python3 - <<'PY'
+          import json, re
+
+          src = open('analyzer.txt', encoding='utf-8', errors='replace').read()
+          # Line format (bullet separator U+2022 '•'):
+          #   info • message • path:line:col • rule
+          sep = '\u2022'
+          line_re = re.compile(
+              rf'^\s*(info|warning|error)\s*{sep}\s*(?P<msg>.*?)\s*{sep}\s+'
+              rf'(?P<path>[^:\s][^:]*):(?P<line>\d+):(?P<col>\d+)\s*{sep}\s+(?P<rule>\S+)\s*$'
+          )
+
+          rules = {}
+          results = []
+          artifacts = {}
+
+          for raw in src.splitlines():
+              m = line_re.match(raw)
+              if not m:
+                  continue
+              sev = m.group(1)
+              msg = m.group('msg').strip()
+              path = m.group('path')
+              line = int(m.group('line'))
+              col = int(m.group('col'))
+              rule = m.group('rule')
+
+              if rule not in rules:
+                  rules[rule] = {'id': rule, 'name': rule,
+                                 'shortDescription': {'text': rule}}
+              results.append({
+                  'ruleId': rule,
+                  'level': {'error': 'error', 'warning': 'warning',
+                            'info': 'note'}[sev],
+                  'message': {'text': msg},
+                  'locations': [{
+                      'physicalLocation': {
+                          'artifactLocation': {'uri': path},
+                          'region': {'startLine': line, 'startColumn': col},
+                      }
+                  }],
+              })
+              artifacts[path] = {'location': {'uri': path}, 'roles': ['analysisTarget']}
+
+          sarif = {
+              '$schema': 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/' +
+                         'master/Schemata/sarif-schema-2.1.0.json',
+              'version': '2.1.0',
+              'runs': [{
+                  'tool': {
+                      'driver': {
+                          'name': 'dart_analyzer',
+                          'informationUri': 'https://dart.dev/tools/dart-analyze',
+                          'rules': list(rules.values()),
+                      }
+                  },
+                  'artifacts': list(artifacts.values()),
+                  'results': results,
+              }],
+          }
+          with open('dart-analysis.sarif', 'w', encoding='utf-8') as f:
+              json.dump(sarif, f, ensure_ascii=False, indent=1)
+          print(f'SARIF written: {len(results)} results, {len(rules)} rules')
+          PY
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dart-analysis.sarif
+          category: dart-analyzer

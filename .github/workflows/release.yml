@@ -15,6 +15,13 @@ jobs:
   build-android:
     name: Build + sign Android release
     runs-on: ubuntu-latest
+    # MANUAL APPROVAL GATE: publishing a production/mainnet build requires a
+    # human approval. Configure this environment at
+    #   Settings → Environments → production → "Required reviewers"
+    # (add the maintainer(s) as reviewers). Until then the job starts
+    # immediately; with reviewers configured the run WAITS for approval
+    # before building/signing — exactly what a security-audit gate should do.
+    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
