@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../data/api_service.dart';
 import '../../data/auth_state.dart';
 import '../../data/google_oauth_flow.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/platform.dart';
 import '../../widgets/auth_buttons.dart';
 import '../../data/auth_credentials.dart';
@@ -32,6 +33,8 @@ class _AuthScreenState extends State<AuthScreen>
 
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email'],
+    clientId:
+        '18846067823-6rrulad9n5f43446l94pofvf367j6d04.apps.googleusercontent.com',
     serverClientId:
         '18846067823-8g31lqvrvnkcbitnau6ga8kuad783as9.apps.googleusercontent.com',
   );
@@ -56,7 +59,7 @@ class _AuthScreenState extends State<AuthScreen>
           setState(() => _googleLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Google sign-in was cancelled or failed'),
+              content: Text(AppLocalizations.of(context).translate('auth.googleCancelled')),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -86,7 +89,7 @@ class _AuthScreenState extends State<AuthScreen>
         setState(() => _googleLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to get Google ID token'),
+            content: Text(AppLocalizations.of(context).translate('auth.googleFailedToken')),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -127,7 +130,7 @@ class _AuthScreenState extends State<AuthScreen>
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message ?? 'Google sign-in failed'),
+            content: Text(result.message ?? AppLocalizations.of(context).translate('auth.googleSignInFailed')),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -137,7 +140,7 @@ class _AuthScreenState extends State<AuthScreen>
       setState(() => _googleLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Google Sign-In failed. Please try again.'),
+          content: Text(AppLocalizations.of(context).translate('auth.googleSignInFailed')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -179,11 +182,16 @@ class _AuthScreenState extends State<AuthScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.message ?? 'Login failed'),
+          content: Text(result.message ?? AppLocalizations.of(context).translate('auth.loginFailed')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
+  }
+
+  Future<void> _handleDemoSignIn() async {
+    await AuthState.instance.startDemoSession();
+    if (mounted) context.go('/home/chats');
   }
 
   @override
@@ -272,6 +280,27 @@ class _AuthScreenState extends State<AuthScreen>
           const SizedBox(height: 12),
           _buildDivider(cs),
           const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _emailLoading || _googleLoading ? null : _handleDemoSignIn,
+              icon: const Icon(Icons.science_outlined),
+              label: const Text('Войти под тестовым аккаунтом'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: cs.primary,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Моковые данные, кошелёк создаётся отдельно вами',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+          ),
           const SizedBox(height: 16),
           _buildTermsText(cs),
         ],
@@ -286,7 +315,7 @@ class _AuthScreenState extends State<AuthScreen>
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
-            hintText: 'Email',
+            hintText: AppLocalizations.of(context).translate('auth.email'),
             prefixIcon: Icon(Icons.email_outlined, color: cs.onSurfaceVariant),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -296,7 +325,7 @@ class _AuthScreenState extends State<AuthScreen>
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            hintText: 'Password',
+            hintText: AppLocalizations.of(context).translate('auth.password'),
             prefixIcon: Icon(Icons.lock_outline, color: cs.onSurfaceVariant),
             suffixIcon: IconButton(
               icon: Icon(
@@ -315,7 +344,7 @@ class _AuthScreenState extends State<AuthScreen>
           child: TextButton(
             onPressed: () {},
             child: Text(
-              'Forgot password?',
+              AppLocalizations.of(context).translate('auth.forgotPassword'),
               style: TextStyle(color: cs.primary, fontSize: 13),
             ),
           ),
@@ -342,7 +371,7 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                   )
                 : Text(
-                    _isRegister ? 'Create Account' : 'Sign In',
+                    _isRegister ? AppLocalizations.of(context).translate('auth.createAccount') : AppLocalizations.of(context).translate('auth.signIn'),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -355,8 +384,8 @@ class _AuthScreenState extends State<AuthScreen>
           onPressed: () => setState(() => _isRegister = !_isRegister),
           child: Text(
             _isRegister
-                ? 'Already have an account? Sign In'
-                : 'Don\'t have an account? Create one',
+                ? AppLocalizations.of(context).translate('auth.alreadyHaveAccount')
+                : AppLocalizations.of(context).translate('auth.dontHaveAccount'),
             style: TextStyle(color: cs.primary, fontSize: 13),
           ),
         ),
@@ -411,7 +440,7 @@ class _AuthScreenState extends State<AuthScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Sign in to continue',
+            AppLocalizations.of(context).translate('auth.signInToContinue'),
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withValues(alpha: 0.85),
@@ -429,7 +458,7 @@ class _AuthScreenState extends State<AuthScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'or',
+            AppLocalizations.of(context).translate('auth.or'),
             style: TextStyle(
               color: cs.onSurfaceVariant,
               fontSize: 14,
@@ -443,18 +472,19 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   Widget _buildTermsText(ColorScheme cs) {
+    final l10n = AppLocalizations.of(context);
     return Text.rich(
       TextSpan(
-        text: 'By continuing, you agree to our ',
+        text: l10n.translate('auth.termsPrefix'),
         style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
         children: [
           TextSpan(
-            text: 'Terms of Service',
+            text: l10n.translate('auth.termsOfService'),
             style: TextStyle(color: cs.primary, fontWeight: FontWeight.w500),
           ),
-          const TextSpan(text: ' and '),
+          TextSpan(text: l10n.translate('auth.and')),
           TextSpan(
-            text: 'Privacy Policy',
+            text: l10n.translate('auth.privacyPolicy'),
             style: TextStyle(color: cs.primary, fontWeight: FontWeight.w500),
           ),
         ],

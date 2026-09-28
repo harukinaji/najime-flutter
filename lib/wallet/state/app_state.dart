@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -171,7 +173,14 @@ class AppState extends ChangeNotifier {
       // account — in that case tear down the just-established session.
       final address = client.session?.primaryAccount;
       if (address != null) {
-        final link = await ApiService.linkWalletAccount(walletAddress: address);
+        final link = await ApiService.linkWalletAccount(
+          walletAddress: address,
+          signMessage: (message) async => base58Encode(
+            (await client.signMessage(
+              Uint8List.fromList(utf8.encode(message)),
+            )).signature,
+          ),
+        );
         if (!link.success) {
           await client.disconnect();
           throw StateError(

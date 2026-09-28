@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/user.dart';
 import '../theme/app_colors.dart';
 
@@ -109,13 +110,13 @@ class ProfileHeader extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.qr_code, color: Colors.white, size: 18),
-                    SizedBox(width: 6),
+                    const Icon(Icons.qr_code, color: Colors.white, size: 18),
+                    const SizedBox(width: 6),
                     Text(
-                      'Show QR Code',
+                      AppLocalizations.of(context).translate('profile.showQrCode'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,

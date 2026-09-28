@@ -22,10 +22,13 @@ class CacheService {
   encrypt_lib.Key? _aesKey;
   bool _enabled = true;
   Directory? _cacheDir;
+  Future<void>? _initFuture;
 
   bool get isEnabled => _enabled;
 
-  Future<void> init() async {
+  Future<void> init() => _initFuture ??= _init();
+
+  Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     _enabled = prefs.getBool(_keyPref) ?? true;
     if (!_enabled) return;
@@ -34,7 +37,12 @@ class CacheService {
     _cacheDir = await getApplicationCacheDirectory();
   }
 
+  Future<void> get ready async {
+    await (_initFuture ??= _init());
+  }
+
   Future<void> setEnabled(bool value) async {
+    await ready;
     _enabled = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyPref, value);
@@ -109,6 +117,7 @@ class CacheService {
   // ─── Chat list cache ───────────────────────────────────────
 
   Future<void> saveChats(List<ChatModel> chats) async {
+    await ready;
     if (!_enabled || _cacheDir == null) return;
     try {
       final data = chats.map((c) => _chatToJson(c)).toList();
@@ -122,6 +131,7 @@ class CacheService {
   }
 
   Future<List<ChatModel>> loadChats() async {
+    await ready;
     if (!_enabled || _cacheDir == null) return [];
     try {
       final file = File('${_cacheDir!.path}/chats.enc');
@@ -132,6 +142,81 @@ class CacheService {
       return data.map((c) => _chatFromJson(c as Map<String, dynamic>)).toList();
     } catch (e) {
       debugPrint('[Cache] loadChats error: $e');
+      return [];
+    }
+  }
+
+  Future<void> saveChatMessages(
+    String chatId,
+    Map<String, dynamic> data,
+  ) async {
+    await ready;
+    if (!_enabled || _cacheDir == null || chatId.isEmpty) return;
+    try {
+      final file = File('${_cacheDir!.path}/messages_${chatId.hashCode}.enc');
+      await file.writeAsString(_encrypt(jsonEncode(data)));
+    } catch (e) {
+      debugPrint('[Cache] saveChatMessages error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> loadChatMessages(String chatId) async {
+    await ready;
+    if (!_enabled || _cacheDir == null || chatId.isEmpty) return null;
+    try {
+      final file = File('${_cacheDir!.path}/messages_${chatId.hashCode}.enc');
+      if (!await file.exists()) return null;
+      final decoded = jsonDecode(_decrypt(await file.readAsString()));
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (e) {
+      debugPrint('[Cache] loadChatMessages error: $e');
+      return null;
+    }
+  }
+
+  /// Updates a message payload in the encrypted per-chat cache. Used for
+  /// chain-derived check status so it survives app restarts and offline opens.
+  Future<void> updateChatMessageContent(
+    String chatId,
+    String messageId,
+    String content,
+  ) async {
+    final data = await loadChatMessages(chatId);
+    if (data == null || data['messages'] is! List) return;
+    final messages = (data['messages'] as List).map((entry) {
+      if (entry is Map && entry['id'] == messageId) {
+        return <String, dynamic>{
+          ...Map<String, dynamic>.from(entry),
+          'content': content,
+        };
+      }
+      return entry;
+    }).toList();
+    await saveChatMessages(chatId, {...data, 'messages': messages});
+  }
+
+  Future<void> saveStories(List<Map<String, dynamic>> stories) async {
+    await ready;
+    if (!_enabled || _cacheDir == null) return;
+    try {
+      final file = File('${_cacheDir!.path}/stories.enc');
+      await file.writeAsString(_encrypt(jsonEncode(stories)));
+    } catch (e) {
+      debugPrint('[Cache] saveStories error: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> loadStories() async {
+    await ready;
+    if (!_enabled || _cacheDir == null) return [];
+    try {
+      final file = File('${_cacheDir!.path}/stories.enc');
+      if (!await file.exists()) return [];
+      final decoded = jsonDecode(_decrypt(await file.readAsString()));
+      if (decoded is! List) return [];
+      return decoded.whereType<Map<String, dynamic>>().toList();
+    } catch (e) {
+      debugPrint('[Cache] loadStories error: $e');
       return [];
     }
   }
@@ -203,6 +288,7 @@ class CacheService {
   // ─── Image cache ───────────────────────────────────────────
 
   Future<void> saveImage(String url, Uint8List bytes) async {
+    await ready;
     if (!_enabled || _cacheDir == null) return;
     try {
       final dir = Directory('${_cacheDir!.path}/images');
@@ -216,6 +302,7 @@ class CacheService {
   }
 
   Future<Uint8List?> loadImage(String url) async {
+    await ready;
     if (!_enabled || _cacheDir == null) return null;
     try {
       final dir = Directory('${_cacheDir!.path}/images');
@@ -231,10 +318,19 @@ class CacheService {
   }
 
   Future<void> clearAll() async {
+    await ready;
     if (_cacheDir == null) return;
     try {
       final chatsFile = File('${_cacheDir!.path}/chats.enc');
       if (await chatsFile.exists()) await chatsFile.delete();
+      final storiesFile = File('${_cacheDir!.path}/stories.enc');
+      if (await storiesFile.exists()) await storiesFile.delete();
+      final messageFiles = _cacheDir!.listSync().whereType<File>().where(
+        (f) => f.path.contains('/messages_') && f.path.endsWith('.enc'),
+      );
+      for (final file in messageFiles) {
+        await file.delete();
+      }
       final imgDir = Directory('${_cacheDir!.path}/images');
       if (await imgDir.exists()) await imgDir.delete(recursive: true);
     } catch (_) {}

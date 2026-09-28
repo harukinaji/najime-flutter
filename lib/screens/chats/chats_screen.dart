@@ -12,6 +12,7 @@ import '../../data/chat_read_service.dart';
 import '../../data/notification_service.dart';
 import '../../data/story_service.dart';
 import '../../data/websocket_service.dart';
+import '../../data/widget_service.dart';
 import '../../models/chat.dart';
 import '../../models/contact.dart';
 import '../../models/message.dart';
@@ -19,6 +20,7 @@ import '../../models/story.dart';
 import '../../utils/desktop_chat.dart';
 import '../../utils/platform.dart';
 import '../../widgets/chat_tile.dart';
+import '../../l10n/app_localizations.dart';
 
 class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});
@@ -28,6 +30,8 @@ class ChatsScreen extends StatefulWidget {
 }
 
 class _ChatsScreenState extends State<ChatsScreen> {
+  bool get _isDemo => AuthState.instance.isDemo ||
+      AuthState.instance.username == 'demo_user';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -42,6 +46,13 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
   List<ChatModel> _chats = [];
   bool _chatsLoading = true;
+  bool _hasLoadedChatsOnce = false;
+  String _headerTitle = 'Connecting...';
+  bool _localizationInitialized = false;
+  bool _hasConnectedOnce = false;
+  Timer? _serverRetryTimer;
+  bool _retryInProgress = false;
+  int _retrySeconds = 3;
   List<Map<String, dynamic>> _foldersRaw = [];
   final Map<String, bool> _onlineStatus = {};
 
@@ -49,15 +60,30 @@ class _ChatsScreenState extends State<ChatsScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _loadChats();
-    _loadFolders();
-    _refreshStories();
+    // A demo account is fully offline: populate its chats immediately and
+    // never enter the normal server/retry loading flow.
+    if (_isDemo) {
+      _chatsLoading = false;
+      _loadChats();
+    } else {
+      _loadInitialData();
+      _refreshStories();
+    }
     WebSocketService.on('new_message', _onNewMessage);
     WebSocketService.on('new_story', _onNewStory);
     WebSocketService.on('story_viewed', _onNewStory);
     WebSocketService.on('status', _onStatus);
     NotificationService.onMessageOpenedApp = _onNotificationTap;
     ChatReadService.instance.lastReadChatId.addListener(_onChatRead);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_localizationInitialized) {
+      _headerTitle = AppLocalizations.of(context).translate('chat.connection');
+      _localizationInitialized = true;
+    }
   }
 
   void _onChatRead() {
@@ -70,9 +96,18 @@ class _ChatsScreenState extends State<ChatsScreen> {
         }
       }
     });
+    WidgetService.updateWidget(
+      names: _chats.map((c) => c.name).toList(),
+      messages: _chats.map((c) => c.lastMessage?.content ?? '').toList(),
+      unreads: _chats.map((c) => '${c.unreadCount}').toList(),
+      timestamps: _chats.map((c) => c.lastActivity?.toIso8601String() ?? '').toList(),
+      onlineStatuses: _chats.map((c) => c.isOnline).toList(),
+      avatarUrls: _chats.map((c) => c.avatarUrl ?? '').toList(),
+    );
   }
 
   void _refreshStories() {
+    if (_isDemo) return;
     StoryService.instance.fetchStories().then((_) {
       if (mounted) setState(() {});
     });
@@ -84,6 +119,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     _debounce?.cancel();
+    _serverRetryTimer?.cancel();
     WebSocketService.off('new_message', _onNewMessage);
     WebSocketService.off('new_story', _onNewStory);
     WebSocketService.off('story_viewed', _onNewStory);
@@ -98,6 +134,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
   }
 
   void _onNewStory(dynamic data) {
+    if (_isDemo) return;
     StoryService.instance.fetchStories().then((_) {
       if (mounted) setState(() {});
     });
@@ -130,24 +167,72 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
   Future<void> _loadChats() async {
     if (!mounted) return;
-    final isInitial = _chats.isEmpty;
+    if (_isDemo) {
+      final now = DateTime.now();
+      final demo = <ChatModel>[
+        ChatModel(
+          id: 'demo-alice', name: 'Alice', contactId: 'demo-alice', isOnline: true,
+          lastActivity: now.subtract(const Duration(minutes: 2)), unreadCount: 2,
+          lastMessage: MessageModel(id: 'demo-m1', senderId: 'demo-alice',
+            content: 'Привет! Это тестовый чат 👋', type: MessageType.text,
+            timestamp: now.subtract(const Duration(minutes: 2)), isMe: false),
+        ),
+        ChatModel(
+          id: 'demo-team', name: 'NajiMe Team', isGroup: true,
+          participantIds: const ['demo_user', 'demo-alice', 'demo-bob'],
+          lastActivity: now.subtract(const Duration(hours: 1)),
+          lastMessage: MessageModel(id: 'demo-m2', senderId: 'demo-bob',
+            content: 'Добро пожаловать в демо-режим', type: MessageType.text,
+            timestamp: now.subtract(const Duration(hours: 1)), isMe: false),
+        ),
+        ChatModel(
+          id: 'demo-wallet', name: 'Wallet Support', contactId: 'demo-wallet',
+          lastActivity: now.subtract(const Duration(days: 1)),
+          lastMessage: MessageModel(id: 'demo-m3', senderId: 'demo-wallet',
+            content: 'Создайте кошелёк во вкладке Wallet', type: MessageType.text,
+            timestamp: now.subtract(const Duration(days: 1)), isMe: false),
+        ),
+      ];
+      _chats = demo;
+      _chatsLoading = false;
+      _hasLoadedChatsOnce = true;
+      _hasConnectedOnce = true;
+      if (mounted) setState(() => _headerTitle = 'NajiMe');
+      return;
+    }
+    final isInitial = !_hasLoadedChatsOnce;
     if (isInitial) {
       setState(() => _chatsLoading = true);
       // Load from cache first for instant display
       final cached = await CacheService.instance.loadChats();
       if (cached.isNotEmpty && mounted) {
         _chats = cached;
+        _chatsLoading = false;
+        _hasLoadedChatsOnce = true;
         setState(() {});
       }
     }
     final raw = await ApiService.getChats();
     if (!mounted) return;
 
+    if (ApiService.lastChatsRequestSucceeded) {
+      _hasConnectedOnce = true;
+      setState(() => _headerTitle = AppLocalizations.of(context).translate('chat.refreshing'));
+    }
+
     // Load muted chat IDs from local storage
     final prefs = await SharedPreferences.getInstance();
     final mutedChats = prefs.getStringList('muted_chats') ?? [];
 
     try {
+      // An offline request returns an empty list. Keep the encrypted local
+      // history instead of replacing it with an empty screen.
+      if (!ApiService.lastChatsRequestSucceeded) {
+        _chatsLoading = false;
+        _hasLoadedChatsOnce = true;
+        setState(() {});
+        return;
+      }
       debugPrint('getChats returned ${raw.length} chats');
       _chats = raw.map((c) {
         debugPrint('parsing chat: $c');
@@ -186,8 +271,19 @@ class _ChatsScreenState extends State<ChatsScreen> {
               (c['is_muted'] as bool? ?? false) || mutedChats.contains(chatId),
         );
       }).toList();
+      _hasLoadedChatsOnce = true;
       // Save to cache
       CacheService.instance.saveChats(_chats);
+
+      // Update home screen widget
+      WidgetService.updateWidget(
+        names: _chats.map((c) => c.name).toList(),
+        messages: _chats.map((c) => c.lastMessage?.content ?? '').toList(),
+        unreads: _chats.map((c) => '${c.unreadCount}').toList(),
+        timestamps: _chats.map((c) => c.lastActivity?.toIso8601String() ?? '').toList(),
+        onlineStatuses: _chats.map((c) => c.isOnline).toList(),
+        avatarUrls: _chats.map((c) => c.avatarUrl ?? '').toList(),
+      );
     } catch (e) {
       debugPrint('error parsing chats: $e');
       if (_chats.isEmpty) _chats = [];
@@ -197,8 +293,50 @@ class _ChatsScreenState extends State<ChatsScreen> {
   }
 
   Future<void> _loadFolders() async {
+    if (_isDemo) {
+      _foldersRaw = [];
+      return;
+    }
     _foldersRaw = await ApiService.getFolders();
     setState(() {});
+  }
+
+  Future<void> _loadInitialData() async {
+    if (_retryInProgress) return;
+    _retryInProgress = true;
+    if (mounted && !_hasConnectedOnce) {
+      setState(() => _headerTitle = AppLocalizations.of(context).translate('chat.connection'));
+    }
+    try {
+      await Future.wait<void>([_loadChats(), _loadFolders()]);
+      if (!mounted) return;
+      if (_isDemo) {
+        setState(() => _headerTitle = 'NajiMe');
+        return;
+      }
+      final connected = ApiService.lastChatsRequestSucceeded;
+      setState(() => _headerTitle = connected
+          ? 'NajiMe'
+          : AppLocalizations.of(context).translate('chat.connection'));
+      if (connected) {
+        _retrySeconds = 3;
+        _serverRetryTimer?.cancel();
+        _serverRetryTimer = null;
+      } else {
+        _scheduleServerRetry();
+      }
+    } finally {
+      _retryInProgress = false;
+    }
+  }
+
+  void _scheduleServerRetry() {
+    if (!mounted || _serverRetryTimer != null) return;
+    _serverRetryTimer = Timer(Duration(seconds: _retrySeconds), () {
+      _serverRetryTimer = null;
+      _loadInitialData();
+    });
+    _retrySeconds = (_retrySeconds * 2).clamp(3, 30);
   }
 
   MessageType _parseMessageType(String? t) {
@@ -308,7 +446,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching ? _buildSearchField() : const Text('NajiMe'),
+        title: _isSearching ? _buildSearchField() : Text(_headerTitle),
         leading: _isSearching
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -728,9 +866,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
     return Container(
       height: 108,
       color: cs.surface,
-      child: ListView.builder(
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+        physics: const BouncingScrollPhysics(),
+        clipBehavior: Clip.hardEdge,
         itemCount: usersWithStories.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -742,6 +882,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           final chat = _chats.where((c) => c.contactId == userId).firstOrNull;
           return _buildStoryAvatar(s, chat, cs);
         },
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
       ),
     );
   }

@@ -66,6 +66,9 @@ class _MessageBubbleState extends State<MessageBubble> {
   List<double> _waveform = [];
   bool _invoicePaying = false;
   bool _invoicePaid = false;
+  bool? _chainCheckActive;
+  bool _chainCheckStatusLoaded = false;
+  bool _checkStatusRequestInFlight = false;
 
   String? get _myWalletAddress {
     final appState = AppState.instance;
@@ -90,6 +93,47 @@ class _MessageBubbleState extends State<MessageBubble> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.message.voiceWaveform != widget.message.voiceWaveform) {
       _initWaveform();
+    }
+    if (oldWidget.message.id != widget.message.id ||
+        oldWidget.message.content != widget.message.content) {
+      _chainCheckActive = null;
+      _chainCheckStatusLoaded = false;
+    }
+  }
+
+  void _applyCheckChainStatus(CheckData check, bool? active) {
+    if (!mounted) return;
+    setState(() {
+      _chainCheckActive = active;
+      _chainCheckStatusLoaded = true;
+    });
+    if (active == null) return;
+    final storedStatus = active ? 'active' : 'closed';
+    if (check.status != storedStatus) {
+      widget.onInvoicePaid?.call(
+        widget.message.id,
+        check.copyWith(status: storedStatus).encode(),
+      );
+    }
+  }
+
+  Future<void> _refreshCheckStatus(CheckData check) async {
+    final checkId = check.checkId;
+    if (checkId == null || checkId.isEmpty || _checkStatusRequestInFlight) {
+      return;
+    }
+    _checkStatusRequestInFlight = true;
+    if (mounted) setState(() {});
+    try {
+      final active = await CheckEscrowService.isCheckActive(
+        AppState.instance.solana.client,
+        checkId,
+      );
+      if (!mounted || widget.message.content != check.encode()) return;
+      _applyCheckChainStatus(check, active);
+    } finally {
+      _checkStatusRequestInFlight = false;
+      if (mounted) setState(() {});
     }
   }
 
@@ -1028,11 +1072,24 @@ class _MessageBubbleState extends State<MessageBubble> {
         await AppState.instance.connectExternalWallet(ctx);
       }
       if (!mounted) return;
+      binding = await proxy.getBinding();
+      final proof = await ApiService.linkWalletAccount(
+        walletAddress: binding.publicKey ?? '',
+        signMessage: (message) async =>
+            (await proxy.signMessage(
+              ctx,
+              message: utf8.encode(message),
+            )).signature ??
+            '',
+      );
+      if (!proof.success)
+        throw StateError(proof.message ?? 'Wallet proof failed');
+      if (!mounted) return;
       final res = await proxy.paySolana(
         ctx,
         recipient: invoice.recipient,
         lamports: invoice.lamports!,
-        memo: invoice.memo,
+        memo: 'najime:invoice:$messageId',
       );
       if (kDebugMode) debugPrint('[invoice] paySolana ok');
       // ── Server sync ── runs even if widget unmounted ──
@@ -1044,9 +1101,12 @@ class _MessageBubbleState extends State<MessageBubble> {
       } catch (e) {
         debugPrint('[invoice] markInvoicePaid error: $e');
       }
+      _pendingInvoiceSignature = txSig;
       if (!synced) {
-        _syncInvoicePaidWithRetry(messageId, txSig);
+        synced = await _syncInvoicePaidWithRetry(messageId, txSig);
       }
+      if (!synced)
+        throw StateError('Payment submitted; confirmation pending: $txSig');
       // ── Update local UI (only if still mounted) ──
       if (mounted) {
         setState(() {
@@ -1082,7 +1142,8 @@ class _MessageBubbleState extends State<MessageBubble> {
         );
       } else {
         // Widget gone — try server sync in background (user may have paid)
-        _syncInvoicePaidWithRetry(messageId, '');
+        if (_pendingInvoiceSignature != null)
+          _syncInvoicePaidWithRetry(messageId, _pendingInvoiceSignature!);
       }
     }
   }
@@ -1093,7 +1154,10 @@ class _MessageBubbleState extends State<MessageBubble> {
     if (!mounted) return;
     setState(() => _invoicePaying = true);
     try {
-      final synced = await ApiService.markInvoicePaid(widget.message.id, '');
+      final synced = await ApiService.markInvoicePaid(
+        widget.message.id,
+        _pendingInvoiceSignature ?? invoice.txSignature ?? '',
+      );
       if (!mounted) return;
       setState(() {
         _invoicePaid = synced;
@@ -1126,14 +1190,18 @@ class _MessageBubbleState extends State<MessageBubble> {
     }
   }
 
-  void _syncInvoicePaidWithRetry(String messageId, String txSig) async {
+  String? _pendingInvoiceSignature;
+
+  Future<bool> _syncInvoicePaidWithRetry(String messageId, String txSig) async {
+    if (txSig.isEmpty) return false;
     for (var delay = 2; delay <= 30; delay *= 2) {
       await Future.delayed(Duration(seconds: delay));
       try {
         final synced = await ApiService.markInvoicePaid(messageId, txSig);
-        if (synced) return;
+        if (synced) return true;
       } catch (_) {}
     }
+    return false;
   }
 
   Widget _buildCheckContent(ColorScheme cs, bool isMe) {
@@ -1145,6 +1213,17 @@ class _MessageBubbleState extends State<MessageBubble> {
       );
     }
     final redeemed = check.status == 'redeemed';
+    final closedOnChain =
+        check.status == 'closed' || _chainCheckActive == false;
+    final chainStatusLabel = redeemed
+        ? 'Redeemed'
+        : closedOnChain
+        ? 'Closed on-chain'
+        : !_chainCheckStatusLoaded
+        ? 'Not checked on-chain'
+        : _chainCheckActive == true
+        ? 'Active on-chain'
+        : 'Status unavailable';
     final isCreator = check.creatorId == widget.currentUserId;
     final sol = check.lamports != null ? check.lamports! / 1e9 : 0.0;
 
@@ -1154,7 +1233,7 @@ class _MessageBubbleState extends State<MessageBubble> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: redeemed
+            colors: (redeemed || closedOnChain)
                 ? [Colors.grey.shade600, Colors.grey.shade700]
                 : [const Color(0xFFF59E0B), const Color(0xFFD97706)],
             begin: Alignment.topLeft,
@@ -1169,13 +1248,19 @@ class _MessageBubbleState extends State<MessageBubble> {
             Row(
               children: [
                 Icon(
-                  redeemed ? Icons.receipt_long : Icons.card_giftcard,
+                  (redeemed || closedOnChain)
+                      ? Icons.receipt_long
+                      : Icons.card_giftcard,
                   size: 18,
                   color: Colors.white,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  redeemed ? 'Check redeemed' : 'Check',
+                  redeemed
+                      ? 'Check redeemed'
+                      : closedOnChain
+                      ? 'Check no longer active'
+                      : 'Check',
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 11,
@@ -1194,6 +1279,48 @@ class _MessageBubbleState extends State<MessageBubble> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (!redeemed) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      chainStatusLabel,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Check status on-chain',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
+                    onPressed: _checkStatusRequestInFlight
+                        ? null
+                        : () => _refreshCheckStatus(check),
+                    icon: _checkStatusRequestInFlight
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.refresh,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                  ),
+                ],
+              ),
+            ],
             if (redeemed && check.txSignature != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -1208,7 +1335,7 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
             ],
             const SizedBox(height: 10),
-            if (redeemed)
+            if (redeemed || closedOnChain)
               Row(
                 children: [
                   const Icon(
@@ -1218,7 +1345,11 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    isCreator ? 'Your check has been redeemed' : 'Redeemed',
+                    redeemed
+                        ? (isCreator
+                              ? 'Your check has been redeemed'
+                              : 'Redeemed')
+                        : 'This escrow is already closed',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -1274,7 +1405,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                       : null,
                   icon: const Icon(Icons.redeem, size: 18),
                   label: Text(
-                    _hasBuiltInWallet ? 'Redeem' : 'Built-in wallet required',
+                    !_hasBuiltInWallet ? 'Built-in wallet required' : 'Redeem',
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -1285,8 +1416,10 @@ class _MessageBubbleState extends State<MessageBubble> {
                 ),
               ),
             ] else
-              const Text(
-                'Awaiting redemption',
+              Text(
+                _chainCheckStatusLoaded && _chainCheckActive == null
+                    ? 'On-chain status unavailable'
+                    : 'Awaiting redemption',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
             const SizedBox(height: 6),
@@ -1350,6 +1483,26 @@ class _MessageBubbleState extends State<MessageBubble> {
     // keypair.  getBinding() may return a WalletConnect address when Phantom
     // is also connected, which would cause an AccountNotSigner error.
     final walletAddress = appState.wallet!.address;
+    final checkAddress = check.checkId ?? widget.message.id;
+    final chainActive = await CheckEscrowService.isCheckActive(
+      appState.solana.client,
+      checkAddress,
+    );
+    if (chainActive != true) {
+      if (!mounted) return;
+      _applyCheckChainStatus(check, chainActive);
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(
+            chainActive == false
+                ? 'This check has already been redeemed or closed.'
+                : 'Could not read this check from Solana. Try again shortly.',
+          ),
+        ),
+      );
+      return;
+    }
+    _applyCheckChainStatus(check, true);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1362,7 +1515,7 @@ class _MessageBubbleState extends State<MessageBubble> {
             Text('Amount: ${check.amount} ${check.currency}'),
             const SizedBox(height: 8),
             const Text(
-              'Recipient:',
+              'Your wallet will receive:',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             Text(
@@ -1387,8 +1540,20 @@ class _MessageBubbleState extends State<MessageBubble> {
 
     setState(() => _invoicePaying = true);
     try {
-      final pdaAddress = check.checkId ?? widget.message.id;
+      var pdaAddress = check.checkId ?? widget.message.id;
       if (pdaAddress.isEmpty) throw Exception('No PDA address for this check');
+
+      // Older locally saved demo checks accidentally stored their seed as
+      // check_id. Seeds may contain underscores; derive the PDA for those
+      // legacy payloads before passing it to the Base58 address parser.
+      if (pdaAddress.contains('_')) {
+        final programId = await CheckEscrowService.getProgramId();
+        if (programId == null) throw Exception('Program ID not configured');
+        pdaAddress = await CheckEscrowService.deriveCheckPda(
+          programId,
+          pdaAddress,
+        );
+      }
 
       final creatorAddr = check.creatorAddress;
       if (creatorAddr == null || creatorAddr.isEmpty) {
@@ -1406,7 +1571,22 @@ class _MessageBubbleState extends State<MessageBubble> {
         creatorAddress: creatorAddr,
       );
 
-      await ApiService.redeemCheck(pdaAddress, txSignature: txSig);
+      if (ApiService.accessToken != 'demo-local-session') {
+        Map<String, dynamic>? redemption;
+        for (var attempt = 0; attempt < 8; attempt++) {
+          redemption = await ApiService.redeemCheck(
+            pdaAddress,
+            txSignature: txSig,
+          );
+          if (redemption?['success'] == true) break;
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
+        if (redemption?['success'] != true) {
+          throw StateError(
+            'Redemption submitted but not yet confirmed: $txSig',
+          );
+        }
+      }
 
       if (!mounted) return;
       setState(() => _invoicePaying = false);

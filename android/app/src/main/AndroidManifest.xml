@@ -118,8 +118,38 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".BadgeHostApduService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/nfc_apduservice" />
+        </service>
+
         <receiver
             android:name=".NajiReplyReceiver"
+            android:exported="false" />
+
+        <!-- NajiMe Chat Widget -->
+        <receiver
+            android:name=".NajiChatWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_najime_info" />
+        </receiver>
+
+        <service
+            android:name=".WidgetRefreshJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false" />
 
         <!-- Media session background service for wallet NFT audio playback. -->

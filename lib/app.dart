@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 import 'data/websocket_service.dart';
 import 'data/auth_state.dart';
 import 'data/lock_service.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/auth/lock_screen.dart';
 
 class NajiMeApp extends StatefulWidget {
@@ -63,6 +65,13 @@ class _NajiMeAppState extends State<NajiMeApp> with WidgetsBindingObserver {
       darkTheme: AppTheme.darkTheme(),
       themeMode: _themeMode,
       routerConfig: AppRouter.router,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         return Stack(
           children: [

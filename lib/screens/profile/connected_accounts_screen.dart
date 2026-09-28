@@ -135,10 +135,6 @@ class _ConnectedAccountsScreenState extends State<ConnectedAccountsScreen> {
         builder: (_) => PhoneVerificationScreen(
           currentPhone: _phone,
           onVerified: (phone) async {
-            await ApiService.linkPhoneAccount(
-              phoneNumber: phone,
-              isVerified: true,
-            );
             if (mounted) _loadAccounts();
           },
         ),

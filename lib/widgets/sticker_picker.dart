@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../config.dart';
 import '../data/api_service.dart';
 import '../data/sticker_cache.dart';
+import '../l10n/app_localizations.dart';
 import '../models/sticker.dart';
 import '../screens/stickers/sticker_pack_screen.dart';
 import 'sticker_widget.dart';
@@ -198,7 +199,7 @@ class _StickerPickerState extends State<StickerPicker> {
           ),
           const SizedBox(height: 12),
           Text(
-            'No sticker packs installed',
+            AppLocalizations.of(context).translate('stickers.noPacks'),
             style: TextStyle(fontSize: 14, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
@@ -210,7 +211,7 @@ class _StickerPickerState extends State<StickerPicker> {
               ).then((_) => _loadPacks());
             },
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Browse Sticker Packs'),
+            label: Text(AppLocalizations.of(context).translate('stickers.browsePacks')),
           ),
         ],
       ),
@@ -221,7 +222,7 @@ class _StickerPickerState extends State<StickerPicker> {
     if (stickers.isEmpty) {
       return Center(
         child: Text(
-          'No stickers in this pack',
+          AppLocalizations.of(context).translate('stickers.noStickersInPack'),
           style: TextStyle(color: cs.onSurfaceVariant),
         ),
       );

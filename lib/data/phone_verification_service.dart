@@ -4,6 +4,13 @@ import 'package:flutter/foundation.dart';
 class PhoneVerificationService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  Future<String> verifiedIdToken() async {
+    final token = await _auth.currentUser?.getIdToken(true);
+    if (token == null || token.isEmpty)
+      throw StateError('Phone verification expired');
+    return token;
+  }
+
   String? _verificationId;
   int? _resendToken;
 
@@ -54,14 +61,34 @@ class PhoneVerificationService {
         verificationId: _verificationId!,
         smsCode: smsCode,
       );
+      return await verifyCredential(
+        credential,
+        onError: onError,
+        onSuccess: onSuccess,
+      );
+    } on FirebaseAuthException catch (e) {
+      onError(_friendlyError(e));
+      return false;
+    } catch (e) {
+      onError(_handleGenericError(e));
+      return false;
+    }
+  }
+
+  Future<bool> verifyCredential(
+    PhoneAuthCredential credential, {
+    required void Function(String error) onError,
+    required void Function(String phoneNumber) onSuccess,
+  }) async {
+    try {
       final userCredential = await _auth.signInWithCredential(credential);
       final phone = userCredential.user?.phoneNumber;
-      if (phone != null) {
-        onSuccess(phone);
-        return true;
+      if (phone == null) {
+        onError('Verification succeeded but phone number is unavailable.');
+        return false;
       }
-      onError('Verification succeeded but phone number is unavailable.');
-      return false;
+      onSuccess(phone);
+      return true;
     } on FirebaseAuthException catch (e) {
       onError(_friendlyError(e));
       return false;

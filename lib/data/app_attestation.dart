@@ -60,6 +60,7 @@ class AppAttestation {
   /// REPLACE) and the local "registered" flag can become stale when the
   /// server database is reset or recreated.
   Future<void> ensureRegistered(String token) async {
+    if (!_initialized) await init();
     if (_hmacKey == null) {
       debugPrint('[Attestation] HMAC key is null, cannot register');
       return;

@@ -10,6 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/api_service.dart';
+import '../../data/auth_state.dart';
+import '../../data/cache_service.dart';
 import '../../data/chat_read_service.dart';
 import '../../data/voice_recording_service.dart';
 import '../../data/websocket_service.dart';
@@ -345,12 +347,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final newContent = data['content'] as String?;
     if (messageId == null || newContent == null) return;
 
+    _updateMessageContent(messageId, newContent);
+  }
+
+  void _updateMessageContent(String messageId, String newContent) {
     final idx = _messages.indexWhere((m) => m.id == messageId);
     if (idx == -1) return;
-
     setState(() {
       _messages[idx] = _messages[idx].copyWith(content: newContent);
     });
+    unawaited(
+      CacheService.instance.updateChatMessageContent(
+        widget.chatId,
+        messageId,
+        newContent,
+      ),
+    );
   }
 
   void _onCallbackAnswer(dynamic data) {
@@ -939,7 +951,52 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Future<void> _loadMessages() async {
     if (!mounted) return;
     setState(() => _loading = true);
-    final data = await ApiService.getMessages(widget.chatId);
+    Map<String, dynamic>? data;
+    if (AuthState.instance.isDemo) {
+      final now = DateTime.now();
+      final isTeam = widget.chatId == 'demo-team';
+      final name = switch (widget.chatId) {
+        'demo-alice' => 'Alice',
+        'demo-team' => 'NajiMe Team',
+        'demo-wallet' => 'Wallet Support',
+        _ => 'Demo Chat',
+      };
+      data = {
+        'success': true,
+        'chat_name': name,
+        'messages': [
+          {
+            'id': '${widget.chatId}-welcome',
+            'sender_id': isTeam ? 'demo-bob' : widget.chatId,
+            'content': isTeam
+                ? 'Это тестовая групповая переписка.'
+                : 'Это тестовое сообщение. Здесь можно проверить интерфейс чата.',
+            'type': 'text',
+            'timestamp': now
+                .subtract(const Duration(minutes: 5))
+                .toIso8601String(),
+            'is_me': false,
+          },
+          {
+            'id': '${widget.chatId}-reply',
+            'sender_id': 'demo_user',
+            'content': 'Сообщение отправлено из демо-аккаунта.',
+            'type': 'text',
+            'timestamp': now
+                .subtract(const Duration(minutes: 2))
+                .toIso8601String(),
+            'is_me': true,
+          },
+        ],
+      };
+      final cachedDemo = await CacheService.instance.loadChatMessages(
+        widget.chatId,
+      );
+      if (cachedDemo != null) data = cachedDemo;
+    } else {
+      data = await ApiService.getMessages(widget.chatId);
+      data ??= await CacheService.instance.loadChatMessages(widget.chatId);
+    }
     if (!mounted) return;
 
     if (data == null) {
@@ -961,6 +1018,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
 
     final msgs = data['messages'] as List? ?? [];
+    if (data['success'] == true) {
+      unawaited(CacheService.instance.saveChatMessages(widget.chatId, data));
+    }
     _messages = [];
     for (final m in msgs) {
       final msg = m as Map<String, dynamic>;
@@ -1074,6 +1134,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
   }
 
+  Future<void> _saveDemoMessages() async {
+    if (!AuthState.instance.isDemo) return;
+    await CacheService.instance.saveChatMessages(widget.chatId, {
+      'success': true,
+      'chat_name': _chatName,
+      'messages': _messages
+          .map(
+            (m) => {
+              'id': m.id,
+              'sender_id': m.senderId,
+              'content': m.content,
+              'type': m.type.name,
+              'timestamp': m.timestamp.toIso8601String(),
+              'is_me': m.isMe,
+              'file_name': m.fileName,
+              'file_size': m.fileSize,
+              'voice_duration_ms': m.voiceDurationMs,
+              'voice_waveform': m.voiceWaveform?.join(','),
+            },
+          )
+          .toList(),
+    });
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _sending) return;
@@ -1102,6 +1186,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
     setState(() => _messages.add(optimisticMsg));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+
+    if (AuthState.instance.isDemo) {
+      final sent = optimisticMsg.copyWith(deliveryStatus: DeliveryStatus.sent);
+      setState(() {
+        _messages.removeWhere((m) => m.id == tempId);
+        _messages.add(sent);
+        _sending = false;
+      });
+      await _saveDemoMessages();
+      return;
+    }
 
     final result = await ApiService.sendMessage(
       widget.chatId,
@@ -1276,6 +1371,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         _sending = true;
         _replyingToMessage = null;
       });
+
+      if (AuthState.instance.isDemo) {
+        final msg = MessageModel(
+          id: 'demo_${DateTime.now().microsecondsSinceEpoch}',
+          senderId: _currentUserId ?? 'demo_user',
+          content: picked.path,
+          type: isImage ? MessageType.image : MessageType.file,
+          timestamp: DateTime.now(),
+          isMe: true,
+          fileName: fileName,
+          fileSize: '${await file.length()} bytes',
+        );
+        setState(() {
+          _messages.add(msg);
+          _sending = false;
+        });
+        await _saveDemoMessages();
+        return;
+      }
 
       final uploadResult = await ApiService.uploadFile(file);
       if (!mounted) return;
@@ -1516,6 +1630,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     setState(() => _messages.add(optimistic));
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
+    if (AuthState.instance.isDemo) {
+      setState(() {
+        _messages.removeWhere((m) => m.id == tempId);
+        _messages.add(optimistic.copyWith(deliveryStatus: DeliveryStatus.sent));
+        _sending = false;
+      });
+      await _saveDemoMessages();
+      return;
+    }
+
     final result = await ApiService.sendMessage(
       widget.chatId,
       invoice.encode(),
@@ -1583,8 +1707,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
-                          'The amount will be transferred to the server\'s escrow wallet. '
-                          'Any chat participant will be able to cash the check.',
+                          'Devnet alpha: the SOL will be held in escrow and any chat participant can redeem this check.',
                           style: TextStyle(fontSize: 12),
                         ),
                       ),
@@ -1619,10 +1742,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       return;
     }
 
-    await _sendCheck(amount);
+    // The open-redeem alpha contract does not assign a user wallet. A valid,
+    // non-signer placeholder is stored in the create instruction; redemption
+    // is authorized by the alpha contract for any signer.
+    await _sendCheck(amount, '11111111111111111111111111111111');
   }
 
-  Future<void> _sendCheck(double amount) async {
+  Future<void> _sendCheck(double amount, String recipientAddress) async {
     if (_sending) return;
 
     final state = AppState.instance;
@@ -1641,7 +1767,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     final lamports = (amount * 1e9).round();
     final ts = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-    final checkId = '${ts}_${(_currentUserId ?? '').substring(0, 8)}';
+    final senderId = _currentUserId ?? '';
+    // Usernames in the demo account can be shorter than eight characters.
+    // Keep the check id deterministic without slicing past the string end.
+    final idSuffix = senderId.length > 8 ? senderId.substring(0, 8) : senderId;
+    final checkId = '${ts}_$idSuffix';
 
     String txSig = '';
     String pdaAddress = '';
@@ -1653,6 +1783,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         feePayerAddress: state.wallet!.address,
         checkId: checkId,
         lamports: lamports,
+        recipientAddress: recipientAddress,
       );
       pdaAddress = pda;
       txSig = tx;
@@ -1665,14 +1796,66 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       return;
     }
 
-    // Register on server (DB tracking only)
-    await ApiService.createCheck(
-      chatId: widget.chatId,
-      pdaAddress: pdaAddress,
-      amountLamports: lamports,
-      currency: 'SOL',
-      txSignature: txSig,
-    );
+    // Demo chats still use a real Solana devnet escrow transaction. Only the
+    // server-side registration is skipped because the demo account has no
+    // backend identity; the signed transaction and local message are real.
+    if (AuthState.instance.isDemo) {
+      final checkData = CheckData(
+        amount: amount,
+        currency: 'SOL',
+        creatorId: 'demo_user',
+        status: 'active',
+        txSignature: txSig,
+        // Store the on-chain PDA in the chat payload. `checkId` above is only
+        // the seed and may contain characters that are invalid in Base58.
+        checkId: pdaAddress,
+        creatorAddress: state.wallet!.address,
+        recipientAddress: recipientAddress,
+      );
+      setState(() {
+        _messages.add(
+          MessageModel(
+            id: 'demo_${DateTime.now().microsecondsSinceEpoch}',
+            senderId: 'demo_user',
+            content: checkData.encode(),
+            type: MessageType.check,
+            timestamp: DateTime.now(),
+            isMe: true,
+            deliveryStatus: DeliveryStatus.sent,
+          ),
+        );
+        _sending = false;
+      });
+      await _saveDemoMessages();
+      return;
+    }
+
+    Map<String, dynamic>? registered;
+    for (var attempt = 0; attempt < 8; attempt++) {
+      registered = await ApiService.createCheck(
+        chatId: widget.chatId,
+        pdaAddress: pdaAddress,
+        recipientAddress: recipientAddress,
+        amountLamports: lamports,
+        currency: 'SOL',
+        txSignature: txSig,
+      );
+      if (registered?['success'] == true) break;
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    if (registered?['success'] != true) {
+      if (mounted) {
+        setState(() => _sending = false);
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Deposit submitted, registration pending. Check: $pdaAddress; transaction: $txSig',
+            ),
+          ),
+        );
+      }
+      return;
+    }
 
     final checkData = CheckData(
       amount: amount,
@@ -1682,6 +1865,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       txSignature: txSig,
       checkId: pdaAddress,
       creatorAddress: state.wallet!.address,
+      recipientAddress: recipientAddress,
     );
 
     final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
@@ -1887,6 +2071,27 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       _sending = true;
       _replyingToMessage = null;
     });
+
+    if (AuthState.instance.isDemo) {
+      final msg = MessageModel(
+        id: 'demo_${DateTime.now().microsecondsSinceEpoch}',
+        senderId: _currentUserId ?? 'demo_user',
+        content: audioFile.path,
+        type: MessageType.voice,
+        timestamp: DateTime.now(),
+        isMe: true,
+        fileName: 'voice_message.m4a',
+        fileSize: '${await audioFile.length()} bytes',
+        voiceDurationMs: durationMs,
+        voiceWaveform: waveform,
+      );
+      setState(() {
+        _messages.add(msg);
+        _sending = false;
+      });
+      await _saveDemoMessages();
+      return;
+    }
 
     try {
       final uploadResult = await ApiService.uploadFile(audioFile);
@@ -2467,12 +2672,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               _handleKeyboardCallback(message.id, callbackData),
           onKeyboardSendMessage: (text) => _handleKeyboardSendMessage(text),
           onInvoicePaid: (messageId, newContent) {
-            final idx = _messages.indexWhere((m) => m.id == messageId);
-            if (idx != -1) {
-              setState(() {
-                _messages[idx] = _messages[idx].copyWith(content: newContent);
-              });
-            }
+            _updateMessageContent(messageId, newContent);
           },
           searchQuery: _isSearchingInChat ? _searchQuery : null,
           isCurrentSearchMatch:

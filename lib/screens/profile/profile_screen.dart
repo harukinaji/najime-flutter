@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/auth_state.dart';
-import '../../data/cache_service.dart';
-import '../../models/user.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/profile_header.dart';
 import '../../widgets/qr_profile_card.dart';
 import '../../widgets/settings_tile.dart';
+import '../../data/cache_service.dart';
+import '../../models/user.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -68,34 +69,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionLabel(cs, 'Account'),
+                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.account')),
                   SettingsTile(
                     icon: Icons.person_outline,
-                    title: 'Edit Profile',
+                    title: AppLocalizations.of(context).translate('profile.editProfile'),
                     onTap: _openEditProfile,
                   ),
                   SettingsTile(
                     icon: Icons.link,
-                    title: 'Connected Accounts',
+                    title: AppLocalizations.of(context).translate('profile.connectedAccounts'),
                     onTap: () =>
                         context.push('/home/profile/connected-accounts'),
                   ),
                   SettingsTile(
                     icon: Icons.folder_outlined,
-                    title: 'Folders',
-                    subtitle: 'Organize your chats',
+                    title: AppLocalizations.of(context).translate('profile.folders'),
+                    subtitle: AppLocalizations.of(context).translate('profile.foldersSubtitle'),
                     onTap: () => context.push('/home/profile/folders'),
                   ),
                   SettingsTile(
                     icon: Icons.smart_toy_outlined,
-                    title: 'My Bots',
-                    subtitle: 'Create and manage bots',
+                    title: AppLocalizations.of(context).translate('profile.myBots'),
+                    subtitle: AppLocalizations.of(context).translate('profile.myBotsSubtitle'),
                     onTap: () => context.push('/home/profile/bots'),
                   ),
                   SettingsTile(
                     icon: Icons.account_balance_wallet_outlined,
-                    title: 'Naji Wallet',
-                    subtitle: 'Solana devnet wallet',
+                    title: AppLocalizations.of(context).translate('profile.najiWallet'),
+                    subtitle: AppLocalizations.of(context).translate('profile.najiWalletSubtitle'),
                     onTap: () => context.go('/home/wallet'),
                   ),
                 ],
@@ -111,41 +112,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionLabel(cs, 'App Settings'),
-                SettingsTile(
-                  icon: Icons.lock_outline,
-                  title: 'Privacy',
-                  onTap: () => context.push('/home/profile/privacy'),
-                ),
-                SettingsTile(
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
-                  onTap: () => context.push('/home/profile/notifications'),
-                ),
-                SettingsTile(
-                  icon: Icons.palette_outlined,
-                  title: 'Appearance',
-                  onTap: () => context.push('/home/profile/appearance'),
-                ),
-                SettingsTile(
-                  icon: Icons.cached_outlined,
-                  title: 'Cache',
-                  subtitle: _cacheEnabled
-                      ? 'Chats & images cached (encrypted)'
-                      : 'Disabled',
-                  trailing: Switch(
-                    value: _cacheEnabled,
-                    onChanged: (v) async {
-                      await CacheService.instance.setEnabled(v);
-                      setState(() => _cacheEnabled = v);
-                    },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.appSettings')),
+                  SettingsTile(
+                    icon: Icons.lock_outline,
+                    title: AppLocalizations.of(context).translate('profile.privacy'),
+                    onTap: () => context.push('/home/profile/privacy'),
                   ),
-                ),
-              ],
-            ),
+                  SettingsTile(
+                    icon: Icons.notifications_outlined,
+                    title: AppLocalizations.of(context).translate('profile.notifications'),
+                    onTap: () => context.push('/home/profile/notifications'),
+                  ),
+                  SettingsTile(
+                    icon: Icons.palette_outlined,
+                    title: AppLocalizations.of(context).translate('profile.appearance'),
+                    onTap: () => context.push('/home/profile/appearance'),
+                  ),
+                  SettingsTile(
+                    icon: Icons.cached_outlined,
+                    title: AppLocalizations.of(context).translate('profile.cache'),
+                    subtitle: _cacheEnabled
+                        ? AppLocalizations.of(context).translate('profile.cacheEnabled')
+                        : AppLocalizations.of(context).translate('profile.cacheDisabled'),
+                    trailing: Switch(
+                      value: _cacheEnabled,
+                      onChanged: (v) async {
+                        await CacheService.instance.setEnabled(v);
+                        setState(() => _cacheEnabled = v);
+                      },
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: Icons.nfc,
+                    title: AppLocalizations.of(context).translate('profile.sendToNBadge'),
+                    subtitle: AppLocalizations.of(context).translate('profile.sendToNBadgeSubtitle'),
+                    onTap: () => context.push('/home/profile/nfc-transfer'),
+                  ),
+                ],
+              ),
           ),
           SliverToBoxAdapter(
             child: Divider(
@@ -156,27 +163,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionLabel(cs, 'Support'),
-                SettingsTile(
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () {},
-                ),
-                SettingsTile(
-                  icon: Icons.logout,
-                  title: 'Log Out',
-                  iconColor: cs.error,
-                  onTap: () async {
-                    await AuthState.instance.logout();
-                    if (!context.mounted) return;
-                    context.go('/onboarding');
-                  },
-                ),
-              ],
-            ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.support')),
+                  SettingsTile(
+                    icon: Icons.help_outline,
+                    title: AppLocalizations.of(context).translate('profile.helpSupport'),
+                    onTap: () {},
+                  ),
+                  SettingsTile(
+                    icon: Icons.logout,
+                    title: AppLocalizations.of(context).translate('profile.logOut'),
+                    iconColor: cs.error,
+                    onTap: () async {
+                      await AuthState.instance.logout();
+                      if (!context.mounted) return;
+                      context.go('/onboarding');
+                    },
+                  ),
+                ],
+              ),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
         ],

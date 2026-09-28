@@ -105,7 +105,7 @@ class SignedHttpClient extends http.BaseClient {
 
   static http.Client _createPinnedClient() {
     final httpClient = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 10);
+      ..connectionTimeout = const Duration(seconds: 3);
 
     if (shouldOverrideCertificateVerification) {
       httpClient.badCertificateCallback = (cert, host, port) =>

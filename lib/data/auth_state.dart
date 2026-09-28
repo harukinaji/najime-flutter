@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import 'api_service.dart';
 import 'app_attestation.dart';
 import 'notification_service.dart';
 import 'story_service.dart';
+import 'cache_service.dart';
 import 'token_cipher.dart';
 import 'websocket_service.dart';
 import '../config.dart';
@@ -26,6 +28,9 @@ class AuthState {
   SharedPreferences? _prefs;
 
   bool isAuthenticated = false;
+  /// True when the local demo account is active. Demo sessions never contact
+  /// the backend and are useful for previewing the UI without registration.
+  bool isDemo = false;
   String? username;
   String? displayName;
   String? email;
@@ -41,18 +46,30 @@ class AuthState {
         '[Auth] Restoring session for user: ${await _storage.read(key: _keyUsername)}',
       );
       isAuthenticated = true;
+      isDemo = token == 'demo-local-session';
       ApiService.setToken(token);
-      await _storeEncryptedNativeToken(token);
-      username = await _storage.read(key: _keyUsername);
-      displayName = await _storage.read(key: _keyDisplayName);
-      email = await _storage.read(key: _keyEmail);
+      unawaited(_storeEncryptedNativeToken(token));
+      final identity = await Future.wait<String?>([
+        _storage.read(key: _keyUsername),
+        _storage.read(key: _keyDisplayName),
+        _storage.read(key: _keyEmail),
+      ]);
+      username = identity[0];
+      displayName = identity[1];
+      email = identity[2];
       bio = _prefs!.getString(_keyBio);
       avatarUrl = _prefs!.getString(_keyAvatarUrl);
 
-      await AppAttestation.instance.ensureRegistered(token);
-
-      WebSocketService.connect(token);
-      debugPrint('[Auth] Session restored, token set, WS connecting');
+      // Demo sessions are intentionally offline and must never open a socket.
+      if (!isDemo) {
+        // Registration is a background sync. Waiting here made offline startup
+        // block on the server's TCP timeout before the first frame.
+        unawaited(Future<void>.delayed(const Duration(seconds: 2), () async {
+          await AppAttestation.instance.ensureRegistered(token);
+          WebSocketService.connect(token);
+        }));
+      }
+      debugPrint('[Auth] Session restored, token set; realtime deferred');
     } else {
       debugPrint('[Auth] No stored session');
     }
@@ -79,6 +96,7 @@ class AuthState {
     if (token.isEmpty) return;
 
     isAuthenticated = true;
+    isDemo = false;
     this.username = username;
     this.displayName = displayName;
     this.email = email;
@@ -123,8 +141,30 @@ class AuthState {
     }
   }
 
+  /// Starts an offline test account with deterministic profile data.
+  /// The wallet is intentionally not created here: the user must create or
+  /// import their own wallet from the Wallet tab.
+  Future<void> startDemoSession() async {
+    isAuthenticated = true;
+    isDemo = true;
+    username = 'demo_user';
+    displayName = 'Demo User';
+    email = 'demo@najime.local';
+    bio = 'Локальный тестовый аккаунт';
+    avatarUrl = null;
+    ApiService.setToken('demo-local-session');
+    _prefs ??= await SharedPreferences.getInstance();
+    await _storage.write(key: _keyToken, value: 'demo-local-session');
+    await _storage.write(key: _keyUsername, value: username);
+    await _storage.write(key: _keyDisplayName, value: displayName);
+    await _storage.write(key: _keyEmail, value: email);
+    await _prefs!.setString(_keyBio, bio!);
+    StoryService.instance.setCurrentUser(id: username!, name: displayName!);
+  }
+
   Future<void> logout() async {
     isAuthenticated = false;
+    isDemo = false;
     username = null;
     displayName = null;
     email = null;
@@ -133,6 +173,11 @@ class AuthState {
     WebSocketService.disconnect();
     ApiService.logout();
     ApiService.setToken('');
+
+    // Chat/message history is encrypted on disk for offline startup. It is
+    // session data, so remove it when the account signs out rather than
+    // showing the previous account's chats to the next user.
+    await CacheService.instance.clearAll();
 
     await _storage.delete(key: _keyToken);
     await _storage.delete(key: _keyUsername);

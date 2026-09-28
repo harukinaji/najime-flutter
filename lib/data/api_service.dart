@@ -11,6 +11,7 @@ import 'secure_http_client.dart';
 
 class ApiService {
   static const String _baseUrl = AppConfig.apiBaseUrl;
+  static const Duration _readTimeout = Duration(seconds: 3);
 
   /// WalletConnect project id from the frontend `.env` file. It's a public
   /// identifier used to construct the Reown AppKit relay/session engine; the
@@ -20,6 +21,7 @@ class ApiService {
 
   static String? _accessToken;
   static String? _username;
+  static bool lastChatsRequestSucceeded = false;
 
   static String? get accessToken => _accessToken;
   static String? get username => _username;
@@ -607,7 +609,7 @@ class ApiService {
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-      );
+      ).timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return body['user'] as Map<String, dynamic>;
@@ -621,15 +623,17 @@ class ApiService {
   }
 
   static Future<List<Map<String, dynamic>>> getChats() async {
+    lastChatsRequestSucceeded = false;
     try {
       final response = await _client.get(
         Uri.parse('$_baseUrl/api/chats'),
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-      );
+      ).timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
+        lastChatsRequestSucceeded = true;
         return (body['chats'] as List).cast<Map<String, dynamic>>();
       }
       debugPrint('[API] getChats failed: ${response.statusCode}');
@@ -726,6 +730,7 @@ class ApiService {
   static Future<Map<String, dynamic>?> createCheck({
     required String chatId,
     required String pdaAddress,
+    required String recipientAddress,
     required int amountLamports,
     required String currency,
     required String txSignature,
@@ -740,6 +745,7 @@ class ApiService {
         body: jsonEncode({
           'chat_id': chatId,
           'pda_address': pdaAddress,
+          'recipient_address': recipientAddress,
           'amount_lamports': amountLamports,
           'currency': currency,
           'tx_signature': txSignature,
@@ -886,7 +892,7 @@ class ApiService {
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-      );
+      ).timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return (body['folders'] as List).cast<Map<String, dynamic>>();
@@ -1465,7 +1471,7 @@ class ApiService {
 
   static Future<ApiLoginResult> linkPhoneAccount({
     required String phoneNumber,
-    required bool isVerified,
+    required String firebaseIdToken,
     String? password,
     String? encryptedPhone,
     String? phoneNonce,
@@ -1479,7 +1485,7 @@ class ApiService {
         },
         body: jsonEncode({
           'phone_number': phoneNumber,
-          'is_verified': isVerified,
+          'firebase_id_token': firebaseIdToken,
           if (password != null) 'password': password,
           if (encryptedPhone != null) 'encrypted_phone': encryptedPhone,
           if (phoneNonce != null) 'phone_nonce': phoneNonce,
@@ -1517,15 +1523,35 @@ class ApiService {
 
   static Future<ApiLoginResult> linkWalletAccount({
     required String walletAddress,
+    required Future<String> Function(String message) signMessage,
   }) async {
     try {
+      final challenge = await _client.post(
+        Uri.parse('$_baseUrl/api/connected-accounts/wallet-challenge'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
+        body: jsonEncode({'wallet_address': walletAddress}),
+      );
+      final proof = jsonDecode(challenge.body) as Map<String, dynamic>;
+      if (challenge.statusCode != 200 || proof['success'] != true) {
+        return ApiLoginResult(
+          success: false,
+          message: 'Could not request wallet proof',
+        );
+      }
+      final signature = await signMessage(proof['message'] as String);
       final response = await _client.post(
         Uri.parse('$_baseUrl/api/connected-accounts/link/wallet'),
         headers: {
           'Content-Type': 'application/json',
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-        body: jsonEncode({'wallet_address': walletAddress}),
+        body: jsonEncode({
+          'wallet_address': walletAddress,
+          'signature': signature,
+        }),
       );
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -2265,7 +2291,7 @@ class ApiService {
         headers: {
           if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
         },
-      );
+      ).timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return (body['users'] as List).cast<Map<String, dynamic>>();

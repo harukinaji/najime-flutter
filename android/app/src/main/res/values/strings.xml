@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Последние чаты и непрочитанные сообщения</string>
+    <string name="nfc_badge_description">NajiMe Badge Profile</string>
+    <string name="nfc_badge_group">NajiMe Badge</string>
+    <string name="nfc_badge_aid_desc">NajiMe Badge Profile</string>
+</resources>

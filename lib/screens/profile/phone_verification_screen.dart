@@ -106,6 +106,38 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _userPassword = password;
     }
 
+    if (!mounted) return;
+    if (_userPassword == null) {
+      final controller = TextEditingController();
+      final password = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Confirm your password'),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (password == null || password.isEmpty) {
+        setState(() => _loading = false);
+        return;
+      }
+      _userPassword = password;
+    }
+
     await _phoneService.sendCode(
       phoneNumber: phone,
       onError: (err) {
@@ -126,8 +158,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         _otpFocusNodes[0].requestFocus();
       },
       onAutoVerify: (credential) async {
-        await _phoneService.verifyCode(
-          smsCode: credential.smsCode ?? '',
+        await _phoneService.verifyCredential(
+          credential,
           onError: (_) {},
           onSuccess: (phone) => _onPhoneVerified(phone),
         );
@@ -186,29 +218,37 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       _error = null;
     });
 
-    final linkResult = await ApiService.linkPhoneAccount(
-      phoneNumber: phone,
-      isVerified: true,
-      password: _userPassword,
-    );
-
-    if (!mounted) return;
-
-    setState(() => _loading = false);
-
-    if (linkResult.success) {
-      widget.onVerified(phone);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone number verified and encrypted!'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final linkResult = await ApiService.linkPhoneAccount(
+        phoneNumber: phone,
+        firebaseIdToken: await _phoneService.verifiedIdToken(),
+        password: _userPassword,
       );
-      Navigator.of(context).pop();
-    } else {
-      setState(
-        () => _error = linkResult.message ?? 'Failed to link phone number.',
-      );
+
+      if (!mounted) return;
+
+      setState(() => _loading = false);
+
+      if (linkResult.success) {
+        widget.onVerified(phone);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Phone number verified and encrypted!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
+      } else {
+        setState(
+          () => _error = linkResult.message ?? 'Failed to link phone number.',
+        );
+      }
+    } catch (_) {
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _error = 'Phone verification expired. Request a new code.';
+        });
     }
   }
 
