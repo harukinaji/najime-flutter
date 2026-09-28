@@ -171,26 +171,45 @@ class _ChatsScreenState extends State<ChatsScreen> {
       final now = DateTime.now();
       final demo = <ChatModel>[
         ChatModel(
-          id: 'demo-alice', name: 'Alice', contactId: 'demo-alice', isOnline: true,
-          lastActivity: now.subtract(const Duration(minutes: 2)), unreadCount: 2,
-          lastMessage: MessageModel(id: 'demo-m1', senderId: 'demo-alice',
-            content: 'Привет! Это тестовый чат 👋', type: MessageType.text,
-            timestamp: now.subtract(const Duration(minutes: 2)), isMe: false),
+          id: 'demo-alice',
+          name: 'Alice',
+          contactId: 'demo-alice',
+          isOnline: true,
+          lastActivity: now.subtract(const Duration(minutes: 2)),
+          unreadCount: 2,
+          lastMessage: MessageModel(
+            id: 'demo-m1',
+            senderId: 'demo-alice',
+            content: 'Hi! This is a test chat 👋',
+            type: MessageType.text,
+            timestamp: now.subtract(const Duration(minutes: 2)),
+            isMe: false,
+          ),
         ),
         ChatModel(
           id: 'demo-team', name: 'NajiMe Team', isGroup: true,
           participantIds: const ['demo_user', 'demo-alice', 'demo-bob'],
           lastActivity: now.subtract(const Duration(hours: 1)),
-          lastMessage: MessageModel(id: 'demo-m2', senderId: 'demo-bob',
-            content: 'Добро пожаловать в демо-режим', type: MessageType.text,
-            timestamp: now.subtract(const Duration(hours: 1)), isMe: false),
+          lastMessage: MessageModel(
+            id: 'demo-m2',
+            senderId: 'demo-bob',
+            content: 'Welcome to demo mode',
+            type: MessageType.text,
+            timestamp: now.subtract(const Duration(hours: 1)),
+            isMe: false,
+          ),
         ),
         ChatModel(
           id: 'demo-wallet', name: 'Wallet Support', contactId: 'demo-wallet',
           lastActivity: now.subtract(const Duration(days: 1)),
-          lastMessage: MessageModel(id: 'demo-m3', senderId: 'demo-wallet',
-            content: 'Создайте кошелёк во вкладке Wallet', type: MessageType.text,
-            timestamp: now.subtract(const Duration(days: 1)), isMe: false),
+          lastMessage: MessageModel(
+            id: 'demo-m3',
+            senderId: 'demo-wallet',
+            content: 'Create a wallet in the Wallet tab',
+            type: MessageType.text,
+            timestamp: now.subtract(const Duration(days: 1)),
+            isMe: false,
+          ),
         ),
       ];
       _chats = demo;
