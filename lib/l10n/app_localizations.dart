@@ -17,13 +17,11 @@ class AppLocalizations {
     delegate,
   ];
 
-  static const List<Locale> supportedLocales = [
-    Locale('en'),
-    Locale('ru'),
-  ];
+  static const List<Locale> supportedLocales = [Locale('en'), Locale('ru')];
 
-  late final Map<String, String> _strings =
-      locale.languageCode == 'ru' ? stringsRu : stringsEn;
+  late final Map<String, String> _strings = locale.languageCode == 'ru'
+      ? stringsRu
+      : stringsEn;
 
   String translate(String key) => _strings[key] ?? key;
 }
@@ -33,8 +31,7 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      ['en', 'ru'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => ['en', 'ru'].contains(locale.languageCode);
 
   @override
   Future<AppLocalizations> load(Locale locale) async =>

@@ -82,7 +82,11 @@ class _StickerStripState extends State<StickerStrip> {
               child: TextButton.icon(
                 onPressed: widget.onExpand,
                 icon: const Icon(Icons.add, size: 18),
-                label: Text(AppLocalizations.of(context).translate('stickers.installPacks')),
+                label: Text(
+                  AppLocalizations.of(
+                    context,
+                  ).translate('stickers.installPacks'),
+                ),
               ),
             )
           : Column(
@@ -167,7 +171,9 @@ class _StickerStripState extends State<StickerStrip> {
                   child: _stickers.isEmpty
                       ? Center(
                           child: Text(
-                            AppLocalizations.of(context).translate('stickers.noStickers'),
+                            AppLocalizations.of(
+                              context,
+                            ).translate('stickers.noStickers'),
                             style: TextStyle(
                               fontSize: 12,
                               color: cs.onSurfaceVariant,

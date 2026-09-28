@@ -604,12 +604,14 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> getCurrentUser() async {
     try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/api/me'),
-        headers: {
-          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-        },
-      ).timeout(_readTimeout);
+      final response = await _client
+          .get(
+            Uri.parse('$_baseUrl/api/me'),
+            headers: {
+              if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+            },
+          )
+          .timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return body['user'] as Map<String, dynamic>;
@@ -625,12 +627,14 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> getChats() async {
     lastChatsRequestSucceeded = false;
     try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/api/chats'),
-        headers: {
-          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-        },
-      ).timeout(_readTimeout);
+      final response = await _client
+          .get(
+            Uri.parse('$_baseUrl/api/chats'),
+            headers: {
+              if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+            },
+          )
+          .timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         lastChatsRequestSucceeded = true;
@@ -887,12 +891,14 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> getFolders() async {
     try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/api/folders'),
-        headers: {
-          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-        },
-      ).timeout(_readTimeout);
+      final response = await _client
+          .get(
+            Uri.parse('$_baseUrl/api/folders'),
+            headers: {
+              if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+            },
+          )
+          .timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return (body['folders'] as List).cast<Map<String, dynamic>>();
@@ -2286,12 +2292,14 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>?> getStories() async {
     try {
-      final response = await _client.get(
-        Uri.parse('$_baseUrl/api/stories'),
-        headers: {
-          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
-        },
-      ).timeout(_readTimeout);
+      final response = await _client
+          .get(
+            Uri.parse('$_baseUrl/api/stories'),
+            headers: {
+              if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+            },
+          )
+          .timeout(_readTimeout);
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 && body['success'] == true) {
         return (body['users'] as List).cast<Map<String, dynamic>>();

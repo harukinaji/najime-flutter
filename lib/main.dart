@@ -75,8 +75,10 @@ void main() async {
   // Start Firebase only after the first frame. On some Android builds FCM
   // creates a secondary Flutter engine and stalls rasterization for seconds.
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    unawaited(Future<void>.delayed(const Duration(seconds: 5), _initFirebase).then((_) {
-      if (firebaseAvailable) unawaited(NotificationService().init());
-    }));
+    unawaited(
+      Future<void>.delayed(const Duration(seconds: 5), _initFirebase).then((_) {
+        if (firebaseAvailable) unawaited(NotificationService().init());
+      }),
+    );
   });
 }

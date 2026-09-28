@@ -48,7 +48,10 @@ class PhoneNumberCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          phoneNumber ?? AppLocalizations.of(context).translate('phone.addPhone'),
+                          phoneNumber ??
+                              AppLocalizations.of(
+                                context,
+                              ).translate('phone.addPhone'),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,

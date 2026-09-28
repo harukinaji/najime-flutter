@@ -56,7 +56,9 @@ class WidgetService {
 
       try {
         final uri = Uri.parse(url);
-        final response = await http.get(uri).timeout(const Duration(seconds: 5));
+        final response = await http
+            .get(uri)
+            .timeout(const Duration(seconds: 5));
         if (response.statusCode == 200) {
           await file.writeAsBytes(response.bodyBytes);
           paths.add(file.path);

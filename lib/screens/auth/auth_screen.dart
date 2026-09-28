@@ -59,7 +59,9 @@ class _AuthScreenState extends State<AuthScreen>
           setState(() => _googleLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context).translate('auth.googleCancelled')),
+              content: Text(
+                AppLocalizations.of(context).translate('auth.googleCancelled'),
+              ),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -89,7 +91,9 @@ class _AuthScreenState extends State<AuthScreen>
         setState(() => _googleLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).translate('auth.googleFailedToken')),
+            content: Text(
+              AppLocalizations.of(context).translate('auth.googleFailedToken'),
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -130,7 +134,12 @@ class _AuthScreenState extends State<AuthScreen>
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message ?? AppLocalizations.of(context).translate('auth.googleSignInFailed')),
+            content: Text(
+              result.message ??
+                  AppLocalizations.of(
+                    context,
+                  ).translate('auth.googleSignInFailed'),
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -140,7 +149,9 @@ class _AuthScreenState extends State<AuthScreen>
       setState(() => _googleLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).translate('auth.googleSignInFailed')),
+          content: Text(
+            AppLocalizations.of(context).translate('auth.googleSignInFailed'),
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -182,7 +193,10 @@ class _AuthScreenState extends State<AuthScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.message ?? AppLocalizations.of(context).translate('auth.loginFailed')),
+          content: Text(
+            result.message ??
+                AppLocalizations.of(context).translate('auth.loginFailed'),
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -283,7 +297,9 @@ class _AuthScreenState extends State<AuthScreen>
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: _emailLoading || _googleLoading ? null : _handleDemoSignIn,
+              onPressed: _emailLoading || _googleLoading
+                  ? null
+                  : _handleDemoSignIn,
               icon: const Icon(Icons.science_outlined),
               label: const Text('Войти под тестовым аккаунтом'),
               style: OutlinedButton.styleFrom(
@@ -371,7 +387,11 @@ class _AuthScreenState extends State<AuthScreen>
                     ),
                   )
                 : Text(
-                    _isRegister ? AppLocalizations.of(context).translate('auth.createAccount') : AppLocalizations.of(context).translate('auth.signIn'),
+                    _isRegister
+                        ? AppLocalizations.of(
+                            context,
+                          ).translate('auth.createAccount')
+                        : AppLocalizations.of(context).translate('auth.signIn'),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -384,8 +404,12 @@ class _AuthScreenState extends State<AuthScreen>
           onPressed: () => setState(() => _isRegister = !_isRegister),
           child: Text(
             _isRegister
-                ? AppLocalizations.of(context).translate('auth.alreadyHaveAccount')
-                : AppLocalizations.of(context).translate('auth.dontHaveAccount'),
+                ? AppLocalizations.of(
+                    context,
+                  ).translate('auth.alreadyHaveAccount')
+                : AppLocalizations.of(
+                    context,
+                  ).translate('auth.dontHaveAccount'),
             style: TextStyle(color: cs.primary, fontSize: 13),
           ),
         ),

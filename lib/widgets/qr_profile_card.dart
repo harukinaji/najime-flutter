@@ -382,7 +382,9 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
                         opacity: _controlsVisible ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 600),
                         child: Text(
-                          AppLocalizations.of(context).translate('qr.scanToView'),
+                          AppLocalizations.of(
+                            context,
+                          ).translate('qr.scanToView'),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withValues(alpha: 0.6),
@@ -399,13 +401,17 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
                           children: [
                             _ActionButton(
                               icon: Icons.file_download_outlined,
-                              label: AppLocalizations.of(context).translate('qr.save'),
+                              label: AppLocalizations.of(
+                                context,
+                              ).translate('qr.save'),
                               onTap: () {},
                             ),
                             const SizedBox(width: 16),
                             _ActionButton(
                               icon: Icons.share_outlined,
-                              label: AppLocalizations.of(context).translate('qr.share'),
+                              label: AppLocalizations.of(
+                                context,
+                              ).translate('qr.share'),
                               onTap: () {},
                             ),
                           ],

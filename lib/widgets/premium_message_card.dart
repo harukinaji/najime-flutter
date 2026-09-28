@@ -177,7 +177,11 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                                 ),
                                 side: BorderSide(color: cs.outlineVariant),
                               ),
-                              child: Text(AppLocalizations.of(context).translate('premium.cancel')),
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                ).translate('premium.cancel'),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -195,7 +199,11 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Text(AppLocalizations.of(context).translate('premium.unlock')),
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                ).translate('premium.unlock'),
+                              ),
                             ),
                           ),
                         ],
