@@ -211,7 +211,9 @@ class _StickerPickerState extends State<StickerPicker> {
               ).then((_) => _loadPacks());
             },
             icon: const Icon(Icons.add, size: 18),
-            label: Text(AppLocalizations.of(context).translate('stickers.browsePacks')),
+            label: Text(
+              AppLocalizations.of(context).translate('stickers.browsePacks'),
+            ),
           ),
         ],
       ),

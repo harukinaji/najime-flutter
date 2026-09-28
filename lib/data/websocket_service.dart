@@ -116,7 +116,8 @@ class WebSocketService {
             ...attestationHeaders,
           },
           customClient: httpClient,
-        ).timeout(const Duration(seconds: 4))
+        )
+        .timeout(const Duration(seconds: 4))
         .then((ws) {
           _socket = ws;
           _connecting = false;

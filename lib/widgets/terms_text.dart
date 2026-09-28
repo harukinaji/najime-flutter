@@ -35,8 +35,7 @@ class TermsText extends StatelessWidget {
               color: cs.primary,
               decoration: TextDecoration.underline,
             ),
-            recognizer:
-                _TapRecognizer()..onTap = () => _launchUrl(termsUrl),
+            recognizer: _TapRecognizer()..onTap = () => _launchUrl(termsUrl),
           ),
           TextSpan(text: andText),
           TextSpan(
@@ -45,8 +44,7 @@ class TermsText extends StatelessWidget {
               color: cs.primary,
               decoration: TextDecoration.underline,
             ),
-            recognizer:
-                _TapRecognizer()..onTap = () => _launchUrl(privacyUrl),
+            recognizer: _TapRecognizer()..onTap = () => _launchUrl(privacyUrl),
           ),
         ],
       ),

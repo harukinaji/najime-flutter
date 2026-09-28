@@ -188,7 +188,8 @@ const Map<String, String> stringsRu = {
   'invoice.currencyNotSupported': 'пока не поддерживается',
   'invoice.paid': 'Оплачено',
   'invoice.paidTx': 'Оплачено:',
-  'invoice.paymentError': 'Ошибка оплаты. Если вы уже оплатили, нажмите «Синхронизировать»',
+  'invoice.paymentError':
+      'Ошибка оплаты. Если вы уже оплатили, нажмите «Синхронизировать»',
   'invoice.sync': 'Синхронизировать',
   'invoice.statusSynced': 'Статус синхронизирован',
   'invoice.serverDidNotConfirm':

@@ -17,7 +17,9 @@ class NfcTransferScreen extends StatefulWidget {
 
 class _NfcTransferScreenState extends State<NfcTransferScreen> {
   static const _bleChannel = MethodChannel('com.naji.najimessenger/bluetooth');
-  static const _bleEventChannel = EventChannel('com.naji.najimessenger/bluetooth_events');
+  static const _bleEventChannel = EventChannel(
+    'com.naji.najimessenger/bluetooth_events',
+  );
 
   BleDevice? _connectedDevice;
   bool _transferring = false;
@@ -32,7 +34,9 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
   @override
   void initState() {
     super.initState();
-    _eventSubscription = _bleEventChannel.receiveBroadcastStream().listen((dynamic event) {
+    _eventSubscription = _bleEventChannel.receiveBroadcastStream().listen((
+      dynamic event,
+    ) {
       if (_disposed) return;
       final map = event is Map ? Map<String, dynamic>.from(event as Map) : null;
       if (map == null) return;
@@ -79,11 +83,12 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
       await _bleChannel.invokeMethod('startScan', {'services': []});
       if (!_disposed) setState(() => _scanning = false);
     } catch (e) {
-      if (!_disposed) setState(() {
-        _scanning = false;
-        _statusMessage = 'Scan failed: $e';
-        _isError = true;
-      });
+      if (!_disposed)
+        setState(() {
+          _scanning = false;
+          _statusMessage = 'Scan failed: $e';
+          _isError = true;
+        });
     }
   }
 
@@ -96,18 +101,20 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
     });
     try {
       await _bleChannel.invokeMethod('connect', {'deviceId': address});
-      if (!_disposed) setState(() {
-        _connectedDevice = BleDevice._(address);
-        _transferring = false;
-        _statusMessage = 'Connected! Tap "Send Profile".';
-        _done = false;
-      });
+      if (!_disposed)
+        setState(() {
+          _connectedDevice = BleDevice._(address);
+          _transferring = false;
+          _statusMessage = 'Connected! Tap "Send Profile".';
+          _done = false;
+        });
     } catch (e) {
-      if (!_disposed) setState(() {
-        _transferring = false;
-        _statusMessage = 'Error: ${e.toString()}';
-        _isError = true;
-      });
+      if (!_disposed)
+        setState(() {
+          _transferring = false;
+          _statusMessage = 'Error: ${e.toString()}';
+          _isError = true;
+        });
     }
   }
 
@@ -160,13 +167,14 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
           final bytes = base64Decode(base64Data);
           final decoded = img.decodeImage(bytes);
           if (decoded != null) {
-final resized = img.copyResize(decoded, width: 100, height: 100);
-              final jpgBytes = img.encodeJpg(resized, quality: 80);
-              avatarBase64 = base64Encode(jpgBytes);
+            final resized = img.copyResize(decoded, width: 100, height: 100);
+            final jpgBytes = img.encodeJpg(resized, quality: 80);
+            avatarBase64 = base64Encode(jpgBytes);
             debugPrint('[BLE] avatar base64 len: ${avatarBase64.length}');
           }
         } else {
-          final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+          final client = HttpClient()
+            ..connectionTimeout = const Duration(seconds: 5);
           final request = await client.getUrl(Uri.parse(avatarUrl));
           final response = await request.close();
           debugPrint('[BLE] avatar HTTP status: ${response.statusCode}');
@@ -241,9 +249,10 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                 child: FilledButton.icon(
                   onPressed: _transferring ? null : _startScan,
                   icon: const Icon(Icons.search),
-                  label: const Text('Scan for NBadge',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
+                  label: const Text(
+                    'Scan for NBadge',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: cs.primary,
                     shape: RoundedRectangleBorder(
@@ -253,13 +262,12 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                 ),
               ),
               if (_scanning)
-                const SizedBox(
-                  height: 52,
-                  child: CircularProgressIndicator(),
-                ),
+                const SizedBox(height: 52, child: CircularProgressIndicator()),
               if (_results.isNotEmpty) ...[
-                Text('Found ${_results.length} device(s)',
-                    style: const TextStyle(fontSize: 14)),
+                Text(
+                  'Found ${_results.length} device(s)',
+                  style: const TextStyle(fontSize: 14),
+                ),
                 const SizedBox(height: 8),
                 ..._results.map((r) {
                   final name = r['name'] ?? '';
@@ -270,8 +278,10 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                     title: Text(name),
                     subtitle: Text(address),
                     trailing: _connectedDevice?.remoteId == address
-                        ? const Icon(Icons.bluetooth_connected,
-                            color: Colors.green)
+                        ? const Icon(
+                            Icons.bluetooth_connected,
+                            color: Colors.green,
+                          )
                         : ElevatedButton(
                             onPressed: isConnecting
                                 ? null
@@ -302,7 +312,9 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                   label: Text(
                     _transferring ? 'Sending...' : 'Send Profile',
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: cs.primary,
@@ -331,8 +343,8 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                   color: _isError
                       ? cs.errorContainer
                       : _done
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : cs.primaryContainer,
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : cs.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -341,11 +353,13 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                       _isError
                           ? Icons.error_outline
                           : _done
-                              ? Icons.check_circle_outline
-                              : Icons.info_outline,
+                          ? Icons.check_circle_outline
+                          : Icons.info_outline,
                       color: _isError
                           ? cs.error
-                          : _done ? Colors.green : cs.primary,
+                          : _done
+                          ? Colors.green
+                          : cs.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -357,8 +371,8 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
                           color: _isError
                               ? cs.onErrorContainer
                               : _done
-                                  ? Colors.green.shade800
-                                  : cs.onPrimaryContainer,
+                              ? Colors.green.shade800
+                              : cs.onPrimaryContainer,
                         ),
                       ),
                     ),
@@ -391,12 +405,18 @@ final resized = img.copyResize(decoded, width: 100, height: 100);
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle,
-                    style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                ),
               ],
             ),
           ),

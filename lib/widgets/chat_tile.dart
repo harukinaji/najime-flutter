@@ -221,7 +221,10 @@ class ChatTile extends StatelessWidget {
               child: _buildPreviewImage(msg.content, 28, 28),
             ),
             const SizedBox(width: 6),
-            Text(AppLocalizations.of(context).translate('chat.photo'), style: textStyle),
+            Text(
+              AppLocalizations.of(context).translate('chat.photo'),
+              style: textStyle,
+            ),
           ],
         );
       case MessageType.sticker:
@@ -236,7 +239,10 @@ class ChatTile extends StatelessWidget {
           children: [
             Icon(Icons.mic, size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text(AppLocalizations.of(context).translate('chat.voiceMessage'), style: textStyle),
+            Text(
+              AppLocalizations.of(context).translate('chat.voiceMessage'),
+              style: textStyle,
+            ),
           ],
         );
       case MessageType.file:
@@ -246,7 +252,8 @@ class ChatTile extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                msg.fileName ?? AppLocalizations.of(context).translate('chat.file'),
+                msg.fileName ??
+                    AppLocalizations.of(context).translate('chat.file'),
                 style: textStyle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -259,7 +266,10 @@ class ChatTile extends StatelessWidget {
           children: [
             Icon(Icons.lock, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text(AppLocalizations.of(context).translate('chat.premiumMessage'), style: textStyle),
+            Text(
+              AppLocalizations.of(context).translate('chat.premiumMessage'),
+              style: textStyle,
+            ),
           ],
         );
       case MessageType.invoice:
@@ -285,7 +295,9 @@ class ChatTile extends StatelessWidget {
             Icon(Icons.card_giftcard, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
             Text(
-              chk != null ? '${AppLocalizations.of(context).translate('chat.check')}: ${chk.amount} ${chk.currency}' : AppLocalizations.of(context).translate('chat.check'),
+              chk != null
+                  ? '${AppLocalizations.of(context).translate('chat.check')}: ${chk.amount} ${chk.currency}'
+                  : AppLocalizations.of(context).translate('chat.check'),
               style: textStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
