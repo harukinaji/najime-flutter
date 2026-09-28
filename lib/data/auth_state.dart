@@ -28,6 +28,7 @@ class AuthState {
   SharedPreferences? _prefs;
 
   bool isAuthenticated = false;
+
   /// True when the local demo account is active. Demo sessions never contact
   /// the backend and are useful for previewing the UI without registration.
   bool isDemo = false;
@@ -64,10 +65,12 @@ class AuthState {
       if (!isDemo) {
         // Registration is a background sync. Waiting here made offline startup
         // block on the server's TCP timeout before the first frame.
-        unawaited(Future<void>.delayed(const Duration(seconds: 2), () async {
-          await AppAttestation.instance.ensureRegistered(token);
-          WebSocketService.connect(token);
-        }));
+        unawaited(
+          Future<void>.delayed(const Duration(seconds: 2), () async {
+            await AppAttestation.instance.ensureRegistered(token);
+            WebSocketService.connect(token);
+          }),
+        );
       }
       debugPrint('[Auth] Session restored, token set; realtime deferred');
     } else {

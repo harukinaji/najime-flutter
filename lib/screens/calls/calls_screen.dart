@@ -71,8 +71,10 @@ class _CallsScreenState extends State<CallsScreen> {
   String _formatTimestamp(DateTime timestamp, BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final diff = DateTime.now().difference(timestamp);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}${l10n.translate('time.minutesAgo')}';
-    if (diff.inHours < 24) return '${diff.inHours}${l10n.translate('time.hoursAgo')}';
+    if (diff.inMinutes < 60)
+      return '${diff.inMinutes}${l10n.translate('time.minutesAgo')}';
+    if (diff.inHours < 24)
+      return '${diff.inHours}${l10n.translate('time.hoursAgo')}';
     return '${diff.inDays}${l10n.translate('time.daysAgo')}';
   }
 

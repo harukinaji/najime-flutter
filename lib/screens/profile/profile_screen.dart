@@ -69,34 +69,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.account')),
+                  _sectionLabel(
+                    cs,
+                    AppLocalizations.of(context).translate('profile.account'),
+                  ),
                   SettingsTile(
                     icon: Icons.person_outline,
-                    title: AppLocalizations.of(context).translate('profile.editProfile'),
+                    title: AppLocalizations.of(
+                      context,
+                    ).translate('profile.editProfile'),
                     onTap: _openEditProfile,
                   ),
                   SettingsTile(
                     icon: Icons.link,
-                    title: AppLocalizations.of(context).translate('profile.connectedAccounts'),
+                    title: AppLocalizations.of(
+                      context,
+                    ).translate('profile.connectedAccounts'),
                     onTap: () =>
                         context.push('/home/profile/connected-accounts'),
                   ),
                   SettingsTile(
                     icon: Icons.folder_outlined,
-                    title: AppLocalizations.of(context).translate('profile.folders'),
-                    subtitle: AppLocalizations.of(context).translate('profile.foldersSubtitle'),
+                    title: AppLocalizations.of(
+                      context,
+                    ).translate('profile.folders'),
+                    subtitle: AppLocalizations.of(
+                      context,
+                    ).translate('profile.foldersSubtitle'),
                     onTap: () => context.push('/home/profile/folders'),
                   ),
                   SettingsTile(
                     icon: Icons.smart_toy_outlined,
-                    title: AppLocalizations.of(context).translate('profile.myBots'),
-                    subtitle: AppLocalizations.of(context).translate('profile.myBotsSubtitle'),
+                    title: AppLocalizations.of(
+                      context,
+                    ).translate('profile.myBots'),
+                    subtitle: AppLocalizations.of(
+                      context,
+                    ).translate('profile.myBotsSubtitle'),
                     onTap: () => context.push('/home/profile/bots'),
                   ),
                   SettingsTile(
                     icon: Icons.account_balance_wallet_outlined,
-                    title: AppLocalizations.of(context).translate('profile.najiWallet'),
-                    subtitle: AppLocalizations.of(context).translate('profile.najiWalletSubtitle'),
+                    title: AppLocalizations.of(
+                      context,
+                    ).translate('profile.najiWallet'),
+                    subtitle: AppLocalizations.of(
+                      context,
+                    ).translate('profile.najiWalletSubtitle'),
                     onTap: () => context.go('/home/wallet'),
                   ),
                 ],
@@ -112,47 +131,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.appSettings')),
-                  SettingsTile(
-                    icon: Icons.lock_outline,
-                    title: AppLocalizations.of(context).translate('profile.privacy'),
-                    onTap: () => context.push('/home/profile/privacy'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionLabel(
+                  cs,
+                  AppLocalizations.of(context).translate('profile.appSettings'),
+                ),
+                SettingsTile(
+                  icon: Icons.lock_outline,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.privacy'),
+                  onTap: () => context.push('/home/profile/privacy'),
+                ),
+                SettingsTile(
+                  icon: Icons.notifications_outlined,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.notifications'),
+                  onTap: () => context.push('/home/profile/notifications'),
+                ),
+                SettingsTile(
+                  icon: Icons.palette_outlined,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.appearance'),
+                  onTap: () => context.push('/home/profile/appearance'),
+                ),
+                SettingsTile(
+                  icon: Icons.cached_outlined,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.cache'),
+                  subtitle: _cacheEnabled
+                      ? AppLocalizations.of(
+                          context,
+                        ).translate('profile.cacheEnabled')
+                      : AppLocalizations.of(
+                          context,
+                        ).translate('profile.cacheDisabled'),
+                  trailing: Switch(
+                    value: _cacheEnabled,
+                    onChanged: (v) async {
+                      await CacheService.instance.setEnabled(v);
+                      setState(() => _cacheEnabled = v);
+                    },
                   ),
-                  SettingsTile(
-                    icon: Icons.notifications_outlined,
-                    title: AppLocalizations.of(context).translate('profile.notifications'),
-                    onTap: () => context.push('/home/profile/notifications'),
-                  ),
-                  SettingsTile(
-                    icon: Icons.palette_outlined,
-                    title: AppLocalizations.of(context).translate('profile.appearance'),
-                    onTap: () => context.push('/home/profile/appearance'),
-                  ),
-                  SettingsTile(
-                    icon: Icons.cached_outlined,
-                    title: AppLocalizations.of(context).translate('profile.cache'),
-                    subtitle: _cacheEnabled
-                        ? AppLocalizations.of(context).translate('profile.cacheEnabled')
-                        : AppLocalizations.of(context).translate('profile.cacheDisabled'),
-                    trailing: Switch(
-                      value: _cacheEnabled,
-                      onChanged: (v) async {
-                        await CacheService.instance.setEnabled(v);
-                        setState(() => _cacheEnabled = v);
-                      },
-                    ),
-                  ),
-                  SettingsTile(
-                    icon: Icons.nfc,
-                    title: AppLocalizations.of(context).translate('profile.sendToNBadge'),
-                    subtitle: AppLocalizations.of(context).translate('profile.sendToNBadgeSubtitle'),
-                    onTap: () => context.push('/home/profile/nfc-transfer'),
-                  ),
-                ],
-              ),
+                ),
+                SettingsTile(
+                  icon: Icons.nfc,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.sendToNBadge'),
+                  subtitle: AppLocalizations.of(
+                    context,
+                  ).translate('profile.sendToNBadgeSubtitle'),
+                  onTap: () => context.push('/home/profile/nfc-transfer'),
+                ),
+              ],
+            ),
           ),
           SliverToBoxAdapter(
             child: Divider(
@@ -163,27 +201,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionLabel(cs, AppLocalizations.of(context).translate('profile.support')),
-                  SettingsTile(
-                    icon: Icons.help_outline,
-                    title: AppLocalizations.of(context).translate('profile.helpSupport'),
-                    onTap: () {},
-                  ),
-                  SettingsTile(
-                    icon: Icons.logout,
-                    title: AppLocalizations.of(context).translate('profile.logOut'),
-                    iconColor: cs.error,
-                    onTap: () async {
-                      await AuthState.instance.logout();
-                      if (!context.mounted) return;
-                      context.go('/onboarding');
-                    },
-                  ),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionLabel(
+                  cs,
+                  AppLocalizations.of(context).translate('profile.support'),
+                ),
+                SettingsTile(
+                  icon: Icons.help_outline,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.helpSupport'),
+                  onTap: () {},
+                ),
+                SettingsTile(
+                  icon: Icons.logout,
+                  title: AppLocalizations.of(
+                    context,
+                  ).translate('profile.logOut'),
+                  iconColor: cs.error,
+                  onTap: () async {
+                    await AuthState.instance.logout();
+                    if (!context.mounted) return;
+                    context.go('/onboarding');
+                  },
+                ),
+              ],
+            ),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
         ],

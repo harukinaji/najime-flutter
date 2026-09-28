@@ -30,8 +30,8 @@ class ChatsScreen extends StatefulWidget {
 }
 
 class _ChatsScreenState extends State<ChatsScreen> {
-  bool get _isDemo => AuthState.instance.isDemo ||
-      AuthState.instance.username == 'demo_user';
+  bool get _isDemo =>
+      AuthState.instance.isDemo || AuthState.instance.username == 'demo_user';
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -100,7 +100,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
       names: _chats.map((c) => c.name).toList(),
       messages: _chats.map((c) => c.lastMessage?.content ?? '').toList(),
       unreads: _chats.map((c) => '${c.unreadCount}').toList(),
-      timestamps: _chats.map((c) => c.lastActivity?.toIso8601String() ?? '').toList(),
+      timestamps: _chats
+          .map((c) => c.lastActivity?.toIso8601String() ?? '')
+          .toList(),
       onlineStatuses: _chats.map((c) => c.isOnline).toList(),
       avatarUrls: _chats.map((c) => c.avatarUrl ?? '').toList(),
     );
@@ -187,7 +189,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
           ),
         ),
         ChatModel(
-          id: 'demo-team', name: 'NajiMe Team', isGroup: true,
+          id: 'demo-team',
+          name: 'NajiMe Team',
+          isGroup: true,
           participantIds: const ['demo_user', 'demo-alice', 'demo-bob'],
           lastActivity: now.subtract(const Duration(hours: 1)),
           lastMessage: MessageModel(
@@ -200,7 +204,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
           ),
         ),
         ChatModel(
-          id: 'demo-wallet', name: 'Wallet Support', contactId: 'demo-wallet',
+          id: 'demo-wallet',
+          name: 'Wallet Support',
+          contactId: 'demo-wallet',
           lastActivity: now.subtract(const Duration(days: 1)),
           lastMessage: MessageModel(
             id: 'demo-m3',
@@ -236,7 +242,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
     if (ApiService.lastChatsRequestSucceeded) {
       _hasConnectedOnce = true;
-      setState(() => _headerTitle = AppLocalizations.of(context).translate('chat.refreshing'));
+      setState(
+        () => _headerTitle = AppLocalizations.of(
+          context,
+        ).translate('chat.refreshing'),
+      );
     }
 
     // Load muted chat IDs from local storage
@@ -299,7 +309,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
         names: _chats.map((c) => c.name).toList(),
         messages: _chats.map((c) => c.lastMessage?.content ?? '').toList(),
         unreads: _chats.map((c) => '${c.unreadCount}').toList(),
-        timestamps: _chats.map((c) => c.lastActivity?.toIso8601String() ?? '').toList(),
+        timestamps: _chats
+            .map((c) => c.lastActivity?.toIso8601String() ?? '')
+            .toList(),
         onlineStatuses: _chats.map((c) => c.isOnline).toList(),
         avatarUrls: _chats.map((c) => c.avatarUrl ?? '').toList(),
       );
@@ -324,7 +336,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
     if (_retryInProgress) return;
     _retryInProgress = true;
     if (mounted && !_hasConnectedOnce) {
-      setState(() => _headerTitle = AppLocalizations.of(context).translate('chat.connection'));
+      setState(
+        () => _headerTitle = AppLocalizations.of(
+          context,
+        ).translate('chat.connection'),
+      );
     }
     try {
       await Future.wait<void>([_loadChats(), _loadFolders()]);
@@ -334,9 +350,11 @@ class _ChatsScreenState extends State<ChatsScreen> {
         return;
       }
       final connected = ApiService.lastChatsRequestSucceeded;
-      setState(() => _headerTitle = connected
-          ? 'NajiMe'
-          : AppLocalizations.of(context).translate('chat.connection'));
+      setState(
+        () => _headerTitle = connected
+            ? 'NajiMe'
+            : AppLocalizations.of(context).translate('chat.connection'),
+      );
       if (connected) {
         _retrySeconds = 3;
         _serverRetryTimer?.cancel();

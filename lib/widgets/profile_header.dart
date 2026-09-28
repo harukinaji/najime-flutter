@@ -116,7 +116,9 @@ class ProfileHeader extends StatelessWidget {
                     const Icon(Icons.qr_code, color: Colors.white, size: 18),
                     const SizedBox(width: 6),
                     Text(
-                      AppLocalizations.of(context).translate('profile.showQrCode'),
+                      AppLocalizations.of(
+                        context,
+                      ).translate('profile.showQrCode'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,

@@ -101,7 +101,9 @@ class _HomeShellState extends State<HomeShell>
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierLabel: AppLocalizations.of(context).translate('calls.incomingCall'),
+      barrierLabel: AppLocalizations.of(
+        context,
+      ).translate('calls.incomingCall'),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (ctx, animation, secondaryAnimation) {
         return _IncomingCallOverlay(data: data);
@@ -392,7 +394,13 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isVideo ? AppLocalizations.of(context).translate('calls.groupVideoCall') : AppLocalizations.of(context).translate('calls.groupVoiceCall'),
+                    isVideo
+                        ? AppLocalizations.of(
+                            context,
+                          ).translate('calls.groupVideoCall')
+                        : AppLocalizations.of(
+                            context,
+                          ).translate('calls.groupVoiceCall'),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
@@ -410,15 +418,17 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
                 children: [
                   _IncomingCallButton(
                     icon: Icons.call_end,
-                      label: AppLocalizations.of(context).translate('calls.decline'),
-                      color: Colors.red,
+                    label: AppLocalizations.of(
+                      context,
+                    ).translate('calls.decline'),
+                    color: Colors.red,
                     size: 72,
                     onTap: widget.onDecline,
                   ),
                   const SizedBox(width: 64),
                   _IncomingCallButton(
                     icon: Icons.call,
-                      label: AppLocalizations.of(context).translate('calls.join'),
+                    label: AppLocalizations.of(context).translate('calls.join'),
                     color: Colors.green,
                     size: 72,
                     onTap: widget.onAccept,
@@ -563,7 +573,13 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isVideo ? AppLocalizations.of(context).translate('calls.groupVideoCall') : AppLocalizations.of(context).translate('calls.groupVoiceCall'),
+                      isVideo
+                          ? AppLocalizations.of(
+                              context,
+                            ).translate('calls.groupVideoCall')
+                          : AppLocalizations.of(
+                              context,
+                            ).translate('calls.groupVoiceCall'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 14,
@@ -581,7 +597,9 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                   children: [
                     _IncomingCallButton(
                       icon: Icons.call_end,
-                      label: AppLocalizations.of(context).translate('calls.decline'),
+                      label: AppLocalizations.of(
+                        context,
+                      ).translate('calls.decline'),
                       color: Colors.red,
                       size: 72,
                       onTap: () {
@@ -592,7 +610,9 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                     const SizedBox(width: 64),
                     _IncomingCallButton(
                       icon: Icons.call,
-                      label: AppLocalizations.of(context).translate('calls.accept'),
+                      label: AppLocalizations.of(
+                        context,
+                      ).translate('calls.accept'),
                       color: Colors.green,
                       size: 72,
                       onTap: () {

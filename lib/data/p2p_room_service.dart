@@ -300,7 +300,10 @@ class P2PRoomService {
         await _ensureAudioSender(peer);
       }
 
-      final offer = await pc.createOffer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
+      final offer = await pc.createOffer({
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': true,
+      });
       await pc.setLocalDescription(offer);
       _sendSignal(peerId, 'offer', sdp: _sdpMap(offer));
     } catch (e) {
@@ -347,7 +350,8 @@ class P2PRoomService {
           peer.remoteVideoStream = event.streams.first;
           peer.isCemu = true;
           _notify();
-          if (onRemoteVideo != null) onRemoteVideo!(peerId, event.streams.first);
+          if (onRemoteVideo != null)
+            onRemoteVideo!(peerId, event.streams.first);
         }
       }
     };
@@ -468,7 +472,10 @@ class P2PRoomService {
       if (_voiceActive && _localAudioStream != null) {
         await _ensureAudioSender(peer);
       }
-      final answer = await peer.pc!.createAnswer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
+      final answer = await peer.pc!.createAnswer({
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': true,
+      });
       await peer.pc!.setLocalDescription(answer);
       _sendSignal(from, 'answer', sdp: _sdpMap(answer));
     } catch (e) {
@@ -561,7 +568,9 @@ class P2PRoomService {
     } catch (_) {}
     peer.remoteStream = null;
     if (peer.remoteVideoStream != null) {
-      try { onRemoteVideoEnded?.call(peerId); } catch (_) {}
+      try {
+        onRemoteVideoEnded?.call(peerId);
+      } catch (_) {}
     }
     peer.remoteVideoStream = null;
     peer.isCemu = false;
@@ -583,8 +592,12 @@ class P2PRoomService {
   // ��� Cemu DRC ���
   bool _cemuMode = false;
   bool get cemuMode => _cemuMode;
-  MediaStream? getCemuStream(String peerId) => _peers[peerId]?.remoteVideoStream;
-  List<String> get cemuPeers => _peers.entries.where((e) => e.value.isCemu || e.value.remoteVideoStream != null).map((e) => e.key).toList();
+  MediaStream? getCemuStream(String peerId) =>
+      _peers[peerId]?.remoteVideoStream;
+  List<String> get cemuPeers => _peers.entries
+      .where((e) => e.value.isCemu || e.value.remoteVideoStream != null)
+      .map((e) => e.key)
+      .toList();
 
   bool get voiceActive => _voiceActive;
 
@@ -653,7 +666,9 @@ class P2PRoomService {
       peer.inVoice = false;
       peer.remoteStream = null;
       if (peer.remoteVideoStream != null) {
-        try { onRemoteVideoEnded?.call(peer.peerId); } catch (_) {}
+        try {
+          onRemoteVideoEnded?.call(peer.peerId);
+        } catch (_) {}
       }
       peer.remoteVideoStream = null;
       peer.isCemu = false;
@@ -703,7 +718,10 @@ class P2PRoomService {
     final pc = peer.pc;
     if (pc == null) return;
     try {
-      final offer = await pc.createOffer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
+      final offer = await pc.createOffer({
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': true,
+      });
       await pc.setLocalDescription(offer);
       _sendSignal(peer.peerId, 'offer', sdp: _sdpMap(offer));
     } catch (_) {}
@@ -752,7 +770,12 @@ class P2PRoomService {
     }
   }
 
-  void sendCemuTouch({required double x, required double y, required bool down, int pointerId = 0}) {
+  void sendCemuTouch({
+    required double x,
+    required double y,
+    required bool down,
+    int pointerId = 0,
+  }) {
     sendCemuInput({
       'type': 'touch',
       'x': x.clamp(0.0, 1.0),
@@ -766,11 +789,19 @@ class P2PRoomService {
     sendCemuInput({'type': 'buttons', ...buttons});
   }
 
-  void sendCemuSticks({double lx = 0, double ly = 0, double rx = 0, double ry = 0}) {
+  void sendCemuSticks({
+    double lx = 0,
+    double ly = 0,
+    double rx = 0,
+    double ry = 0,
+  }) {
     sendCemuInput({'type': 'sticks', 'lx': lx, 'ly': ly, 'rx': rx, 'ry': ry});
   }
 
   void notifyCemuRole() {
-    sendToPeers('cemu_client_ready', {'role': 'vanilla_client', 'supports_video': true});
+    sendToPeers('cemu_client_ready', {
+      'role': 'vanilla_client',
+      'supports_video': true,
+    });
   }
 }
