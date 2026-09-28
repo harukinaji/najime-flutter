@@ -969,8 +969,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             'id': '${widget.chatId}-welcome',
             'sender_id': isTeam ? 'demo-bob' : widget.chatId,
             'content': isTeam
-                ? 'Это тестовая групповая переписка.'
-                : 'Это тестовое сообщение. Здесь можно проверить интерфейс чата.',
+                ? 'This is a demo group chat.'
+                : 'This is a demo message. Use this chat to explore the interface.',
             'type': 'text',
             'timestamp': now
                 .subtract(const Duration(minutes: 5))
@@ -980,7 +980,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           {
             'id': '${widget.chatId}-reply',
             'sender_id': 'demo_user',
-            'content': 'Сообщение отправлено из демо-аккаунта.',
+            'content': 'Message sent from the demo account.',
             'type': 'text',
             'timestamp': now
                 .subtract(const Duration(minutes: 2))
@@ -992,7 +992,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final cachedDemo = await CacheService.instance.loadChatMessages(
         widget.chatId,
       );
-      if (cachedDemo != null) data = cachedDemo;
+      if (cachedDemo != null) {
+        final cachedMessages = cachedDemo['messages'];
+        if (cachedMessages is List) {
+          for (final message in cachedMessages) {
+            if (message is! Map) continue;
+            message['content'] = switch (message['content']) {
+              'Это тестовая групповая переписка.' =>
+                'This is a demo group chat.',
+              'Это тестовое сообщение. Здесь можно проверить интерфейс чата.' =>
+                'This is a demo message. Use this chat to explore the interface.',
+              'Сообщение отправлено из демо-аккаунта.' =>
+                'Message sent from the demo account.',
+              final content => content,
+            };
+          }
+        }
+        data = cachedDemo;
+      }
     } else {
       data = await ApiService.getMessages(widget.chatId);
       data ??= await CacheService.instance.loadChatMessages(widget.chatId);

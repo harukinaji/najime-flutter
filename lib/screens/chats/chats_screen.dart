@@ -182,7 +182,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           lastMessage: MessageModel(
             id: 'demo-m1',
             senderId: 'demo-alice',
-            content: 'Привет! Это тестовый чат 👋',
+            content: 'Hi! This is a test chat 👋',
             type: MessageType.text,
             timestamp: now.subtract(const Duration(minutes: 2)),
             isMe: false,
@@ -197,7 +197,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           lastMessage: MessageModel(
             id: 'demo-m2',
             senderId: 'demo-bob',
-            content: 'Добро пожаловать в демо-режим',
+            content: 'Welcome to demo mode',
             type: MessageType.text,
             timestamp: now.subtract(const Duration(hours: 1)),
             isMe: false,
@@ -211,7 +211,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           lastMessage: MessageModel(
             id: 'demo-m3',
             senderId: 'demo-wallet',
-            content: 'Создайте кошелёк во вкладке Wallet',
+            content: 'Create a wallet in the Wallet tab',
             type: MessageType.text,
             timestamp: now.subtract(const Duration(days: 1)),
             isMe: false,
