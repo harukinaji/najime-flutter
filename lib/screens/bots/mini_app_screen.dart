@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import '../../data/mini_app_api_policy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,7 +38,6 @@ bool _isAllowedMiniAppUrl(String url) {
 }
 
 /// Allowed API path prefixes for mini-app requests.
-const _allowedApiPathPrefixes = ['/api/miniapp/', '/api/me', '/api/stickers/'];
 
 const _bridgeScript = '''
 (function() {
@@ -1138,12 +1138,14 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
 
   Future<void> _handleApiRequest(Map<String, dynamic> payload) async {
     final path = payload['path'] as String? ?? '/';
-    if (!_allowedApiPathPrefixes.any((prefix) => path.startsWith(prefix))) {
+    if (!isMiniAppApiRequestAllowed(
+      path,
+      (payload['method'] as String? ?? 'GET'),
+    )) {
       _respondError(payload, 'API path not allowed');
       return;
     }
     final method = (payload['method'] as String? ?? 'GET').toUpperCase();
-    final headers = (payload['headers'] as Map<String, dynamic>?) ?? {};
 
     try {
       final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
@@ -1151,7 +1153,6 @@ class _MiniAppScreenState extends State<MiniAppScreen> {
         'Content-Type': 'application/json',
         if (ApiService.accessToken != null)
           'Authorization': 'Bearer ${ApiService.accessToken}',
-        ...headers.map((k, v) => MapEntry(k, v.toString())),
       };
 
       final client = ApiService.client;

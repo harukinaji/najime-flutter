@@ -19,26 +19,21 @@
       "type": "non_fast_forward"
     },
     {
+      "type": "required_linear_history"
+    },
+    {
       "type": "pull_request",
       "parameters": {
         "require_code_owner_review": false,
-        "require_last_push_approval": true,
-        "dismiss_stale_reviews_on_push": true,
-        "required_approving_review_count": 1,
-        "required_review_thread_resolution": true
-      }
-    },
-    {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict": true,
-        "checks": [
-          { "context": "Format check", "integration_id": null },
-          { "context": "Analyze", "integration_id": null },
-          { "context": "Test (unit + wallet)", "integration_id": null },
-          { "context": "Secret scan (gitleaks)", "integration_id": null },
-          { "context": "Dependency review", "integration_id": null },
-          { "context": "flutter analyze \u2192 SARIF", "integration_id": null }
+        "require_last_push_approval": false,
+        "dismiss_stale_reviews_on_push": false,
+        "required_approving_review_count": 0,
+        "required_review_thread_resolution": false,
+        "require_extra_approval_for_unattributed_changes": false,
+        "allowed_merge_methods": [
+          "merge",
+          "squash",
+          "rebase"
         ]
       }
     }

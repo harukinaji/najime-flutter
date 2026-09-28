@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class _LoadingButton extends StatelessWidget {
   final bool loading;
@@ -46,7 +47,7 @@ class GoogleSignInButton extends StatelessWidget {
                 : const BorderSide(color: Color(0xFFDADCE0), width: 1),
           ),
         ),
-        child: Row(
+              child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset('assets/images/google_g.png', width: 28, height: 28),
@@ -54,7 +55,7 @@ class GoogleSignInButton extends StatelessWidget {
             _LoadingButton(
               loading: loading,
               child: Text(
-                'Continue with Google',
+                AppLocalizations.of(context).translate('auth.continueWithGoogle'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF1F1F1F),
@@ -92,7 +93,7 @@ class AppleSignInButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: Row(
+              child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.apple, size: 28),
@@ -100,7 +101,7 @@ class AppleSignInButton extends StatelessWidget {
             _LoadingButton(
               loading: loading,
               child: Text(
-                'Continue with Apple',
+                AppLocalizations.of(context).translate('auth.continueWithApple'),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: isDark ? Colors.black : Colors.white,

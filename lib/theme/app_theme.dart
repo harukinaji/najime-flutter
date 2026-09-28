@@ -56,7 +56,11 @@ class AppTheme {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
-        scrolledUnderElevation: 1,
+        // Keep the header color stable while the chat list scrolls. Material 3
+        // otherwise applies a surface tint/elevation overlay when content
+        // passes underneath the AppBar.
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontFamily: _fontFamily,

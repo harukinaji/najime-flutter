@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/api_service.dart';
+import '../l10n/app_localizations.dart';
 import '../models/sticker.dart';
 import 'sticker_widget.dart';
 
@@ -81,7 +82,7 @@ class _StickerStripState extends State<StickerStrip> {
               child: TextButton.icon(
                 onPressed: widget.onExpand,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Install sticker packs'),
+                label: Text(AppLocalizations.of(context).translate('stickers.installPacks')),
               ),
             )
           : Column(
@@ -166,7 +167,7 @@ class _StickerStripState extends State<StickerStrip> {
                   child: _stickers.isEmpty
                       ? Center(
                           child: Text(
-                            'No stickers',
+                            AppLocalizations.of(context).translate('stickers.noStickers'),
                             style: TextStyle(
                               fontSize: 12,
                               color: cs.onSurfaceVariant,

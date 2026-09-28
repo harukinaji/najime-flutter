@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../config.dart';
 import '../models/story.dart';
 import 'api_service.dart';
+import 'cache_service.dart';
 
 const _baseUrl = AppConfig.apiBaseUrl;
 
@@ -84,8 +86,12 @@ class StoryService {
 
   Future<void> fetchStories() async {
     try {
-      final data = await ApiService.getStories();
+      final remote = await ApiService.getStories();
+      final data = remote ?? await CacheService.instance.loadStories();
       if (data == null) return;
+      if (remote != null) {
+        unawaited(CacheService.instance.saveStories(remote));
+      }
       _users = data.map((u) {
         final userId = u['user_id'] as String;
         final stories = (u['stories'] as List).map((s) {

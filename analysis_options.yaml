@@ -19,6 +19,11 @@ analyzer:
     # (its analysis_options.yaml references `pedantic`, which is unavailable
     # here; its example apps need dev-only packages).
     - plugins/flutter_contacts_patched/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   # The lint rules applied to this project can be customized in the

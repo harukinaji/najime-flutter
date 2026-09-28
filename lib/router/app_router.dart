@@ -23,12 +23,14 @@ import '../screens/profile/appearance_screen.dart';
 import '../screens/profile/folders_screen.dart';
 import '../screens/premium/premium_unlock_screen.dart';
 import '../screens/profile/lock_settings_screen.dart';
+import '../screens/profile/nfc_transfer_screen.dart';
 import '../screens/bots/bot_manager_screen.dart';
 import '../screens/bots/mini_app_screen.dart';
 import '../screens/stories/story_creation_screen.dart';
 import '../screens/stories/story_viewer_screen.dart';
 import '../stories/storybook_screen.dart';
 import '../wallet/wallet_feature.dart';
+import '../screens/multiplayer/cemu_gamepad_screen.dart';
 
 import '../data/auth_credentials.dart' show AuthCredentials;
 
@@ -212,6 +214,11 @@ class AppRouter {
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => const BotManagerScreen(),
                   ),
+                  GoRoute(
+                    path: 'nfc-transfer',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => const NfcTransferScreen(),
+                  ),
                 ],
               ),
             ],
@@ -262,6 +269,14 @@ class AppRouter {
             url: extra?['url'] as String? ?? '',
             title: extra?['title'] as String? ?? 'Mini App',
           );
+        },
+      ),
+      GoRoute(
+        path: '/cemu-gamepad',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return CemuGamepadScreen(joinRoomId: extra?['roomId'] as String?);
         },
       ),
       GoRoute(

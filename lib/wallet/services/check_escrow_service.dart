@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:solana/encoder.dart';
 import 'package:solana/solana.dart' hide Wallet;
 
@@ -12,25 +13,70 @@ import '../services/walletconnect_service.dart';
 class CheckEscrowService {
   const CheckEscrowService(this._client);
 
+  static String? _cachedProgramId;
+  static Future<String?>? _programIdRequest;
+
   final SolanaClient _client;
 
   // ── Public API ──────────────────────────────────────────────────
 
   static Future<String?> getProgramId() async {
+    final cached = _cachedProgramId;
+    if (cached != null) return cached;
+    final pending = _programIdRequest;
+    if (pending != null) return pending;
+
+    final request = _fetchProgramId();
+    _programIdRequest = request;
+    try {
+      final programId = await request;
+      if (programId != null) _cachedProgramId = programId;
+      return programId;
+    } finally {
+      _programIdRequest = null;
+    }
+  }
+
+  static Future<String?> _fetchProgramId() async {
     try {
       final resp = await ApiService.getProgramId();
-      if (resp != null && resp['success'] == true) {
+      if (resp != null && resp['success'] == true && resp['version'] == 2) {
         return resp['program_id'] as String?;
       }
     } catch (_) {}
     return null;
   }
 
+  /// Returns true while the escrow PDA exists, false after it has been
+  /// redeemed/closed, and null when its state could not be read.
+  static Future<bool?> isCheckActive(
+    SolanaClient client,
+    String checkIdOrPda,
+  ) async {
+    try {
+      var address = checkIdOrPda;
+      // Older local demo payloads stored the seed (which may contain `_`)
+      // instead of the derived PDA.
+      if (address.contains('_')) {
+        final programId = await getProgramId();
+        if (programId == null) return null;
+        address = await deriveCheckPda(programId, address);
+      }
+      final result = await client.rpcClient.getAccountInfo(
+        address,
+        commitment: Commitment.confirmed,
+      );
+      return result.value != null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<String> deriveCheckPda(String programId, String checkId) async {
     final programKey = Ed25519HDPublicKey.fromBase58(programId);
     final pda = await Ed25519HDPublicKey.findProgramAddress(
       seeds: [
-        ByteArray(Uint8List.fromList(utf8.encode('check'))),
+        ByteArray(Uint8List.fromList(utf8.encode('check_v2'))),
         ByteArray(Uint8List.fromList(utf8.encode(checkId))),
       ],
       programId: programKey,
@@ -45,6 +91,7 @@ class CheckEscrowService {
     required String feePayerAddress,
     required String checkId,
     required int lamports,
+    required String recipientAddress,
   }) async {
     final programId = await getProgramId();
     if (programId == null) throw Exception('Program ID not configured');
@@ -54,10 +101,37 @@ class CheckEscrowService {
     final programKey = Ed25519HDPublicKey.fromBase58(programId);
     final feePayer = Ed25519HDPublicKey.fromBase58(feePayerAddress);
 
+    if (base58Decode(recipientAddress).length != 32 ||
+        recipientAddress == feePayerAddress) {
+      throw ArgumentError('A different valid recipient wallet is required');
+    }
+    // The local demo account has no backend identity. In Devnet alpha the
+    // on-chain signer is sufficient, so wallet linking/proof is skipped.
+    if (ApiService.accessToken != 'demo-local-session') {
+      final proof = await ApiService.linkWalletAccount(
+        walletAddress: feePayerAddress,
+        signMessage: (message) async {
+          if (wallet != null)
+            return base58Encode(
+              (await wallet.keyPair.sign(utf8.encode(message))).bytes,
+            );
+          if (wcClient != null)
+            return base58Encode(
+              (await wcClient.signMessage(
+                Uint8List.fromList(utf8.encode(message)),
+              )).signature,
+            );
+          throw StateError('No wallet available');
+        },
+      );
+      if (!proof.success)
+        throw StateError(proof.message ?? 'Wallet proof failed');
+    }
     final data = ByteArray.merge([
-      ByteArray(_instructionDiscriminator('create_check')),
+      ByteArray(_instructionDiscriminator('create_check_v2')),
       _borshString(checkId),
       ByteArray.u64(lamports),
+      ByteArray(base58Decode(recipientAddress)),
     ]);
 
     final instruction = Instruction(
@@ -97,7 +171,27 @@ class CheckEscrowService {
     final feePayer = Ed25519HDPublicKey.fromBase58(feePayerAddress);
     final creator = Ed25519HDPublicKey.fromBase58(creatorAddress);
 
-    final data = ByteArray(_instructionDiscriminator('redeem_check'));
+    if (ApiService.accessToken != 'demo-local-session') {
+      final proof = await ApiService.linkWalletAccount(
+        walletAddress: feePayerAddress,
+        signMessage: (message) async {
+          if (wallet != null)
+            return base58Encode(
+              (await wallet.keyPair.sign(utf8.encode(message))).bytes,
+            );
+          if (wcClient != null)
+            return base58Encode(
+              (await wcClient.signMessage(
+                Uint8List.fromList(utf8.encode(message)),
+              )).signature,
+            );
+          throw StateError('No wallet available');
+        },
+      );
+      if (!proof.success)
+        throw StateError(proof.message ?? 'Wallet proof failed');
+    }
+    final data = ByteArray(_instructionDiscriminator('redeem_check_v2'));
 
     final instruction = Instruction(
       programId: programKey,
@@ -182,12 +276,9 @@ class CheckEscrowService {
   // ── Helpers ─────────────────────────────────────────────────────
 
   static Uint8List _instructionDiscriminator(String name) {
-    const discriminators = <String, List<int>>{
-      'create_check': [57, 71, 10, 234, 193, 121, 121, 121],
-      'redeem_check': [199, 222, 12, 51, 150, 243, 47, 93],
-      'cancel_check': [207, 131, 251, 87, 124, 4, 72, 207],
-    };
-    return Uint8List.fromList(discriminators[name] ?? []);
+    return Uint8List.fromList(
+      crypto.sha256.convert(utf8.encode('global:$name')).bytes.take(8).toList(),
+    );
   }
 
   static ByteArray _borshString(String s) {

@@ -15,8 +15,10 @@ class _P2PPeer {
   RTCPeerConnection? pc;
   RTCDataChannel? dc;
   MediaStream? remoteStream;
+  MediaStream? remoteVideoStream;
   bool inVoice = false;
   bool muted = false;
+  bool isCemu = false;
   String state;
   double? latencyMs;
   int _pingSeq = 0;
@@ -53,6 +55,8 @@ class P2PRoomService {
   void Function()? onChanged;
   void Function(String from, String eventName, Map<String, dynamic> payload)?
   onEvent;
+  void Function(String peerId, MediaStream stream)? onRemoteVideo;
+  void Function(String peerId)? onRemoteVideoEnded;
 
   String get selfId => AuthState.instance.username ?? 'anonymous';
 
@@ -296,7 +300,7 @@ class P2PRoomService {
         await _ensureAudioSender(peer);
       }
 
-      final offer = await pc.createOffer({'offerToReceiveAudio': true});
+      final offer = await pc.createOffer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
       await pc.setLocalDescription(offer);
       _sendSignal(peerId, 'offer', sdp: _sdpMap(offer));
     } catch (e) {
@@ -330,12 +334,20 @@ class P2PRoomService {
       _wireDc(peerId, dc);
     };
     pc.onTrack = (event) {
-      if (event.track.kind == 'audio' && event.streams.isNotEmpty) {
-        final peer = _peers[peerId];
+      if (event.streams.isEmpty) return;
+      final peer = _peers[peerId];
+      if (event.track.kind == 'audio') {
         if (peer != null) {
           peer.remoteStream = event.streams.first;
           peer.inVoice = true;
           _notify();
+        }
+      } else if (event.track.kind == 'video') {
+        if (peer != null) {
+          peer.remoteVideoStream = event.streams.first;
+          peer.isCemu = true;
+          _notify();
+          if (onRemoteVideo != null) onRemoteVideo!(peerId, event.streams.first);
         }
       }
     };
@@ -456,7 +468,7 @@ class P2PRoomService {
       if (_voiceActive && _localAudioStream != null) {
         await _ensureAudioSender(peer);
       }
-      final answer = await peer.pc!.createAnswer({'offerToReceiveAudio': true});
+      final answer = await peer.pc!.createAnswer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
       await peer.pc!.setLocalDescription(answer);
       _sendSignal(from, 'answer', sdp: _sdpMap(answer));
     } catch (e) {
@@ -548,6 +560,11 @@ class P2PRoomService {
       peer.pc?.close();
     } catch (_) {}
     peer.remoteStream = null;
+    if (peer.remoteVideoStream != null) {
+      try { onRemoteVideoEnded?.call(peerId); } catch (_) {}
+    }
+    peer.remoteVideoStream = null;
+    peer.isCemu = false;
     _notify();
   }
 
@@ -562,6 +579,12 @@ class P2PRoomService {
   }
 
   // ── Voice (mesh over existing P2P connections) ────────────────────
+
+  // ��� Cemu DRC ���
+  bool _cemuMode = false;
+  bool get cemuMode => _cemuMode;
+  MediaStream? getCemuStream(String peerId) => _peers[peerId]?.remoteVideoStream;
+  List<String> get cemuPeers => _peers.entries.where((e) => e.value.isCemu || e.value.remoteVideoStream != null).map((e) => e.key).toList();
 
   bool get voiceActive => _voiceActive;
 
@@ -629,6 +652,11 @@ class P2PRoomService {
     for (final peer in _peers.values) {
       peer.inVoice = false;
       peer.remoteStream = null;
+      if (peer.remoteVideoStream != null) {
+        try { onRemoteVideoEnded?.call(peer.peerId); } catch (_) {}
+      }
+      peer.remoteVideoStream = null;
+      peer.isCemu = false;
     }
     _broadcastVoiceState();
     _notify();
@@ -675,7 +703,7 @@ class P2PRoomService {
     final pc = peer.pc;
     if (pc == null) return;
     try {
-      final offer = await pc.createOffer({'offerToReceiveAudio': true});
+      final offer = await pc.createOffer({'offerToReceiveAudio': true, 'offerToReceiveVideo': true});
       await pc.setLocalDescription(offer);
       _sendSignal(peer.peerId, 'offer', sdp: _sdpMap(offer));
     } catch (_) {}
@@ -695,5 +723,54 @@ class P2PRoomService {
         });
       }
     }
+  }
+
+  // —— Cemu DRC API ——
+  void setCemuMode(bool v) {
+    _cemuMode = v;
+    _notify();
+  }
+
+  void sendCemuInput(Map<String, dynamic> payload, {String? toPeer}) {
+    final msg = {
+      'kind': 'event',
+      'eventName': 'cemu_input',
+      'payload': payload,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (toPeer != null) {
+      final peer = _peers[toPeer];
+      if (peer != null) _sendRaw(peer, msg);
+    } else {
+      for (final peer in _peers.values) {
+        if (peer.isCemu || peer.remoteVideoStream != null) _sendRaw(peer, msg);
+        if (_peers.length == 1) _sendRaw(peer, msg);
+      }
+      if (cemuPeers.isEmpty) {
+        for (final peer in _peers.values) _sendRaw(peer, msg);
+      }
+    }
+  }
+
+  void sendCemuTouch({required double x, required double y, required bool down, int pointerId = 0}) {
+    sendCemuInput({
+      'type': 'touch',
+      'x': x.clamp(0.0, 1.0),
+      'y': y.clamp(0.0, 1.0),
+      'down': down,
+      'pointer': pointerId,
+    });
+  }
+
+  void sendCemuButtons(Map<String, dynamic> buttons) {
+    sendCemuInput({'type': 'buttons', ...buttons});
+  }
+
+  void sendCemuSticks({double lx = 0, double ly = 0, double rx = 0, double ry = 0}) {
+    sendCemuInput({'type': 'sticks', 'lx': lx, 'ly': ly, 'rx': rx, 'ry': ry});
+  }
+
+  void notifyCemuRole() {
+    sendToPeers('cemu_client_ready', {'role': 'vanilla_client', 'supports_video': true});
   }
 }

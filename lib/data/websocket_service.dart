@@ -100,7 +100,8 @@ class WebSocketService {
       );
     }
 
-    final httpClient = HttpClient();
+    final httpClient = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 3);
     if (SignedHttpClient.shouldOverrideCertificateVerification) {
       httpClient.badCertificateCallback = (cert, host, port) =>
           SignedHttpClient.verifyServerCertificate(cert, host, port);
@@ -115,7 +116,7 @@ class WebSocketService {
             ...attestationHeaders,
           },
           customClient: httpClient,
-        )
+        ).timeout(const Duration(seconds: 4))
         .then((ws) {
           _socket = ws;
           _connecting = false;

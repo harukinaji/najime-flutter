@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/message.dart';
 
 class PremiumMessageCard extends StatefulWidget {
@@ -146,7 +147,7 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Premium Message',
+                        AppLocalizations.of(context).translate('premium.title'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -155,7 +156,7 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Unlock for ${widget.premiumInfo.amount} ${widget.premiumInfo.assetSymbol}',
+                        '${AppLocalizations.of(context).translate('premium.unlockFor')} ${widget.premiumInfo.amount} ${widget.premiumInfo.assetSymbol}',
                         style: TextStyle(
                           fontSize: 13,
                           color: cs.onSurfaceVariant,
@@ -176,7 +177,7 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                                 ),
                                 side: BorderSide(color: cs.outlineVariant),
                               ),
-                              child: const Text('Cancel'),
+                              child: Text(AppLocalizations.of(context).translate('premium.cancel')),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -194,7 +195,7 @@ class _PremiumMessageCardState extends State<PremiumMessageCard>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text('Unlock'),
+                              child: Text(AppLocalizations.of(context).translate('premium.unlock')),
                             ),
                           ),
                         ],

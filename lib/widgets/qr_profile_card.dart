@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
+import '../l10n/app_localizations.dart';
+
 const Color _primaryQr = Color(0xFF18A7B5);
 
 class QrProfileCard extends StatelessWidget {
@@ -380,7 +382,7 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
                         opacity: _controlsVisible ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 600),
                         child: Text(
-                          'Scan to view profile',
+                          AppLocalizations.of(context).translate('qr.scanToView'),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withValues(alpha: 0.6),
@@ -397,13 +399,13 @@ class _QrProfileScreenState extends State<QrProfileScreen> {
                           children: [
                             _ActionButton(
                               icon: Icons.file_download_outlined,
-                              label: 'Save',
+                              label: AppLocalizations.of(context).translate('qr.save'),
                               onTap: () {},
                             ),
                             const SizedBox(width: 16),
                             _ActionButton(
                               icon: Icons.share_outlined,
-                              label: 'Share',
+                              label: AppLocalizations.of(context).translate('qr.share'),
                               onTap: () {},
                             ),
                           ],

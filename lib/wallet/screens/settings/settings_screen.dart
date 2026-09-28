@@ -1,3 +1,5 @@
+import 'dart:convert';
+import '../../services/wallet_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -67,6 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _accountLoading = true);
     final result = await ApiService.linkWalletAccount(
       walletAddress: wallet.address,
+      signMessage: (message) async =>
+          base58Encode((await wallet.keyPair.sign(utf8.encode(message))).bytes),
     );
     if (!mounted) return;
     setState(() => _accountLoading = false);

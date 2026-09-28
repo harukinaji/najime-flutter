@@ -48,7 +48,9 @@ class LockService {
     _enabled = _prefs!.getBool(_keyLockEnabled) ?? false;
     final methodIndex = _prefs!.getInt(_keyLockMethod) ?? 0;
     _method = LockMethod.values[methodIndex];
-    _hasPin = await _storage.read(key: _keyPinHash) != null;
+    // Reading Android Keystore can take seconds on some devices. When the
+    // lock is disabled there is no reason to touch secure storage at startup.
+    _hasPin = _enabled && await _storage.read(key: _keyPinHash) != null;
     _failedAttempts = _prefs!.getInt(_keyFailedAttempts) ?? 0;
     final lockoutMillis = _prefs!.getInt(_keyLockoutUntil);
     _lockoutUntil = lockoutMillis != null

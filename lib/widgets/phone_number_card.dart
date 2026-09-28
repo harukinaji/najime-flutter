@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 class PhoneNumberCard extends StatelessWidget {
   final String? phoneNumber;
   final bool isVerified;
@@ -38,7 +40,7 @@ class PhoneNumberCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Phone Number',
+                    AppLocalizations.of(context).translate('phone.phoneNumber'),
                     style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 2),
@@ -46,7 +48,7 @@ class PhoneNumberCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          phoneNumber ?? 'Add Phone Number',
+                          phoneNumber ?? AppLocalizations.of(context).translate('phone.addPhone'),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,

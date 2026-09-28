@@ -44,6 +44,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import java.util.UUID
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
 
@@ -58,6 +59,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
         const val NFC_CHANNEL = "com.naji.najimessenger/nfc"
         const val CAMERA_CHANNEL = "com.naji.najimessenger/camera"
         const val BLUETOOTH_CHANNEL = "com.naji.najimessenger/bluetooth"
+        const val BLE_EVENT_CHANNEL = "com.naji.najimessenger/bluetooth_events"
         const val TOKEN_CHANNEL = "com.naji.najimessenger/token"
         var pendingReply: Map<String, String>? = null
     }
@@ -88,6 +90,8 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothLeScanner: BluetoothLeScanner? = null
     private var bluetoothGattMap = mutableMapOf<String, BluetoothGatt>()
+    private var bleEventSink: EventChannel.EventSink? = null
+    private var bleEventChannel: EventChannel? = null
 
     private val bluetoothScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -99,7 +103,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                 "deviceId" to device.address
             )
             Log.d(TAG, "BLE device found: ${device.name} (${device.address}) RSSI=${result.rssi}")
-            bluetoothChannel?.invokeMethod("onDeviceFound", deviceMap)
+            bleEventSink?.success(mapOf("type" to "onDeviceFound", "name" to (device.name ?: ""), "address" to (device.address ?: ""), "rssi" to result.rssi))
         }
 
         override fun onBatchScanResults(results: MutableList<ScanResult>) {
@@ -111,10 +115,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
 
         override fun onScanFailed(errorCode: Int) {
             Log.e(TAG, "BLE scan failed with error code: $errorCode")
-            bluetoothChannel?.invokeMethod("onBluetoothError", mapOf(
-                "error" to "BLE scan failed",
-                "errorCode" to errorCode
-            ))
+            bleEventSink?.error("BLE_SCAN_FAILED", "BLE scan failed", null)
         }
     }
 
@@ -130,7 +131,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
             startBluetoothScanInternal()
         } else {
             Log.e(TAG, "Bluetooth permissions denied: $permissions")
-            bluetoothChannel?.invokeMethod("onBluetoothError", mapOf("error" to "permissions_denied"))
+            bleEventSink?.error("BLUETOOTH_ERROR", "permissions_denied", null)
             bluetoothScanResult?.error("BLUETOOTH_PERMISSION_DENIED", "Bluetooth permissions not granted", null)
             bluetoothScanResult = null
         }
@@ -159,6 +160,8 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
         methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_CHANNEL)
         methodChannel?.setMethodCallHandler { call, result ->
@@ -280,11 +283,33 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                     nfcPendingWriteRecords = records
                     nfcPendingRead = false
                     enableNfcReader()
+                    Log.d(TAG, "writeTag: records=$records, pendingWrite=$nfcPendingWriteRecords")
                     result.success(true)
                 }
                 "sharePayload" -> {
                     val text = call.argument<String>("text") ?: ""
                     shareNfcPayload(text)
+                    result.success(true)
+                }
+                "setBadgeData" -> {
+                    // Standard codec maps Dart Uint8List -> ByteArray, but accept
+                    // List<Number> too (e.g. from tests / other codecs).
+                    val raw = (call.arguments as? Map<*, *>)?.get("data")
+                        ?: call.argument<ByteArray>("data")
+                    val data: ByteArray? = when (raw) {
+                        is ByteArray -> raw
+                        is List<*> -> raw.map { (it as Number).toByte() }.toByteArray()
+                        else -> null
+                    }
+                    if (data != null && data.isNotEmpty()) {
+                        BadgeHostApduService.setBadgeData(data)
+                        result.success(true)
+                    } else {
+                        result.error("INVALID_DATA", "Badge data is null or empty", null)
+                    }
+                }
+                "clearBadgeData" -> {
+                    BadgeHostApduService.clearBadgeData()
                     result.success(true)
                 }
                 "stopShare" -> {
@@ -402,11 +427,36 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
             }
         }
 
+        bleEventChannel = EventChannel(flutterEngine.dartExecutor.binaryMessenger, BLE_EVENT_CHANNEL)
+        bleEventChannel?.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                bleEventSink = events
+            }
+            override fun onCancel(arguments: Any?) {
+                bleEventSink = null
+            }
+        })
+
+        // NajiMe Chat Widget Channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.naji.najimessenger/widget").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "updateWidget" -> {
+                    val names = call.argument<List<String>>("names") ?: emptyList()
+                    val messages = call.argument<List<String>>("messages") ?: emptyList()
+                    val unreads = call.argument<List<String>>("unreads") ?: emptyList()
+                    val timestamps = call.argument<List<String>>("timestamps") ?: emptyList()
+                    val onlineStatuses = call.argument<List<Boolean>>("onlineStatuses") ?: emptyList()
+                    val avatarPaths = call.argument<List<String>>("avatarPaths") ?: emptyList()
+                    NajiChatWidget.updateFromFlutter(this, names, messages, unreads, timestamps, onlineStatuses, avatarPaths)
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+
         flutterEngine.platformViewsController.registry.registerViewFactory(
             "naji_webview", NajiWebViewFactory(flutterEngine.dartExecutor.binaryMessenger)
         )
-
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         gyroscopeSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
@@ -416,11 +466,6 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
         inputManager?.registerInputDeviceListener(this, null)
 
         Log.d(TAG, "configureFlutterEngine: registered InputDeviceListener")
-        logAllDevices("init")
-
-        handler.postDelayed({ logAllDevices("delayed-500ms"); notifyGamepadsUpdate() }, 500)
-        handler.postDelayed({ logAllDevices("delayed-2s"); notifyGamepadsUpdate() }, 2000)
-        handler.postDelayed({ logAllDevices("delayed-5s"); notifyGamepadsUpdate() }, 5000)
 
         handleIntent(intent)
     }
@@ -678,10 +723,15 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
     }
 
     private fun disableNfcReader() {
-        nfcAdapter?.disableReaderMode(this)
+        try {
+            if (!isDestroyed && !isFinishing) {
+                nfcAdapter?.disableReaderMode(this)
+            }
+        } catch (_: Exception) {}
     }
 
     private fun onNfcTagDetected(tag: Tag) {
+        Log.d(TAG, "onNfcTagDetected: pendingIsoDep=$nfcPendingIsoDep pendingWrite=$nfcPendingWriteRecords pendingRead=$nfcPendingRead")
         if (nfcPendingIsoDep) {
             connectIsoDepTag(tag)
         } else if (nfcPendingWriteRecords != null) {
@@ -732,6 +782,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
     }
 
     private fun writeNdefToTag(tag: Tag, records: List<Map<String, Any?>>) {
+        Log.d(TAG, "writeNdefToTag: records=$records")
         try {
             val ndefRecords = records.map { rec ->
                 val tnfRaw = (rec["tnf"] as? Number)?.toInt() ?: NdefRecord.TNF_WELL_KNOWN.toInt()
@@ -774,6 +825,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                 nfcChannel?.invokeMethod("onNfcWritten", null)
             }
         } catch (e: Exception) {
+            Log.e(TAG, "writeNdefToTag failed: ${e.message}", e)
             nfcPendingWriteRecords = null
             disableNfcReader()
             runOnUiThread {
@@ -944,6 +996,11 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
         }
     }
 
+    private var bleSendGatt: BluetoothGatt? = null
+    private var bleSendCharacteristic: BluetoothGattCharacteristic? = null
+    private var bleSendData: ByteArray? = null
+    private var bleSendPos = 0
+    private val BLE_CHUNK_SIZE = 20
     private val bluetoothGattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             Log.d(TAG, "GATT connection state: device=${gatt.device?.address} newState=$newState status=$status")
@@ -956,7 +1013,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                     "connected" to false
                 )
                 handler.post {
-                    bluetoothChannel?.invokeMethod("onConnectionStateChanged", stateMap)
+                    bleEventSink?.success(mapOf("type" to "onConnectionStateChanged", "deviceId" to (gatt.device?.address ?: ""), "connected" to (newState == BluetoothProfile.STATE_CONNECTED), "status" to status))
                 }
             }
         }
@@ -974,14 +1031,12 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                     "servicesReady" to true
                 )
                 handler.post {
-                    bluetoothChannel?.invokeMethod("onConnectionStateChanged", stateMap)
+                    bleEventSink?.success(mapOf("type" to "onConnectionStateChanged", "deviceId" to (gatt.device?.address ?: ""), "connected" to (status == BluetoothGatt.GATT_SUCCESS), "status" to status))
                 }
             } else {
                 Log.e(TAG, "GATT services discovery failed: status=$status")
                 handler.post {
-                    bluetoothChannel?.invokeMethod("onBluetoothError", mapOf(
-                        "error" to "Services discovery failed: $status"
-                    ))
+                    bleEventSink?.error("BLUETOOTH_ERROR", "Services discovery failed: $status", null)
                 }
             }
         }
@@ -998,7 +1053,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                 if (pending != null) {
                     pending.success(dataMap)
                 }
-                bluetoothChannel?.invokeMethod("onDataReceived", dataMap)
+                bleEventSink?.success(mapOf("type" to "onDataReceived", "deviceId" to (gatt.device?.address ?: ""), "data" to hexData, "dataString" to ""))
             }
         }
 
@@ -1010,7 +1065,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
             val str = String(value, Charsets.UTF_8)
             Log.d(TAG, "BLE notification from $charUuid: ${value.size} bytes")
             handler.post {
-                bluetoothChannel?.invokeMethod("onDataReceived", mapOf(
+                bleEventSink?.success(mapOf(
                     "deviceId" to devId,
                     "serviceUuid" to svcUuid,
                     "characteristicUuid" to charUuid,
@@ -1019,6 +1074,40 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                 ))
             }
         }
+
+        override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            if (status != BluetoothGatt.GATT_SUCCESS || bleSendData == null) {
+                cleanupBleSend()
+                return
+            }
+            bleSendPos += BLE_CHUNK_SIZE
+            if (bleSendPos >= (bleSendData?.size ?: 0)) {
+                Log.d(TAG, "BLE chunked send complete (${bleSendData?.size} bytes)")
+                cleanupBleSend()
+                return
+            }
+            sendNextBleChunk()
+        }
+    }
+
+    private fun cleanupBleSend() {
+        bleSendGatt = null
+        bleSendCharacteristic = null
+        bleSendData = null
+        bleSendPos = 0
+    }
+
+    private fun sendNextBleChunk() {
+        val data = bleSendData ?: return
+        val gatt = bleSendGatt ?: return
+        val characteristic = bleSendCharacteristic ?: return
+        if (bleSendPos >= data.size) return
+        val end = minOf(bleSendPos + BLE_CHUNK_SIZE, data.size)
+        val chunk = data.copyOfRange(bleSendPos, end)
+        characteristic.setValue(chunk)
+        characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+        val wrote = gatt.writeCharacteristic(characteristic)
+        Log.d(TAG, "BLE chunk $bleSendPos/${data.size} wrote=$wrote")
     }
 
     private fun connectBluetoothDevice(deviceId: String) {
@@ -1044,13 +1133,17 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
             val gatt = bluetoothGattMap[deviceId] ?: throw Exception("Not connected to $deviceId")
             val allServices = gatt.services
             if (allServices.isNullOrEmpty()) throw Exception("No services discovered yet")
-            val service = allServices.firstOrNull() ?: throw Exception("No services found")
-            val characteristic = service.characteristics?.firstOrNull() ?: throw Exception("No characteristics found")
-            val bytes = hexData.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            characteristic.setValue(bytes)
-            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
-            gatt.writeCharacteristic(characteristic)
-            Log.d(TAG, "Bluetooth raw data sent to $deviceId via ${service.uuid}")
+            val service = allServices.firstOrNull { it.uuid.toString().equals("4fafc201-1fb5-459e-8fcc-c5c9c331914b", ignoreCase = true) }
+                ?: throw Exception("NBadge service not found")
+            val characteristic = service.characteristics?.firstOrNull { it.uuid.toString().equals("beb5483e-36e1-4f6a-9b43-555c55a1f5f1", ignoreCase = true) }
+                ?: throw Exception("NBadge characteristic not found")
+            val bytes = hexData.toByteArray(Charsets.UTF_8)
+            bleSendGatt = gatt
+            bleSendCharacteristic = characteristic
+            bleSendData = bytes
+            bleSendPos = 0
+            Log.d(TAG, "BLE chunked send starting: ${bytes.size} bytes, ${(bytes.size + BLE_CHUNK_SIZE - 1) / BLE_CHUNK_SIZE} chunks")
+            sendNextBleChunk()
         } catch (e: Exception) {
             Log.e(TAG, "Bluetooth send failed: $e")
         }

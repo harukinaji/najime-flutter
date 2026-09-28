@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/webrtc_service.dart';
 import '../../data/websocket_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../calls/call_screen.dart';
 import '../../models/call.dart';
 import '../../theme/app_colors.dart';
@@ -100,7 +101,7 @@ class _HomeShellState extends State<HomeShell>
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierLabel: 'Incoming Call',
+      barrierLabel: AppLocalizations.of(context).translate('calls.incomingCall'),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (ctx, animation, secondaryAnimation) {
         return _IncomingCallOverlay(data: data);
@@ -179,31 +180,31 @@ class _HomeShellState extends State<HomeShell>
           ),
         ),
       ),
-      destinations: const [
+      destinations: [
         NavigationRailDestination(
-          icon: Icon(Icons.chat_bubble_outline),
-          selectedIcon: Icon(Icons.chat_bubble),
-          label: Text('Chats'),
+          icon: const Icon(Icons.chat_bubble_outline),
+          selectedIcon: const Icon(Icons.chat_bubble),
+          label: Text(AppLocalizations.of(context).translate('nav.chats')),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.people_outline),
-          selectedIcon: Icon(Icons.people),
-          label: Text('Contacts'),
+          icon: const Icon(Icons.people_outline),
+          selectedIcon: const Icon(Icons.people),
+          label: Text(AppLocalizations.of(context).translate('nav.contacts')),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.call_outlined),
-          selectedIcon: Icon(Icons.call),
-          label: Text('Calls'),
+          icon: const Icon(Icons.call_outlined),
+          selectedIcon: const Icon(Icons.call),
+          label: Text(AppLocalizations.of(context).translate('nav.calls')),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: Text('Profile'),
+          icon: const Icon(Icons.person_outline),
+          selectedIcon: const Icon(Icons.person),
+          label: Text(AppLocalizations.of(context).translate('nav.profile')),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.account_balance_wallet_outlined),
-          selectedIcon: Icon(Icons.account_balance_wallet),
-          label: Text('Wallet'),
+          icon: const Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: const Icon(Icons.account_balance_wallet),
+          label: Text(AppLocalizations.of(context).translate('nav.wallet')),
         ),
       ],
     );
@@ -215,31 +216,31 @@ class _HomeShellState extends State<HomeShell>
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _onTap,
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Chats',
+            icon: const Icon(Icons.chat_bubble_outline),
+            selectedIcon: const Icon(Icons.chat_bubble),
+            label: AppLocalizations.of(context).translate('nav.chats'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Contacts',
+            icon: const Icon(Icons.people_outline),
+            selectedIcon: const Icon(Icons.people),
+            label: AppLocalizations.of(context).translate('nav.contacts'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.call_outlined),
-            selectedIcon: Icon(Icons.call),
-            label: 'Calls',
+            icon: const Icon(Icons.call_outlined),
+            selectedIcon: const Icon(Icons.call),
+            label: AppLocalizations.of(context).translate('nav.calls'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: AppLocalizations.of(context).translate('nav.profile'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Wallet',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: const Icon(Icons.account_balance_wallet),
+            label: AppLocalizations.of(context).translate('nav.wallet'),
           ),
         ],
       ),
@@ -368,7 +369,7 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
             ),
             const SizedBox(height: 8),
             Text(
-              '${widget.callerName} is calling',
+              '${widget.callerName} ${AppLocalizations.of(context).translate('calls.isCalling')}',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 16,
@@ -391,7 +392,7 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Group ${isVideo ? "Video" : "Voice"} Call',
+                    isVideo ? AppLocalizations.of(context).translate('calls.groupVideoCall') : AppLocalizations.of(context).translate('calls.groupVoiceCall'),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 14,
@@ -409,15 +410,15 @@ class _GroupCallOverlayState extends State<_GroupCallOverlay>
                 children: [
                   _IncomingCallButton(
                     icon: Icons.call_end,
-                    label: 'Decline',
-                    color: Colors.red,
+                      label: AppLocalizations.of(context).translate('calls.decline'),
+                      color: Colors.red,
                     size: 72,
                     onTap: widget.onDecline,
                   ),
                   const SizedBox(width: 64),
                   _IncomingCallButton(
                     icon: Icons.call,
-                    label: 'Join',
+                      label: AppLocalizations.of(context).translate('calls.join'),
                     color: Colors.green,
                     size: 72,
                     onTap: widget.onAccept,
@@ -562,7 +563,7 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Incoming ${isVideo ? "Video" : "Voice"} Call',
+                      isVideo ? AppLocalizations.of(context).translate('calls.groupVideoCall') : AppLocalizations.of(context).translate('calls.groupVoiceCall'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 14,
@@ -580,7 +581,7 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                   children: [
                     _IncomingCallButton(
                       icon: Icons.call_end,
-                      label: 'Decline',
+                      label: AppLocalizations.of(context).translate('calls.decline'),
                       color: Colors.red,
                       size: 72,
                       onTap: () {
@@ -591,7 +592,7 @@ class _IncomingCallOverlayState extends State<_IncomingCallOverlay>
                     const SizedBox(width: 64),
                     _IncomingCallButton(
                       icon: Icons.call,
-                      label: 'Accept',
+                      label: AppLocalizations.of(context).translate('calls.accept'),
                       color: Colors.green,
                       size: 72,
                       onTap: () {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../config.dart';
+import '../l10n/app_localizations.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 
@@ -56,7 +57,7 @@ class ChatTile extends StatelessWidget {
                           const SizedBox(width: 4),
                         ],
                         Text(
-                          _formatTime(chat.lastActivity),
+                          _formatTime(chat.lastActivity, context),
                           style: TextStyle(
                             fontSize: 12,
                             color: chat.unreadCount > 0
@@ -72,7 +73,7 @@ class ChatTile extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Expanded(child: _buildLastMessagePreview(cs)),
+                        Expanded(child: _buildLastMessagePreview(cs, context)),
                         if (chat.unreadCount > 0) ...[
                           const SizedBox(width: 8),
                           _buildUnreadBadge(cs),
@@ -194,7 +195,7 @@ class ChatTile extends StatelessWidget {
     );
   }
 
-  Widget _buildLastMessagePreview(ColorScheme cs) {
+  Widget _buildLastMessagePreview(ColorScheme cs, BuildContext context) {
     final msg = chat.lastMessage;
     if (msg == null) return const SizedBox.shrink();
 
@@ -220,12 +221,12 @@ class ChatTile extends StatelessWidget {
               child: _buildPreviewImage(msg.content, 28, 28),
             ),
             const SizedBox(width: 6),
-            Text('Photo', style: textStyle),
+            Text(AppLocalizations.of(context).translate('chat.photo'), style: textStyle),
           ],
         );
       case MessageType.sticker:
         return Text(
-          'Sticker',
+          AppLocalizations.of(context).translate('chat.sticker'),
           style: textStyle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -235,7 +236,7 @@ class ChatTile extends StatelessWidget {
           children: [
             Icon(Icons.mic, size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text('Voice message', style: textStyle),
+            Text(AppLocalizations.of(context).translate('chat.voiceMessage'), style: textStyle),
           ],
         );
       case MessageType.file:
@@ -245,7 +246,7 @@ class ChatTile extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                msg.fileName ?? 'File',
+                msg.fileName ?? AppLocalizations.of(context).translate('chat.file'),
                 style: textStyle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -258,7 +259,7 @@ class ChatTile extends StatelessWidget {
           children: [
             Icon(Icons.lock, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text('Premium message', style: textStyle),
+            Text(AppLocalizations.of(context).translate('chat.premiumMessage'), style: textStyle),
           ],
         );
       case MessageType.invoice:
@@ -269,8 +270,8 @@ class ChatTile extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               inv != null
-                  ? 'Invoice: ${inv.amount} ${inv.currency}'
-                  : 'Invoice',
+                  ? '${AppLocalizations.of(context).translate('chat.invoice')}: ${inv.amount} ${inv.currency}'
+                  : AppLocalizations.of(context).translate('chat.invoice'),
               style: textStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -284,7 +285,7 @@ class ChatTile extends StatelessWidget {
             Icon(Icons.card_giftcard, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
             Text(
-              chk != null ? 'Check: ${chk.amount} ${chk.currency}' : 'Check',
+              chk != null ? '${AppLocalizations.of(context).translate('chat.check')}: ${chk.amount} ${chk.currency}' : AppLocalizations.of(context).translate('chat.check'),
               style: textStyle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -329,16 +330,25 @@ class ChatTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(DateTime time, BuildContext context) {
     final now = DateTime.now();
     final diff = now.difference(time);
+    final l10n = AppLocalizations.of(context);
 
     if (diff.inDays == 0) {
       return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     } else if (diff.inDays == 1) {
-      return 'Yesterday';
+      return l10n.translate('chat.yesterday');
     } else if (diff.inDays < 7) {
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final days = [
+        l10n.translate('time.monday'),
+        l10n.translate('time.tuesday'),
+        l10n.translate('time.wednesday'),
+        l10n.translate('time.thursday'),
+        l10n.translate('time.friday'),
+        l10n.translate('time.saturday'),
+        l10n.translate('time.sunday'),
+      ];
       return days[time.weekday - 1];
     } else {
       return '${time.day}/${time.month}';

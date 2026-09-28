@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../data/api_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/call.dart';
 import 'call_screen.dart';
 
@@ -67,11 +68,12 @@ class _CallsScreenState extends State<CallsScreen> {
     setState(() {});
   }
 
-  String _formatTimestamp(DateTime timestamp) {
+  String _formatTimestamp(DateTime timestamp, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final diff = DateTime.now().difference(timestamp);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}${l10n.translate('time.minutesAgo')}';
+    if (diff.inHours < 24) return '${diff.inHours}${l10n.translate('time.hoursAgo')}';
+    return '${diff.inDays}${l10n.translate('time.daysAgo')}';
   }
 
   String _formatDuration(Duration d) {
@@ -81,17 +83,18 @@ class _CallsScreenState extends State<CallsScreen> {
     return '${d.inMinutes}m ${d.inSeconds % 60}s';
   }
 
-  String _dateSection(DateTime date) {
+  String _dateSection(DateTime date, BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final callDate = DateTime(date.year, date.month, date.day);
     final diff = today.difference(callDate).inDays;
 
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    if (diff < 7) return 'This Week';
-    if (diff < 30) return 'This Month';
-    return 'Older';
+    if (diff == 0) return l10n.translate('calls.today');
+    if (diff == 1) return l10n.translate('calls.yesterday');
+    if (diff < 7) return l10n.translate('calls.thisWeek');
+    if (diff < 30) return l10n.translate('calls.thisMonth');
+    return l10n.translate('calls.older');
   }
 
   Color _statusColor(CallStatus status, ColorScheme cs) {
@@ -223,7 +226,7 @@ class _CallsScreenState extends State<CallsScreen> {
   Widget _buildGroupedList(ColorScheme cs) {
     final grouped = <String, List<CallModel>>{};
     for (final call in _calls) {
-      final section = _dateSection(call.timestamp);
+      final section = _dateSection(call.timestamp, context);
       grouped.putIfAbsent(section, () => []).add(call);
     }
 
@@ -377,7 +380,7 @@ class _CallsScreenState extends State<CallsScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _formatTimestamp(call.timestamp),
+                  _formatTimestamp(call.timestamp, context),
                   style: TextStyle(
                     fontSize: 11,
                     color: cs.onSurfaceVariant,
