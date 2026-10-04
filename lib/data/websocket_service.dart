@@ -20,7 +20,6 @@ class WebSocketService {
   static int _reconnectDelay = 1;
   static const int _maxReconnectDelay = 30;
   static final String _deviceId = _generateDeviceId();
-  static bool _skipAttestation = false;
 
   static String _generateDeviceId() {
     final random = Random.secure();
@@ -43,7 +42,6 @@ class WebSocketService {
   static void connect(String token) {
     _token = token;
     _reconnectDelay = 1;
-    _skipAttestation = false;
     _connect();
   }
 
@@ -88,17 +86,17 @@ class WebSocketService {
     final uri = Uri.parse('${AppConfig.wsBaseUrl}/ws?device_id=$_deviceId');
     debugPrint('[WS] Connecting to ${AppConfig.wsBaseUrl}/ws');
 
-    // Get attestation headers for the WS handshake (skip if not registered)
+    // A WebSocket is authenticated just like REST: register the device key
+    // first and always sign the upgrade request. Never downgrade to an
+    // unsigned connection after a 403.
     final attestation = AppAttestation.instance;
-    final Map<String, String> attestationHeaders;
-    if (_skipAttestation || !await attestation.isKeyRegistered()) {
-      attestationHeaders = {};
-    } else {
-      attestationHeaders = await attestation.signRequest(
-        method: 'GET',
-        path: '/ws',
-      );
+    if (!await attestation.isKeyRegistered()) {
+      await attestation.ensureRegistered(_token!);
     }
+    final attestationHeaders = await attestation.signRequest(
+      method: 'GET',
+      path: '/ws',
+    );
 
     final httpClient = HttpClient()
       ..connectionTimeout = const Duration(seconds: 3);
@@ -224,10 +222,9 @@ class WebSocketService {
             return;
           }
           if (msg.contains('403')) {
-            debugPrint(
-              '[WS] Handshake 403 -> attestation failed, retrying without',
-            );
-            _skipAttestation = true;
+            debugPrint('[WS] Handshake 403 -> re-registering attestation');
+            attestation.invalidateRegistration();
+            unawaited(attestation.ensureRegistered(_token!));
             _scheduleReconnect();
             return;
           }
@@ -252,7 +249,6 @@ class WebSocketService {
     _socket = null;
     _connecting = false;
     _reconnectDelay = 1;
-    _skipAttestation = false;
     _connect();
   }
 

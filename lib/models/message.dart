@@ -16,18 +16,34 @@ enum DeliveryStatus { sending, sent, delivered, read }
 class PremiumUnlockInfo {
   final String assetSymbol;
   final double amount;
+  final int amountLamports;
+  final String recipient;
   final bool isUnlocked;
 
   const PremiumUnlockInfo({
     required this.assetSymbol,
     required this.amount,
+    this.amountLamports = 0,
+    this.recipient = '',
     this.isUnlocked = false,
   });
+
+  factory PremiumUnlockInfo.fromJson(Map<String, dynamic> json) {
+    return PremiumUnlockInfo(
+      assetSymbol: json['asset_symbol'] as String? ?? 'SOL',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0,
+      amountLamports: (json['amount_lamports'] as num?)?.toInt() ?? 0,
+      recipient: json['recipient'] as String? ?? '',
+      isUnlocked: json['is_unlocked'] as bool? ?? false,
+    );
+  }
 
   PremiumUnlockInfo copyWith({bool? isUnlocked}) {
     return PremiumUnlockInfo(
       assetSymbol: assetSymbol,
       amount: amount,
+      amountLamports: amountLamports,
+      recipient: recipient,
       isUnlocked: isUnlocked ?? this.isUnlocked,
     );
   }
