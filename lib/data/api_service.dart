@@ -731,6 +731,30 @@ class ApiService {
     }
   }
 
+  static Future<String?> unlockPremiumMessage(
+    String messageId,
+    String txSignature,
+  ) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl/api/messages/$messageId/premium-unlock'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
+        body: jsonEncode({'tx_signature': txSignature}),
+      );
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        return body['content'] as String?;
+      }
+      throw StateError(body['message'] as String? ?? 'Payment not confirmed');
+    } catch (e) {
+      if (kDebugMode) debugPrint('[API] premium unlock failed: $e');
+      rethrow;
+    }
+  }
+
   static Future<Map<String, dynamic>?> createCheck({
     required String chatId,
     required String pdaAddress,

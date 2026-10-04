@@ -5,8 +5,10 @@ import '../models/message.dart';
 import '../widgets/premium_message_card.dart';
 
 final _lockedInfo = const PremiumUnlockInfo(
-  assetSymbol: 'NAJI',
-  amount: 5.0,
+  assetSymbol: 'SOL',
+  amount: 0.01,
+  amountLamports: 10000000,
+  recipient: '11111111111111111111111111111111',
   isUnlocked: false,
 );
 
@@ -22,6 +24,7 @@ final premiumStories = [
     builder: (context) => Padding(
       padding: const EdgeInsets.all(16),
       child: PremiumMessageCard(
+        messageId: 'storybook-premium-locked',
         premiumInfo: _lockedInfo,
         content:
             'This is exclusive premium content that is locked behind a payment wall.',
@@ -33,6 +36,7 @@ final premiumStories = [
     builder: (context) => Padding(
       padding: const EdgeInsets.all(16),
       child: PremiumMessageCard(
+        messageId: 'storybook-premium-unlocked',
         premiumInfo: _unlockedInfo,
         content: 'Thank you for unlocking this exclusive premium content!',
       ),

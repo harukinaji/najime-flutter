@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -33,8 +34,10 @@ class _AuthScreenState extends State<AuthScreen>
 
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email'],
-    clientId:
-        '18846067823-6rrulad9n5f43446l94pofvf367j6d04.apps.googleusercontent.com',
+    // Android obtains its OAuth client from google-services.json. Passing the
+    // Android client ID here overrides plugin discovery and can produce
+    // ApiException 10 on release builds. The web client is used only as the
+    // ID-token audience consumed by the backend.
     serverClientId:
         '18846067823-8g31lqvrvnkcbitnau6ga8kuad783as9.apps.googleusercontent.com',
   );
@@ -145,12 +148,13 @@ class _AuthScreenState extends State<AuthScreen>
         );
       }
     } catch (e) {
+      if (kDebugMode) debugPrint('[Auth] Google Sign-In failed: $e');
       if (!mounted) return;
       setState(() => _googleLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).translate('auth.googleSignInFailed'),
+            '${AppLocalizations.of(context).translate('auth.googleSignInFailed')}: $e',
           ),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),

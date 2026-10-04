@@ -15,14 +15,14 @@ import 'secure_http_client.dart';
 ///
 /// Generates a unique HMAC-SHA256 key stored in Android Keystore / iOS Keychain
 /// on first launch. Every HTTP request is signed with this key so the server
-/// can verify it originates from a genuine app instance.
+/// can reject unsigned and replayed requests from unregistered installations.
 ///
 /// Even if an attacker captures network traffic (PCAP), they cannot replay
 /// requests because:
 ///   1. Each request has a unique nonce (anti-replay)
 ///   2. Each request has a timestamp (anti-replay, ±60s window)
-///   3. The HMAC key never leaves the device
-///   4. Certificate pinning prevents MITM interception
+///   3. The key is kept in protected local storage after registration
+///   4. TLS certificate verification protects the registration channel
 class AppAttestation {
   AppAttestation._();
   static final instance = AppAttestation._();

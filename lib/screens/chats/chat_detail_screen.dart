@@ -914,6 +914,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (t == 'file') type = MessageType.file;
       if (t == 'sticker') type = MessageType.sticker;
       if (t == 'invoice') type = MessageType.invoice;
+      if (t == 'premiumMessage') type = MessageType.premiumMessage;
 
       String content = data['content'] as String? ?? '';
 
@@ -924,6 +925,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         type: type,
         timestamp: DateTime.parse(data['timestamp'] as String),
         isMe: false,
+        premiumInfo: data['premium_info'] is Map
+            ? PremiumUnlockInfo.fromJson(
+                Map<String, dynamic>.from(data['premium_info'] as Map),
+              )
+            : null,
         voiceDurationMs: data['voice_duration_ms'] as int?,
         voiceWaveform: _parseWaveform(data['voice_waveform'] as String?),
         replyToId: data['reply_to_id'] as String?,
@@ -1077,6 +1083,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           isMe: msg['is_me'] as bool? ?? false,
           fileName: msg['file_name'] as String?,
           fileSize: msg['file_size'] as String?,
+          premiumInfo: msg['premium_info'] is Map
+              ? PremiumUnlockInfo.fromJson(
+                  Map<String, dynamic>.from(msg['premium_info'] as Map),
+                )
+              : null,
           voiceDurationMs: msg['voice_duration_ms'] as int?,
           voiceWaveform: _parseWaveform(msg['voice_waveform'] as String?),
           reactions: _parseReactions(msg['reactions']),
@@ -1353,6 +1364,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               },
             ),
             ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('Premium message'),
+              subtitle: const Text('Unlock with a verified SOL payment'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _showPremiumComposer();
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.card_giftcard),
               title: const Text('Check'),
               onTap: () async {
@@ -1364,6 +1384,99 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _showPremiumComposer() async {
+    final contentController = TextEditingController();
+    final amountController = TextEditingController();
+    final draft = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Premium message'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: contentController,
+              minLines: 3,
+              maxLines: 8,
+              maxLength: 10000,
+              decoration: const InputDecoration(
+                labelText: 'Locked content',
+                alignLabelWithHint: true,
+              ),
+            ),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Price in SOL',
+                hintText: '0.01',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, {
+              'content': contentController.text.trim(),
+              'amount': amountController.text.trim(),
+            }),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    contentController.dispose();
+    amountController.dispose();
+    if (draft == null || !mounted) return;
+    final amount = double.tryParse(draft['amount'] ?? '');
+    final content = draft['content'] ?? '';
+    if (content.isEmpty || amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter content and a positive SOL price')),
+      );
+      return;
+    }
+    final result = await ApiService.sendMessage(
+      widget.chatId,
+      jsonEncode({'content': content, 'amount': amount, 'currency': 'SOL'}),
+      type: 'premiumMessage',
+    );
+    if (!mounted) return;
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verify your wallet before selling premium content'),
+        ),
+      );
+      return;
+    }
+    final premium = result['premium_info'] is Map
+        ? PremiumUnlockInfo.fromJson(
+            Map<String, dynamic>.from(result['premium_info'] as Map),
+          )
+        : null;
+    setState(() {
+      _messages.add(
+        MessageModel(
+          id: result['id'] as String,
+          senderId: result['sender_id'] as String,
+          content: result['content'] as String? ?? content,
+          type: MessageType.premiumMessage,
+          timestamp: DateTime.parse(result['timestamp'] as String),
+          isMe: true,
+          premiumInfo: premium,
+        ),
+      );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _pickAndSend({
@@ -2668,9 +2781,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: PremiumMessageCard(
+              messageId: message.id,
               premiumInfo: message.premiumInfo!,
               content: message.content,
-              onUnlock: () {},
+              onUnlocked: (content) {
+                if (!mounted) return;
+                setState(() {
+                  final i = _messages.indexWhere((m) => m.id == message.id);
+                  if (i >= 0) {
+                    _messages[i] = _messages[i].copyWith(
+                      content: content,
+                      premiumInfo: message.premiumInfo!.copyWith(
+                        isUnlocked: true,
+                      ),
+                    );
+                  }
+                });
+              },
             ),
           );
         }
