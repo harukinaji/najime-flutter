@@ -1,6 +1,7 @@
 package com.naji.najimessenger
 
 import android.content.Context
+import android.content.ComponentName
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -11,6 +12,7 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.nfc.cardemulation.CardEmulation
 import android.nfc.tech.IsoDep
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
@@ -272,6 +274,9 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
             when (call.method) {
                 "isNfcAvailable" -> result.success(nfcAdapter != null)
                 "isNfcEnabled" -> result.success(nfcAdapter?.isEnabled == true)
+                "isHceAvailable" -> result.success(
+                    packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
+                )
                 "startRead" -> {
                     nfcPendingRead = true
                     nfcPendingWriteRecords = null
@@ -303,13 +308,23 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
                     }
                     if (data != null && data.isNotEmpty()) {
                         BadgeHostApduService.setBadgeData(data)
-                        result.success(true)
+                        if (enableBadgeHceRouting()) {
+                            result.success(true)
+                        } else {
+                            BadgeHostApduService.clearBadgeData()
+                            result.error(
+                                "HCE_ROUTING_FAILED",
+                                "Android could not activate NBadge card emulation",
+                                null
+                            )
+                        }
                     } else {
                         result.error("INVALID_DATA", "Badge data is null or empty", null)
                     }
                 }
                 "clearBadgeData" -> {
                     BadgeHostApduService.clearBadgeData()
+                    disableBadgeHceRouting()
                     result.success(true)
                 }
                 "stopShare" -> {
@@ -912,6 +927,33 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
         }
     }
 
+    private fun enableBadgeHceRouting(): Boolean {
+        val adapter = nfcAdapter ?: return false
+        return try {
+            // Explicit foreground preference is important on OEM Android
+            // builds which do not reliably route category="other" AIDs to a
+            // host service merely because its activity is visible.
+            val service = ComponentName(this, BadgeHostApduService::class.java)
+            val enabled = CardEmulation.getInstance(adapter)
+                .setPreferredService(this, service)
+            Log.d("BadgeHCE", "Foreground HCE routing enabled=$enabled")
+            enabled
+        } catch (error: Exception) {
+            Log.e("BadgeHCE", "Could not enable foreground HCE routing", error)
+            false
+        }
+    }
+
+    private fun disableBadgeHceRouting() {
+        val adapter = nfcAdapter ?: return
+        try {
+            CardEmulation.getInstance(adapter).unsetPreferredService(this)
+            Log.d("BadgeHCE", "Foreground HCE routing disabled")
+        } catch (error: Exception) {
+            Log.w("BadgeHCE", "Could not disable foreground HCE routing", error)
+        }
+    }
+
     // ── Vibrator ──────────────────────────────────────────────────────
 
     private fun vibrate(durationMs: Long) {
@@ -1217,6 +1259,7 @@ class MainActivity : AudioServiceFragmentActivity(), InputManager.InputDeviceLis
         stopBluetoothScan()
         disconnectIsoDep()
         disableNfcReader()
+        disableBadgeHceRouting()
         stopNfcShare()
         stopGyroscopeListening()
         stopAccelerometerListening()
