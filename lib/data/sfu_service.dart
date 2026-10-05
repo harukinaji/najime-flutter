@@ -5,6 +5,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../config.dart';
 import 'api_service.dart';
+import 'call_audio_constraints.dart';
 import 'websocket_service.dart';
 
 class SFUParticipantInfo {
@@ -106,7 +107,7 @@ class SFUService {
 
   static Future<MediaStream> _getLocalStream(bool video) async {
     return await navigator.mediaDevices.getUserMedia({
-      'audio': true,
+      'audio': najimeCallAudioConstraints,
       'video': video,
     });
   }

@@ -11,7 +11,9 @@ import 'secure_http_client.dart';
 
 class ApiService {
   static const String _baseUrl = AppConfig.apiBaseUrl;
-  static const Duration _readTimeout = Duration(seconds: 3);
+  // Three seconds was short enough for the server to finish with HTTP 200
+  // after the phone had already abandoned the response on slower links.
+  static const Duration _readTimeout = Duration(seconds: 20);
 
   /// WalletConnect project id from the frontend `.env` file. It's a public
   /// identifier used to construct the Reown AppKit relay/session engine; the
@@ -22,11 +24,18 @@ class ApiService {
   static String? _accessToken;
   static String? _username;
   static bool lastChatsRequestSucceeded = false;
+  static final Map<String, Map<String, dynamic>> _userProfileCache = {};
+  static final Map<String, Future<Map<String, dynamic>?>> _userProfileRequests =
+      {};
 
   static String? get accessToken => _accessToken;
   static String? get username => _username;
 
   static void setToken(String token) {
+    if (_accessToken != token) {
+      _userProfileCache.clear();
+      _userProfileRequests.clear();
+    }
     _accessToken = token;
   }
 
@@ -578,6 +587,8 @@ class ApiService {
   static void logout() {
     _accessToken = null;
     _username = null;
+    _userProfileCache.clear();
+    _userProfileRequests.clear();
   }
 
   static Future<List<Map<String, dynamic>>?> checkContacts(
@@ -621,6 +632,76 @@ class ApiService {
     } catch (e) {
       debugPrint('[API] getCurrentUser error: $e');
       return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> getUserProfile(
+    String userId, {
+    bool refresh = false,
+  }) {
+    if (!refresh) {
+      final cached = _userProfileCache[userId];
+      if (cached != null) return Future.value(cached);
+      final pending = _userProfileRequests[userId];
+      if (pending != null) return pending;
+    }
+
+    final request = () async {
+      try {
+        final response = await _client.get(
+          Uri.parse(
+            '$_baseUrl/api/users/${Uri.encodeComponent(userId)}/profile',
+          ),
+          headers: {
+            if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+          },
+        );
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        if (response.statusCode != 200 || body['success'] != true) return null;
+        final profile = body['profile'];
+        if (profile is! Map<String, dynamic>) return null;
+        _userProfileCache[userId] = profile;
+        return profile;
+      } catch (e) {
+        debugPrint('[API] getUserProfile failed: $e');
+        return null;
+      }
+    }();
+    _userProfileRequests[userId] = request;
+    request.then((_) => _userProfileRequests.remove(userId));
+    return request;
+  }
+
+  static Future<bool> addProfileSong({
+    required String sourceUrl,
+    required String title,
+    required String artist,
+    required int durationMs,
+    required String artworkBase64,
+  }) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$_baseUrl/api/profile/songs'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+        },
+        body: jsonEncode({
+          'source_url': sourceUrl,
+          'title': title,
+          'artist': artist,
+          'duration_ms': durationMs,
+          'artwork_base64': artworkBase64,
+        }),
+      );
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200 || body['success'] != true) return false;
+      _userProfileCache.clear();
+      _userProfileRequests.clear();
+      return true;
+    } catch (e) {
+      debugPrint('[API] addProfileSong failed: $e');
+      return false;
     }
   }
 
@@ -892,6 +973,13 @@ class ApiService {
     String scope = 'private',
   }) async {
     try {
+      final fileSize = await file.length();
+      const maxFileSize = 4 * 1024 * 1024 * 1024;
+      if (fileSize < 0 || fileSize > maxFileSize) return null;
+      if (fileSize > 16 * 1024 * 1024) {
+        return await _uploadFileChunked(file, fileSize: fileSize, scope: scope);
+      }
+
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$_baseUrl/api/upload'),
@@ -911,6 +999,70 @@ class ApiService {
     } catch (_) {
       return null;
     }
+  }
+
+  static Future<Map<String, dynamic>?> _uploadFileChunked(
+    File file, {
+    required int fileSize,
+    required String scope,
+  }) async {
+    final fileName = file.uri.pathSegments.isNotEmpty
+        ? file.uri.pathSegments.last
+        : 'file.bin';
+    final initResponse = await _client.post(
+      Uri.parse('$_baseUrl/api/uploads/init'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+      },
+      body: jsonEncode({
+        'file_name': fileName,
+        'size': fileSize,
+        'scope': scope,
+      }),
+    );
+    if (initResponse.statusCode != 200) return null;
+    final initBody = jsonDecode(initResponse.body) as Map<String, dynamic>;
+    final uploadId = initBody['upload_id'] as String?;
+    final chunkSize = initBody['chunk_size'] as int?;
+    if (uploadId == null || chunkSize == null || chunkSize <= 0) return null;
+
+    var index = 0;
+    for (var start = 0; start < fileSize; start += chunkSize) {
+      final end = (start + chunkSize < fileSize) ? start + chunkSize : fileSize;
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/api/uploads/$uploadId/chunks/$index'),
+      );
+      if (_accessToken != null) {
+        request.headers['Authorization'] = 'Bearer $_accessToken';
+      }
+      request.files.add(
+        http.MultipartFile(
+          'chunk',
+          file.openRead(start, end),
+          end - start,
+          filename: 'chunk-$index',
+        ),
+      );
+      final chunkResponse = await _client.send(request);
+      await chunkResponse.stream.drain<void>();
+      if (chunkResponse.statusCode != 200) return null;
+      index++;
+    }
+
+    final completeResponse = await _client.post(
+      Uri.parse('$_baseUrl/api/uploads/$uploadId/complete'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+      },
+      body: '{}',
+    );
+    if (completeResponse.statusCode != 200) return null;
+    final completeBody =
+        jsonDecode(completeResponse.body) as Map<String, dynamic>;
+    return completeBody['success'] == true ? completeBody : null;
   }
 
   static Future<List<Map<String, dynamic>>> getFolders() async {

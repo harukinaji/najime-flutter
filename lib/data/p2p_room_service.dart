@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+
+import 'call_audio_constraints.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../config.dart';
@@ -616,7 +618,7 @@ class P2PRoomService {
         return false;
       }
       _localAudioStream = await navigator.mediaDevices.getUserMedia({
-        'audio': true,
+        'audio': najimeCallAudioConstraints,
       });
       _ensureAudioSession();
     } catch (e) {
