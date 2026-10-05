@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:solana/dto.dart' show DataSlice, Encoding;
 import 'package:solana/encoder.dart';
 import 'package:solana/solana.dart' hide Wallet;
 
@@ -43,7 +44,10 @@ class CheckEscrowService {
       if (resp != null && resp['success'] == true && resp['version'] == 2) {
         return resp['program_id'] as String?;
       }
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      debugPrint('[CheckEscrow] Failed to fetch program ID: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
     return null;
   }
 
@@ -65,9 +69,15 @@ class CheckEscrowService {
       final result = await client.rpcClient.getAccountInfo(
         address,
         commitment: Commitment.confirmed,
+        encoding: Encoding.base64,
+        // Status checks need to know only whether the account exists. Avoid
+        // decoding its program-owned binary state in this client.
+        dataSlice: const DataSlice(offset: 0, length: 0),
       );
       return result.value != null;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('[CheckEscrow] Failed to read check account: $error');
+      debugPrintStack(stackTrace: stackTrace);
       return null;
     }
   }

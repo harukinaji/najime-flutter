@@ -20,6 +20,7 @@ import '../../models/story.dart';
 import '../../utils/desktop_chat.dart';
 import '../../utils/platform.dart';
 import '../../widgets/chat_tile.dart';
+import '../../widgets/message_bubble.dart';
 import '../../l10n/app_localizations.dart';
 
 class ChatsScreen extends StatefulWidget {
@@ -132,7 +133,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
   }
 
   void _onNewMessage(dynamic data) {
-    _loadChats();
+    _loadChats(forceRefresh: true);
   }
 
   void _onNewStory(dynamic data) {
@@ -167,7 +168,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
     });
   }
 
-  Future<void> _loadChats() async {
+  Future<void> _loadChats({bool forceRefresh = false}) async {
     if (!mounted) return;
     if (_isDemo) {
       final now = DateTime.now();
@@ -234,7 +235,12 @@ class _ChatsScreenState extends State<ChatsScreen> {
         _chats = cached;
         _chatsLoading = false;
         _hasLoadedChatsOnce = true;
+        _hasConnectedOnce = true;
         setState(() {});
+        // WebSocket events keep this list current. Avoid downloading the same
+        // chat list every time the tab/widget is opened; the refresh action
+        // below can still explicitly request a fresh server snapshot.
+        if (!forceRefresh) return;
       }
     }
     final raw = await ApiService.getChats();
@@ -332,10 +338,13 @@ class _ChatsScreenState extends State<ChatsScreen> {
     setState(() {});
   }
 
-  Future<void> _loadInitialData() async {
+  Future<void> _loadInitialData({bool forceRefresh = false}) async {
     if (_retryInProgress) return;
     _retryInProgress = true;
-    if (mounted && !_hasConnectedOnce) {
+    // initState calls this method before inherited localization widgets may be
+    // read. didChangeDependencies initializes the localized title; retries may
+    // update it here only after that initialization has completed.
+    if (mounted && _localizationInitialized && !_hasConnectedOnce) {
       setState(
         () => _headerTitle = AppLocalizations.of(
           context,
@@ -343,13 +352,17 @@ class _ChatsScreenState extends State<ChatsScreen> {
       );
     }
     try {
-      await Future.wait<void>([_loadChats(), _loadFolders()]);
+      await Future.wait<void>([
+        _loadChats(forceRefresh: forceRefresh),
+        _loadFolders(),
+      ]);
       if (!mounted) return;
       if (_isDemo) {
         setState(() => _headerTitle = 'NajiMe');
         return;
       }
-      final connected = ApiService.lastChatsRequestSucceeded;
+      final connected =
+          _hasConnectedOnce || ApiService.lastChatsRequestSucceeded;
       setState(
         () => _headerTitle = connected
             ? 'NajiMe'
@@ -503,6 +516,12 @@ class _ChatsScreenState extends State<ChatsScreen> {
               icon: const Icon(Icons.search_rounded),
               onPressed: _toggleSearch,
             ),
+          if (!_isSearching && !_isDemo)
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'Refresh chats',
+              onPressed: () => _loadInitialData(forceRefresh: true),
+            ),
         ],
       ),
       floatingActionButton: isDesktop
@@ -535,6 +554,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           : Column(
               children: [
                 _buildStoriesBar(cs),
+                const GlobalMusicMiniPlayer(),
                 _buildFolderBar(cs),
                 Expanded(
                   child: _filteredChats.isEmpty

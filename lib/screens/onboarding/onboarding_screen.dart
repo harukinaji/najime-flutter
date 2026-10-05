@@ -21,7 +21,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingPageData(
       icon: Icons.shield_rounded,
       title: 'Private & Secure',
-      subtitle: 'End-to-end encrypted messages with privacy controls',
+      subtitle:
+          'Encrypted transport, protected local storage and privacy controls',
     ),
     _OnboardingPageData(
       icon: Icons.link_rounded,

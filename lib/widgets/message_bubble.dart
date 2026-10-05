@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -9,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
 import '../data/api_service.dart';
+import '../data/link_preview_service.dart';
 import '../models/message.dart';
 import '../wallet/services/wallet_access_proxy.dart';
 import '../wallet/services/check_escrow_service.dart';
@@ -16,6 +20,458 @@ import '../wallet/state/app_state.dart';
 import 'sticker_widget.dart';
 
 const _sentColor = Color(0xFF18A7B5);
+
+const _audioFileExtensions = <String>{
+  'mp3',
+  'm4a',
+  'mp4',
+  'flac',
+  'ogg',
+  'opus',
+  'wav',
+  'webm',
+  'mkv',
+  'aif',
+  'aiff',
+  'aifc',
+  'ape',
+  'mov',
+};
+
+class _AudioAttachment {
+  const _AudioAttachment({
+    required this.url,
+    required this.title,
+    this.artist,
+    this.album,
+    this.duration,
+    this.artwork,
+  });
+
+  final String url;
+  final String title;
+  final String? artist;
+  final String? album;
+  final Duration? duration;
+  final Uint8List? artwork;
+}
+
+class _GlobalMusicPlayer {
+  _GlobalMusicPlayer._();
+
+  static final instance = _GlobalMusicPlayer._();
+
+  final ValueNotifier<int> revision = ValueNotifier<int>(0);
+  AudioPlayer? player;
+  _AudioAttachment? track;
+  Duration position = Duration.zero;
+  Duration duration = Duration.zero;
+  bool loading = false;
+
+  bool isCurrent(_AudioAttachment audio) => track?.url == audio.url;
+  bool get playing => player?.playing ?? false;
+
+  Future<void> toggle(_AudioAttachment audio) async {
+    if (!isCurrent(audio) || player == null) {
+      await _load(audio);
+      // play() completes when playback ends or pauses; don't wait on it here.
+      unawaited(player!.play().catchError((Object _) {}));
+      _changed();
+      return;
+    }
+    if (playing) {
+      await player!.pause();
+    } else {
+      unawaited(player!.play().catchError((Object _) {}));
+    }
+    _changed();
+  }
+
+  Future<void> _load(_AudioAttachment audio) async {
+    loading = true;
+    track = audio;
+    position = Duration.zero;
+    duration = audio.duration ?? Duration.zero;
+    _changed();
+    await player?.dispose();
+    final next = AudioPlayer();
+    player = next;
+    try {
+      final url = audio.url;
+      final localFile = File(url);
+      if (!url.startsWith('http://') &&
+          !url.startsWith('https://') &&
+          !url.startsWith('/uploads') &&
+          await localFile.exists()) {
+        await next.setFilePath(url);
+      } else {
+        final fullUrl = url.startsWith('/uploads')
+            ? '${AppConfig.apiBaseUrl}$url'
+            : url;
+        final token = ApiService.accessToken;
+        await next.setAudioSource(
+          AudioSource.uri(
+            Uri.parse(fullUrl),
+            headers: token == null || token.isEmpty
+                ? null
+                : {'Authorization': 'Bearer $token'},
+          ),
+        );
+      }
+      duration = next.duration ?? duration;
+      next.positionStream.listen((value) {
+        position = value;
+        _changed();
+      });
+      next.durationStream.listen((value) {
+        if (value != null) duration = value;
+        _changed();
+      });
+      next.playerStateStream.listen((state) async {
+        if (state.processingState == ProcessingState.completed) {
+          await next.pause();
+          await next.seek(Duration.zero);
+          position = Duration.zero;
+        }
+        _changed();
+      });
+    } catch (_) {
+      await next.dispose();
+      if (identical(player, next)) {
+        player = null;
+        track = null;
+      }
+      rethrow;
+    } finally {
+      loading = false;
+      _changed();
+    }
+  }
+
+  Future<void> close() async {
+    await player?.stop();
+    await player?.dispose();
+    player = null;
+    track = null;
+    position = Duration.zero;
+    duration = Duration.zero;
+    loading = false;
+    _changed();
+  }
+
+  void _changed() {
+    revision.value++;
+  }
+}
+
+Future<void> playProfileSong({
+  required String url,
+  required String title,
+  required String artist,
+  required int durationMs,
+  Uint8List? artwork,
+}) {
+  return _GlobalMusicPlayer.instance.toggle(
+    _AudioAttachment(
+      url: url,
+      title: title,
+      artist: artist.isEmpty ? null : artist,
+      duration: durationMs > 0 ? Duration(milliseconds: durationMs) : null,
+      artwork: artwork,
+    ),
+  );
+}
+
+ValueListenable<int> get musicPlayerRevision =>
+    _GlobalMusicPlayer.instance.revision;
+
+bool isProfileSongPlaying(String url) {
+  final player = _GlobalMusicPlayer.instance;
+  return player.track?.url == url && player.playing;
+}
+
+class GlobalMusicMiniPlayer extends StatelessWidget {
+  const GlobalMusicMiniPlayer({super.key, this.transparent = false});
+
+  final bool transparent;
+
+  Future<void> _openFullPlayer(
+    BuildContext context,
+    _GlobalMusicPlayer controller,
+    _AudioAttachment audio,
+  ) {
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FullScreenMusicPlayer(
+          audio: audio,
+          player: () => controller.player,
+          togglePlayback: () => controller.toggle(audio),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _GlobalMusicPlayer.instance;
+    return ValueListenableBuilder<int>(
+      valueListenable: controller.revision,
+      builder: (context, _, __) {
+        final audio = controller.track;
+        if (audio == null) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+          child: Material(
+            color: transparent ? Colors.transparent : cs.surfaceContainerHigh,
+            elevation: transparent ? 0 : 2,
+            shadowColor: transparent ? Colors.transparent : Colors.black26,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _openFullPlayer(context, controller, audio),
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: 58,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: audio.artwork == null
+                            ? ColoredBox(
+                                color: cs.primaryContainer,
+                                child: Icon(
+                                  Icons.music_note_rounded,
+                                  color: cs.primary,
+                                ),
+                              )
+                            : Image.memory(audio.artwork!, fit: BoxFit.cover),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            audio.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            audio.artist ?? 'Unknown artist',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: controller.loading
+                          ? null
+                          : () => controller.toggle(audio),
+                      icon: controller.loading
+                          ? const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              controller.playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                            ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close player',
+                      onPressed: controller.close,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FullScreenMusicPlayer extends StatefulWidget {
+  const _FullScreenMusicPlayer({
+    required this.audio,
+    required this.player,
+    required this.togglePlayback,
+  });
+
+  final _AudioAttachment audio;
+  final AudioPlayer? Function() player;
+  final Future<void> Function() togglePlayback;
+
+  @override
+  State<_FullScreenMusicPlayer> createState() => _FullScreenMusicPlayerState();
+}
+
+class _FullScreenMusicPlayerState extends State<_FullScreenMusicPlayer> {
+  Future<void> _toggle() async {
+    await widget.togglePlayback();
+    if (mounted) setState(() {});
+  }
+
+  String _time(Duration value) {
+    final hours = value.inHours;
+    final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return hours > 0 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final player = widget.player();
+    final fallbackDuration = widget.audio.duration ?? Duration.zero;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 32),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text('Now playing'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 18, 28, 34),
+          child: Column(
+            children: [
+              const Spacer(),
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: widget.audio.artwork != null
+                      ? Image.memory(widget.audio.artwork!, fit: BoxFit.cover)
+                      : DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                cs.primaryContainer,
+                                cs.tertiaryContainer,
+                              ],
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.music_note_rounded,
+                            size: 112,
+                            color: cs.primary,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.audio.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  [
+                        if (widget.audio.artist != null) widget.audio.artist!,
+                        if (widget.audio.album != null) widget.audio.album!,
+                      ].join(' • ').isEmpty
+                      ? 'Unknown artist'
+                      : [
+                          if (widget.audio.artist != null) widget.audio.artist!,
+                          if (widget.audio.album != null) widget.audio.album!,
+                        ].join(' • '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
+                ),
+              ),
+              const SizedBox(height: 24),
+              StreamBuilder<Duration>(
+                stream: player?.positionStream,
+                initialData: player?.position ?? Duration.zero,
+                builder: (context, positionSnapshot) {
+                  final position = positionSnapshot.data ?? Duration.zero;
+                  final duration = player?.duration ?? fallbackDuration;
+                  final maxMs = duration.inMilliseconds.toDouble();
+                  final value = position.inMilliseconds
+                      .clamp(0, duration.inMilliseconds)
+                      .toDouble();
+                  return Column(
+                    children: [
+                      Slider(
+                        value: maxMs > 0 ? value : 0,
+                        max: maxMs > 0 ? maxMs : 1,
+                        onChanged: player == null || maxMs <= 0
+                            ? null
+                            : (next) => player.seek(
+                                Duration(milliseconds: next.round()),
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_time(position)),
+                            Text(_time(duration)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 18),
+              StreamBuilder<PlayerState>(
+                stream: player?.playerStateStream,
+                initialData: player?.playerState,
+                builder: (context, stateSnapshot) {
+                  final playing = stateSnapshot.data?.playing ?? false;
+                  return IconButton.filled(
+                    onPressed: _toggle,
+                    iconSize: 54,
+                    padding: const EdgeInsets.all(16),
+                    icon: Icon(
+                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    ),
+                  );
+                },
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class MessageBubble extends StatefulWidget {
   final MessageModel message;
@@ -58,6 +514,8 @@ class MessageBubble extends StatefulWidget {
 }
 
 class _MessageBubbleState extends State<MessageBubble> {
+  LinkPreview? _linkPreview;
+  final Map<String, TapGestureRecognizer> _linkRecognizers = {};
   AudioPlayer? _player;
   bool _isPlaying = false;
   Duration _position = Duration.zero;
@@ -69,6 +527,61 @@ class _MessageBubbleState extends State<MessageBubble> {
   bool? _chainCheckActive;
   bool _chainCheckStatusLoaded = false;
   bool _checkStatusRequestInFlight = false;
+  bool _addingSongToProfile = false;
+  bool _songAddedToProfile = false;
+
+  _AudioAttachment? get _audioAttachment {
+    if (widget.message.type != MessageType.file) return null;
+    final fileName = widget.message.fileName ?? '';
+    Map<String, dynamic>? payload;
+    try {
+      final decoded = jsonDecode(widget.message.content);
+      if (decoded is Map && decoded['kind'] == 'audio') {
+        payload = Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+
+    final extension = fileName.contains('.')
+        ? fileName.split('.').last.toLowerCase()
+        : '';
+    if (payload == null && !_audioFileExtensions.contains(extension)) {
+      return null;
+    }
+
+    final metadata = payload?['metadata'] is Map
+        ? Map<String, dynamic>.from(payload!['metadata'] as Map)
+        : <String, dynamic>{};
+    final url = (payload?['url'] ?? widget.message.content).toString();
+    if (url.isEmpty) return null;
+    final fallbackTitle = fileName.isEmpty
+        ? 'Audio track'
+        : fileName.replaceFirst(RegExp(r'\.[^.]+$'), '');
+    Uint8List? artwork;
+    final encodedArtwork = metadata['art_base64'];
+    if (encodedArtwork is String && encodedArtwork.isNotEmpty) {
+      try {
+        artwork = base64Decode(encodedArtwork);
+      } catch (_) {}
+    }
+    final durationMs = metadata['duration_ms'];
+    return _AudioAttachment(
+      url: url,
+      title: (metadata['title']?.toString().trim().isNotEmpty ?? false)
+          ? metadata['title'].toString().trim()
+          : fallbackTitle,
+      artist: _nonEmptyString(metadata['artist']),
+      album: _nonEmptyString(metadata['album']),
+      duration: durationMs is num
+          ? Duration(milliseconds: durationMs.round())
+          : null,
+      artwork: artwork,
+    );
+  }
+
+  String? _nonEmptyString(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
 
   String? get _myWalletAddress {
     final appState = AppState.instance;
@@ -86,6 +599,7 @@ class _MessageBubbleState extends State<MessageBubble> {
   void initState() {
     super.initState();
     _initWaveform();
+    _loadLinkPreview();
   }
 
   @override
@@ -95,10 +609,37 @@ class _MessageBubbleState extends State<MessageBubble> {
       _initWaveform();
     }
     if (oldWidget.message.id != widget.message.id ||
-        oldWidget.message.content != widget.message.content) {
+        oldWidget.message.content != widget.message.content ||
+        oldWidget.message.type != widget.message.type) {
+      _player?.dispose();
+      _player = null;
+      _position = Duration.zero;
+      _duration = Duration.zero;
+      _isPlaying = false;
+      _isLoading = false;
       _chainCheckActive = null;
       _chainCheckStatusLoaded = false;
+      _addingSongToProfile = false;
+      _songAddedToProfile = false;
+      _loadLinkPreview();
     }
+  }
+
+  Future<void> _loadLinkPreview() async {
+    if (widget.message.type != MessageType.text) {
+      _linkPreview = null;
+      return;
+    }
+    final uri = LinkPreviewService.firstUrl(widget.message.content);
+    _linkPreview = null;
+    if (uri == null) return;
+    final content = widget.message.content;
+    setState(() {
+      _linkPreview = LinkPreview(url: uri, domain: uri.host);
+    });
+    final preview = await LinkPreviewService.fetch(uri);
+    if (!mounted || widget.message.content != content) return;
+    if (preview != null) setState(() => _linkPreview = preview);
   }
 
   void _applyCheckChainStatus(CheckData check, bool? active) {
@@ -148,6 +689,9 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   @override
   void dispose() {
+    for (final recognizer in _linkRecognizers.values) {
+      recognizer.dispose();
+    }
     _player?.dispose();
     super.dispose();
   }
@@ -163,7 +707,22 @@ class _MessageBubbleState extends State<MessageBubble> {
   }
 
   Future<void> _togglePlayback() async {
-    if (widget.message.type != MessageType.voice) return;
+    final attachment = _audioAttachment;
+    if (widget.message.type != MessageType.voice && attachment == null) return;
+
+    if (attachment != null) {
+      try {
+        await _GlobalMusicPlayer.instance.toggle(attachment);
+      } catch (e, stackTrace) {
+        debugPrint('[Audio] Failed to play ${attachment.url}: $e\n$stackTrace');
+        if (mounted) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(content: Text('Could not play this audio file')),
+          );
+        }
+      }
+      return;
+    }
 
     final url = widget.message.content;
     if (url.isEmpty) return;
@@ -176,7 +735,23 @@ class _MessageBubbleState extends State<MessageBubble> {
       setState(() => _isLoading = true);
       _player = AudioPlayer();
       try {
-        await _player!.setUrl(fullUrl);
+        final localFile = File(url);
+        if (!url.startsWith('http://') &&
+            !url.startsWith('https://') &&
+            !url.startsWith('/uploads') &&
+            await localFile.exists()) {
+          await _player!.setFilePath(url);
+        } else {
+          final token = ApiService.accessToken;
+          await _player!.setAudioSource(
+            AudioSource.uri(
+              Uri.parse(fullUrl),
+              headers: token == null || token.isEmpty
+                  ? null
+                  : {'Authorization': 'Bearer $token'},
+            ),
+          );
+        }
         _duration = _player!.duration ?? Duration.zero;
 
         _player!.positionStream.listen((pos) {
@@ -199,8 +774,16 @@ class _MessageBubbleState extends State<MessageBubble> {
         });
 
         setState(() => _isLoading = false);
-      } catch (e) {
-        setState(() => _isLoading = false);
+      } catch (e, stackTrace) {
+        debugPrint('[Audio] Failed to open $fullUrl: $e\n$stackTrace');
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            const SnackBar(content: Text('Could not play this audio file')),
+          );
+        }
+        await _player?.dispose();
+        _player = null;
         return;
       }
     }
@@ -742,25 +1325,35 @@ class _MessageBubbleState extends State<MessageBubble> {
   Widget _buildContent(BuildContext context, ColorScheme cs, bool isMe) {
     switch (widget.message.type) {
       case MessageType.text:
+        final textStyle = TextStyle(
+          color: isMe ? Colors.white : cs.onSurface,
+          fontSize: 15,
+          height: 1.35,
+        );
+        final Widget textContent;
         if (widget.searchQuery != null && widget.searchQuery!.isNotEmpty) {
-          return _buildHighlightedText(
+          textContent = _buildHighlightedText(
             widget.message.content,
             widget.searchQuery!,
-            TextStyle(
-              color: isMe ? Colors.white : cs.onSurface,
-              fontSize: 15,
-              height: 1.35,
-            ),
+            textStyle,
             widget.isCurrentSearchMatch,
           );
+        } else {
+          textContent = _buildLinkifiedText(widget.message.content, textStyle);
         }
-        return Text(
-          widget.message.content,
-          style: TextStyle(
-            color: isMe ? Colors.white : cs.onSurface,
-            fontSize: 15,
-            height: 1.35,
-          ),
+        final preview = _linkPreview;
+        if (preview == null ||
+            widget.searchQuery != null && widget.searchQuery!.isNotEmpty) {
+          return textContent;
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            textContent,
+            const SizedBox(height: 9),
+            _buildLinkPreviewCard(preview, cs, isMe),
+          ],
         );
 
       case MessageType.image:
@@ -809,6 +1402,8 @@ class _MessageBubbleState extends State<MessageBubble> {
         );
 
       case MessageType.file:
+        final audio = _audioAttachment;
+        if (audio != null) return _buildMusicContent(cs, isMe, audio);
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -828,11 +1423,27 @@ class _MessageBubbleState extends State<MessageBubble> {
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              widget.message.fileSize ?? '',
-              style: TextStyle(
-                color: isMe ? Colors.white70 : cs.onSurfaceVariant,
-                fontSize: 13,
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.message.fileName ?? 'File',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    widget.message.fileSize ?? '',
+                    style: TextStyle(
+                      color: isMe ? Colors.white70 : cs.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -851,6 +1462,94 @@ class _MessageBubbleState extends State<MessageBubble> {
       case MessageType.check:
         return _buildCheckContent(cs, isMe);
     }
+  }
+
+  Widget _buildLinkPreviewCard(LinkPreview preview, ColorScheme cs, bool isMe) {
+    final accent = isMe ? Colors.white : cs.primary;
+    return InkWell(
+      onTap: () => launchUrl(preview.url, mode: LaunchMode.externalApplication),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 320),
+        decoration: BoxDecoration(
+          color: isMe
+              ? Colors.black.withValues(alpha: 0.13)
+              : cs.surfaceContainerHighest.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accent.withValues(alpha: 0.22)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (preview.image != null)
+              Image.memory(
+                preview.image!,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 9, 11, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    preview.domain,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (preview.title != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      preview.title!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isMe ? Colors.white : cs.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                  if (preview.description != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      preview.description!,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isMe ? Colors.white70 : cs.onSurfaceVariant,
+                        fontSize: 12,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                  if (preview.title == null && preview.description == null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      preview.url.toString(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isMe ? Colors.white70 : cs.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildInvoiceContent(ColorScheme cs, bool isMe) {
@@ -1609,6 +2308,274 @@ class _MessageBubbleState extends State<MessageBubble> {
     }
   }
 
+  Widget _buildMusicContent(ColorScheme cs, bool isMe, _AudioAttachment audio) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _GlobalMusicPlayer.instance.revision,
+      builder: (_, __, ___) => _buildMusicContentState(cs, isMe, audio),
+    );
+  }
+
+  Widget _buildMusicContentState(
+    ColorScheme cs,
+    bool isMe,
+    _AudioAttachment audio,
+  ) {
+    final global = _GlobalMusicPlayer.instance;
+    final isCurrent = global.isCurrent(audio);
+    final isPlaying = isCurrent && global.playing;
+    final isLoading = isCurrent && global.loading;
+    final showProgress = isCurrent && global.player != null;
+    final position = isCurrent ? global.position : Duration.zero;
+    final loadedDuration = isCurrent ? global.duration : Duration.zero;
+    final totalDuration = loadedDuration.inMilliseconds > 0
+        ? loadedDuration
+        : (audio.duration ?? Duration.zero);
+    final primary = isMe ? Colors.white : cs.primary;
+    final secondary = isMe ? Colors.white70 : cs.onSurfaceVariant;
+    final maxMs = totalDuration.inMilliseconds.toDouble();
+    final positionMs = position.inMilliseconds
+        .clamp(0, totalDuration.inMilliseconds)
+        .toDouble();
+
+    return InkWell(
+      onTap: () => _openMusicPlayer(audio),
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 230, maxWidth: 300),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Material(
+              color: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: isLoading ? null : _togglePlayback,
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: _buildMusicArtwork(audio, primary, cs, isMe),
+                      ),
+                      if (isLoading)
+                        ColoredBox(
+                          color: Colors.black.withValues(alpha: 0.28),
+                          child: const Padding(
+                            padding: EdgeInsets.all(15),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      if (!isLoading)
+                        Center(
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.48),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    audio.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : cs.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  if (showProgress)
+                    Row(
+                      children: [
+                        Text(
+                          _formatDuration(position),
+                          style: TextStyle(color: secondary, fontSize: 11),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: primary,
+                              inactiveTrackColor: primary.withValues(
+                                alpha: 0.35,
+                              ),
+                              thumbColor: primary,
+                              overlayColor: primary.withValues(alpha: 0.12),
+                              trackHeight: 2,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 4,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 10,
+                              ),
+                            ),
+                            child: Slider(
+                              value: maxMs > 0 ? positionMs : 0,
+                              max: maxMs > 0 ? maxMs : 1,
+                              onChanged: maxMs <= 0 || global.player == null
+                                  ? null
+                                  : (value) => global.player!.seek(
+                                      Duration(milliseconds: value.round()),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      [
+                        _formatDuration(totalDuration),
+                        if (audio.artist != null) audio.artist!,
+                      ].join(' • '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: secondary, fontSize: 12),
+                    ),
+                ],
+              ),
+            ),
+            if (ApiService.accessToken != null)
+              IconButton(
+                tooltip: _songAddedToProfile
+                    ? 'Added to profile'
+                    : 'Add to profile',
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 38,
+                  height: 42,
+                ),
+                onPressed: _addingSongToProfile || _songAddedToProfile
+                    ? null
+                    : () => _addSongToProfile(audio),
+                icon: _addingSongToProfile
+                    ? const SizedBox.square(
+                        dimension: 17,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        _songAddedToProfile
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.person_add_alt_1_rounded,
+                        color: _songAddedToProfile ? Colors.green : secondary,
+                        size: 19,
+                      ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMusicArtwork(
+    _AudioAttachment audio,
+    Color foreground,
+    ColorScheme cs,
+    bool isMe,
+  ) {
+    if (audio.artwork != null) {
+      return Image.memory(
+        audio.artwork!,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, __, ___) =>
+            Icon(Icons.music_note_rounded, color: foreground),
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isMe
+              ? [Colors.white30, Colors.white10]
+              : [cs.primaryContainer, cs.tertiaryContainer],
+        ),
+      ),
+      child: Icon(Icons.music_note_rounded, size: 26, color: foreground),
+    );
+  }
+
+  Future<void> _openMusicPlayer(_AudioAttachment audio) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FullScreenMusicPlayer(
+          audio: audio,
+          player: () => _GlobalMusicPlayer.instance.player,
+          togglePlayback: _togglePlayback,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _addSongToProfile(_AudioAttachment audio) async {
+    if (_addingSongToProfile || _songAddedToProfile) return;
+    if (ApiService.accessToken == null) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('Sign in to add songs to your profile')),
+      );
+      return;
+    }
+    setState(() => _addingSongToProfile = true);
+    final globalPlayer = _GlobalMusicPlayer.instance;
+    final duration =
+        audio.duration?.inMilliseconds ??
+        (globalPlayer.isCurrent(audio)
+            ? globalPlayer.duration.inMilliseconds
+            : 0);
+    final added = await ApiService.addProfileSong(
+      sourceUrl: audio.url,
+      title: audio.title,
+      artist: audio.artist ?? '',
+      durationMs: duration,
+      artworkBase64: audio.artwork == null ? '' : base64Encode(audio.artwork!),
+    );
+    if (!mounted) return;
+    setState(() {
+      _addingSongToProfile = false;
+      _songAddedToProfile = added;
+    });
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          added ? 'Added to your profile' : 'Could not add song to profile',
+        ),
+      ),
+    );
+  }
+
   Widget _buildVoiceContent(ColorScheme cs, bool isMe) {
     final totalDuration = _duration.inMilliseconds > 0
         ? _duration
@@ -2015,6 +2982,64 @@ class _MessageBubbleState extends State<MessageBubble> {
       start = index + query.length;
     }
 
+    return RichText(text: TextSpan(children: spans));
+  }
+
+  Widget _buildLinkifiedText(String text, TextStyle style) {
+    final spans = <TextSpan>[];
+    final urlPattern = RegExp(
+      r'https?://[^\s<>"\u0000-\u001f]+',
+      caseSensitive: false,
+    );
+    var cursor = 0;
+    for (final match in urlPattern.allMatches(text)) {
+      var end = match.end;
+      while (end > match.start && '.,!?;:)\]}'.contains(text[end - 1])) {
+        end--;
+      }
+      if (end <= match.start) continue;
+      if (match.start > cursor) {
+        spans.add(
+          TextSpan(text: text.substring(cursor, match.start), style: style),
+        );
+      }
+      final urlText = text.substring(match.start, end);
+      final uri = Uri.tryParse(urlText);
+      if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
+        spans.add(TextSpan(text: urlText, style: style));
+      } else {
+        final recognizer = _linkRecognizers.putIfAbsent(
+          urlText,
+          () => TapGestureRecognizer()
+            ..onTap = () async {
+              try {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } catch (_) {}
+            },
+        );
+        spans.add(
+          TextSpan(
+            text: urlText,
+            style: style.copyWith(
+              color: style.color == Colors.white ? Colors.white : Colors.blue,
+              decoration: TextDecoration.underline,
+              decorationColor: style.color == Colors.white
+                  ? Colors.white
+                  : Colors.blue,
+            ),
+            recognizer: recognizer,
+          ),
+        );
+      }
+      cursor = end;
+      if (end < match.end) {
+        spans.add(TextSpan(text: text.substring(end, match.end), style: style));
+        cursor = match.end;
+      }
+    }
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor), style: style));
+    }
     return RichText(text: TextSpan(children: spans));
   }
 }

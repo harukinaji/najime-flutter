@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,11 +52,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _messageFocusNode = FocusNode();
+  int _scrollToBottomRequest = 0;
 
   List<MessageModel> _messages = [];
   bool _loading = true;
+  bool _messagesRefreshInFlight = false;
+  bool _profileSheetOpen = false;
   String _chatName = '';
   String? _chatAvatarUrl;
+  String? _chatUsername;
   String? _cachedAvatarSource;
   Uint8List? _cachedAvatarBytes;
   bool _sending = false;
@@ -141,8 +147,41 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (contactId == null || !contactId.startsWith('bot_')) return;
     final info = await ApiService.getBotInfo(contactId);
     if (info != null && mounted) {
-      setState(() => _botInfo = info);
+      setState(() {
+        _botInfo = info;
+        _chatUsername = info['username'] as String?;
+      });
     }
+  }
+
+  Future<String?> _resolveChatUsername() async {
+    final cached = _chatUsername;
+    if (cached != null && cached.isNotEmpty) return cached;
+
+    if (AuthState.instance.isDemo) {
+      final username = switch (widget.chatId) {
+        'demo-alice' => 'alice',
+        'demo-wallet' => 'wallet_support',
+        _ => null,
+      };
+      _chatUsername = username;
+      return username;
+    }
+
+    final contactId = widget.contactId;
+    if (contactId == null || widget.isGroup) return null;
+
+    final users = await ApiService.searchUsers(_chatName);
+    for (final user in users) {
+      if (user['id'] == contactId) {
+        final username = user['username'] as String?;
+        if (username != null && username.isNotEmpty) {
+          _chatUsername = username;
+          return username;
+        }
+      }
+    }
+    return null;
   }
 
   void _onStartPressed() {
@@ -914,6 +953,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       if (t == 'file') type = MessageType.file;
       if (t == 'sticker') type = MessageType.sticker;
       if (t == 'invoice') type = MessageType.invoice;
+      if (t == 'premiumMessage') type = MessageType.premiumMessage;
 
       String content = data['content'] as String? ?? '';
 
@@ -924,6 +964,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         type: type,
         timestamp: DateTime.parse(data['timestamp'] as String),
         isMe: false,
+        premiumInfo: data['premium_info'] is Map
+            ? PremiumUnlockInfo.fromJson(
+                Map<String, dynamic>.from(data['premium_info'] as Map),
+              )
+            : null,
         voiceDurationMs: data['voice_duration_ms'] as int?,
         voiceWaveform: _parseWaveform(data['voice_waveform'] as String?),
         replyToId: data['reply_to_id'] as String?,
@@ -948,10 +993,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     }
   }
 
-  Future<void> _loadMessages() async {
+  Future<void> _loadMessages({bool backgroundRefresh = false}) async {
     if (!mounted) return;
-    setState(() => _loading = true);
+    if (_messagesRefreshInFlight) return;
+    if (_messages.isNotEmpty) backgroundRefresh = true;
+    _messagesRefreshInFlight = true;
+    final messagesAtRefreshStart = List<MessageModel>.of(_messages);
+    final messageIdsAtRefreshStart = _messages
+        .map((message) => message.id)
+        .toSet();
+    if (!backgroundRefresh && _messages.isEmpty) {
+      setState(() => _loading = true);
+    }
     Map<String, dynamic>? data;
+    var loadedFromCache = false;
     if (AuthState.instance.isDemo) {
       final now = DateTime.now();
       final isTeam = widget.chatId == 'demo-team';
@@ -1011,12 +1066,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         data = cachedDemo;
       }
     } else {
-      data = await ApiService.getMessages(widget.chatId);
-      data ??= await CacheService.instance.loadChatMessages(widget.chatId);
+      if (!backgroundRefresh) {
+        data = await CacheService.instance.loadChatMessages(widget.chatId);
+        loadedFromCache = data != null;
+      }
+      if (backgroundRefresh || data == null) {
+        final serverData = await ApiService.getMessages(widget.chatId);
+        if (serverData != null) {
+          data = serverData;
+          loadedFromCache = false;
+        } else if (backgroundRefresh) {
+          _messagesRefreshInFlight = false;
+          return;
+        } else {
+          data = await CacheService.instance.loadChatMessages(widget.chatId);
+          loadedFromCache = data != null;
+        }
+      }
     }
-    if (!mounted) return;
+    if (!mounted) {
+      _messagesRefreshInFlight = false;
+      return;
+    }
 
     if (data == null) {
+      _messagesRefreshInFlight = false;
       _loading = false;
       setState(() {});
       return;
@@ -1024,6 +1098,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     // Load mute status from local storage
     final prefs = await SharedPreferences.getInstance();
+    _messagesRefreshInFlight = false;
     final mutedChats = prefs.getStringList('muted_chats') ?? [];
     _isMuted = mutedChats.contains(widget.chatId);
 
@@ -1038,6 +1113,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     if (data['success'] == true) {
       unawaited(CacheService.instance.saveChatMessages(widget.chatId, data));
     }
+    final messagesArrivedDuringRefresh = backgroundRefresh
+        ? _messages
+              .where(
+                (message) => !messageIdsAtRefreshStart.contains(message.id),
+              )
+              .toList()
+        : const <MessageModel>[];
     _messages = [];
     for (final m in msgs) {
       final msg = m as Map<String, dynamic>;
@@ -1077,6 +1159,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           isMe: msg['is_me'] as bool? ?? false,
           fileName: msg['file_name'] as String?,
           fileSize: msg['file_size'] as String?,
+          premiumInfo: msg['premium_info'] is Map
+              ? PremiumUnlockInfo.fromJson(
+                  Map<String, dynamic>.from(msg['premium_info'] as Map),
+                )
+              : null,
           voiceDurationMs: msg['voice_duration_ms'] as int?,
           voiceWaveform: _parseWaveform(msg['voice_waveform'] as String?),
           reactions: _parseReactions(msg['reactions']),
@@ -1097,22 +1184,43 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
       );
     }
+    if (backgroundRefresh) {
+      for (final message in messagesAtRefreshStart.where(
+        (message) => message.id.startsWith('temp_'),
+      )) {
+        if (!_messages.any((loaded) => loaded.id == message.id)) {
+          _messages.add(message);
+        }
+      }
+      for (final message in messagesArrivedDuringRefresh) {
+        if (!_messages.any((loaded) => loaded.id == message.id)) {
+          _messages.add(message);
+        }
+      }
+      _messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    }
     _loading = false;
     setState(() {});
 
-    // Load pinned messages
-    _loadPinnedMessages();
-    // Load scheduled messages
-    _loadScheduledMessages();
+    if (loadedFromCache && !backgroundRefresh && !AuthState.instance.isDemo) {
+      unawaited(_loadMessages(backgroundRefresh: true));
+    }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    // Send delivery receipts for all messages from others (handles offline->online case)
-    _sendDeliveryReceiptsForUndelivered();
-    // Send read receipt for this chat
-    _sendReadReceipt();
-    // Clear the unread badge on the chats list + mark read on the server
-    ApiService.markChatRead(widget.chatId);
-    ChatReadService.instance.markRead(widget.chatId);
+    // Load pinned messages
+    if (!backgroundRefresh) {
+      _loadPinnedMessages();
+      // Load scheduled messages
+      _loadScheduledMessages();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      // Send delivery receipts for all messages from others (handles offline->online case)
+      _sendDeliveryReceiptsForUndelivered();
+      // Send read receipt for this chat
+      _sendReadReceipt();
+      // Clear the unread badge on the chats list + mark read on the server
+      ApiService.markChatRead(widget.chatId);
+      ChatReadService.instance.markRead(widget.chatId);
+    }
   }
 
   void _sendDeliveryReceiptsForUndelivered() {
@@ -1134,20 +1242,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     });
   }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
+  Future<void> _scrollToBottom() async {
+    final request = ++_scrollToBottomRequest;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || request != _scrollToBottomRequest) return;
+      if (!_scrollController.hasClients) continue;
+
+      final position = _scrollController.position;
+      final target = position.maxScrollExtent;
+      if (target - position.pixels <= 2) continue;
+      await _scrollController.animateTo(
+        target,
+        duration: Duration(milliseconds: attempt == 0 ? 240 : 100),
         curve: Curves.easeOut,
       );
-    } else {
-      // Retry after frame build completes
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        }
-      });
+    }
+
+    if (mounted &&
+        request == _scrollToBottomRequest &&
+        _scrollController.hasClients) {
+      final position = _scrollController.position;
+      if (position.maxScrollExtent - position.pixels > 2) {
+        _scrollController.jumpTo(position.maxScrollExtent);
+      }
     }
   }
 
@@ -1345,11 +1463,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               },
             ),
             ListTile(
+              leading: const Icon(Icons.attach_file),
+              title: const Text('File'),
+              subtitle: const Text('Any file up to 4 GiB'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _pickAndSendDocument();
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.receipt_long),
               title: const Text('Invoice'),
               onTap: () async {
                 Navigator.pop(ctx);
                 await _showInvoiceComposer();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('Premium message'),
+              subtitle: const Text('Unlock with a verified SOL payment'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _showPremiumComposer();
               },
             ),
             ListTile(
@@ -1364,6 +1500,241 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _showPremiumComposer() async {
+    final contentController = TextEditingController();
+    final amountController = TextEditingController();
+    final draft = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Premium message'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: contentController,
+              minLines: 3,
+              maxLines: 8,
+              maxLength: 10000,
+              decoration: const InputDecoration(
+                labelText: 'Locked content',
+                alignLabelWithHint: true,
+              ),
+            ),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Price in SOL',
+                hintText: '0.01',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, {
+              'content': contentController.text.trim(),
+              'amount': amountController.text.trim(),
+            }),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    contentController.dispose();
+    amountController.dispose();
+    if (draft == null || !mounted) return;
+    final amount = double.tryParse(draft['amount'] ?? '');
+    final content = draft['content'] ?? '';
+    if (content.isEmpty || amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter content and a positive SOL price')),
+      );
+      return;
+    }
+    final result = await ApiService.sendMessage(
+      widget.chatId,
+      jsonEncode({'content': content, 'amount': amount, 'currency': 'SOL'}),
+      type: 'premiumMessage',
+    );
+    if (!mounted) return;
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verify your wallet before selling premium content'),
+        ),
+      );
+      return;
+    }
+    final premium = result['premium_info'] is Map
+        ? PremiumUnlockInfo.fromJson(
+            Map<String, dynamic>.from(result['premium_info'] as Map),
+          )
+        : null;
+    setState(() {
+      _messages.add(
+        MessageModel(
+          id: result['id'] as String,
+          senderId: result['sender_id'] as String,
+          content: result['content'] as String? ?? content,
+          type: MessageType.premiumMessage,
+          timestamp: DateTime.parse(result['timestamp'] as String),
+          isMe: true,
+          premiumInfo: premium,
+        ),
+      );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  Future<void> _pickAndSendDocument() async {
+    try {
+      final picked = await openFile();
+      if (picked == null) return;
+      final file = File(picked.path);
+      final size = await file.length();
+      const maxSize = 4 * 1024 * 1024 * 1024;
+      if (size > maxSize) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('The maximum file size is 4 GiB')),
+        );
+        return;
+      }
+
+      final replyTo = _replyingToMessage;
+      if (!mounted) return;
+      setState(() {
+        _sending = true;
+        _replyingToMessage = null;
+      });
+
+      final sizeLabel = _formatFileSize(size);
+      final audioMetadata = await _readAudioMetadata(file, picked.name);
+      if (AuthState.instance.isDemo) {
+        setState(() {
+          _messages.add(
+            MessageModel(
+              id: 'demo_${DateTime.now().microsecondsSinceEpoch}',
+              senderId: _currentUserId ?? 'demo_user',
+              content: audioMetadata == null
+                  ? picked.path
+                  : jsonEncode({
+                      'kind': 'audio',
+                      'url': picked.path,
+                      'metadata': audioMetadata,
+                    }),
+              type: MessageType.file,
+              timestamp: DateTime.now(),
+              isMe: true,
+              fileName: picked.name,
+              fileSize: sizeLabel,
+            ),
+          );
+          _sending = false;
+        });
+        await _saveDemoMessages();
+        return;
+      }
+
+      final uploadResult = await ApiService.uploadFile(file);
+      if (!mounted) return;
+      if (uploadResult == null) {
+        setState(() => _sending = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to upload file')));
+        return;
+      }
+
+      final fileUrl = uploadResult['file_url'] as String? ?? '';
+      final serverSize = uploadResult['file_size'] as String? ?? sizeLabel;
+      final messageContent = audioMetadata == null
+          ? fileUrl
+          : jsonEncode({
+              'kind': 'audio',
+              'url': fileUrl,
+              'metadata': audioMetadata,
+            });
+      final sendResult = await ApiService.sendMessage(
+        widget.chatId,
+        messageContent,
+        type: 'file',
+        fileName: picked.name,
+        fileSize: serverSize,
+        replyToId: replyTo?.id,
+      );
+      if (!mounted) return;
+      if (sendResult != null) {
+        setState(() {
+          _messages.add(
+            MessageModel(
+              id: sendResult['id'] as String,
+              senderId: sendResult['sender_id'] as String,
+              content: messageContent,
+              type: MessageType.file,
+              timestamp: DateTime.parse(sendResult['timestamp'] as String),
+              isMe: true,
+              fileName: picked.name,
+              fileSize: serverSize,
+              deliveryStatus: _parseDeliveryStatus(
+                sendResult['delivery_status'] as String? ?? 'sent',
+              ),
+              replyToId: replyTo?.id,
+              replyToContent: replyTo?.content,
+              replyToSenderName: replyTo?.isMe == true ? 'You' : null,
+            ),
+          );
+        });
+      }
+      setState(() => _sending = false);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send file: $error')));
+    }
+  }
+
+  String _formatFileSize(int bytes) {
+    const units = ['B', 'KiB', 'MiB', 'GiB'];
+    var value = bytes.toDouble();
+    var unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit++;
+    }
+    return unit == 0
+        ? '${value.toStringAsFixed(0)} ${units[unit]}'
+        : '${value.toStringAsFixed(1)} ${units[unit]}';
+  }
+
+  Future<Map<String, dynamic>?> _readAudioMetadata(
+    File file,
+    String fileName,
+  ) async {
+    final extension = fileName.contains('.')
+        ? '.${fileName.split('.').last.toLowerCase()}'
+        : '';
+    if (!supportedFileExtensions.contains(extension)) return null;
+    try {
+      return await compute(_readAudioMetadataInIsolate, file.path);
+    } catch (_) {
+      return {
+        'title': fileName.replaceFirst(RegExp(r'\.[^.]+$'), ''),
+        'artist': '',
+      };
+    }
   }
 
   Future<void> _pickAndSend({
@@ -2399,6 +2770,278 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
+  void _startCall(CallType callType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          contactId: widget.contactId ?? '',
+          contactName: _chatName,
+          callType: callType,
+          useSFU: widget.isGroup,
+          roomId: widget.chatId,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openChatProfile() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final cs = Theme.of(context).colorScheme;
+    final Future<Map<String, dynamic>?>? profileFuture =
+        !widget.isGroup &&
+            widget.contactId != null &&
+            widget.contactId!.isNotEmpty &&
+            !widget.contactId!.startsWith('bot_')
+        ? ApiService.getUserProfile(widget.contactId!)
+        : null;
+
+    setState(() => _profileSheetOpen = true);
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheetContext) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.78,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildAvatar(size: 88, showOnline: true),
+                    const SizedBox(height: 14),
+                    Text(
+                      _chatName.isNotEmpty ? _chatName : 'Chat',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(sheetContext).textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    if (!widget.isGroup)
+                      FutureBuilder<String?>(
+                        future: _resolveChatUsername(),
+                        builder: (context, snapshot) {
+                          final username = snapshot.data;
+                          if (username == null || username.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '@$username',
+                              style: TextStyle(color: cs.primary),
+                            ),
+                          );
+                        },
+                      ),
+                    Text(
+                      widget.isGroup
+                          ? 'Group chat'
+                          : (_isOnline ? 'online' : 'offline'),
+                      style: TextStyle(
+                        color: !widget.isGroup && _isOnline
+                            ? const Color(0xFF22C55E)
+                            : cs.onSurfaceVariant,
+                      ),
+                    ),
+                    if (profileFuture != null) ...[
+                      const SizedBox(height: 14),
+                      _buildProfileBioAndSongs(profileFuture, cs),
+                    ],
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _ProfileAction(
+                          icon: Icons.chat_bubble_outline,
+                          label: 'Message',
+                          onTap: () => Navigator.pop(sheetContext),
+                        ),
+                        _ProfileAction(
+                          icon: Icons.call_outlined,
+                          label: 'Call',
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _startCall(CallType.voice);
+                          },
+                        ),
+                        _ProfileAction(
+                          icon: Icons.videocam_outlined,
+                          label: 'Video',
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _startCall(CallType.video);
+                          },
+                        ),
+                        _ProfileAction(
+                          icon: _isMuted
+                              ? Icons.notifications_outlined
+                              : Icons.notifications_off_outlined,
+                          label: _isMuted ? 'Unmute' : 'Mute',
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _toggleMute();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _profileSheetOpen = false);
+    }
+  }
+
+  Widget _buildProfileBioAndSongs(
+    Future<Map<String, dynamic>?> profileFuture,
+    ColorScheme colorScheme,
+  ) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: profileFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            snapshot.data == null) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: LinearProgressIndicator(),
+          );
+        }
+        final profile = snapshot.data;
+        if (profile == null) return const SizedBox.shrink();
+
+        final bio = (profile['bio'] as String? ?? '').trim();
+        final songs = (profile['songs'] as List? ?? const [])
+            .whereType<Map>()
+            .map((song) => Map<String, dynamic>.from(song))
+            .toList();
+        if (bio.isEmpty && songs.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (bio.isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'About',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(bio, style: Theme.of(context).textTheme.bodyMedium),
+              ),
+            ],
+            if (songs.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Music',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              for (final song in songs)
+                _buildProfileSongTile(song, colorScheme),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileSongTile(
+    Map<String, dynamic> song,
+    ColorScheme colorScheme,
+  ) {
+    final title = song['title'] as String? ?? 'Untitled';
+    final artist = song['artist'] as String? ?? '';
+    final url = song['source_url'] as String? ?? '';
+    final durationMs = (song['duration_ms'] as num?)?.toInt() ?? 0;
+    Uint8List? artwork;
+    final encoded = song['artwork_base64'] as String? ?? '';
+    if (encoded.isNotEmpty) {
+      try {
+        artwork = base64Decode(encoded);
+      } catch (_) {}
+    }
+    final duration = Duration(milliseconds: durationMs);
+    final durationLabel =
+        '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox.square(
+          dimension: 46,
+          child: artwork == null
+              ? ColoredBox(
+                  color: colorScheme.primaryContainer,
+                  child: Icon(
+                    Icons.music_note_rounded,
+                    color: colorScheme.primary,
+                  ),
+                )
+              : Image.memory(
+                  artwork,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => ColoredBox(
+                    color: colorScheme.primaryContainer,
+                    child: Icon(
+                      Icons.music_note_rounded,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+        ),
+      ),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        [
+          if (artist.isNotEmpty) artist,
+          if (durationMs > 0) durationLabel,
+        ].join(' · '),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: ValueListenableBuilder<int>(
+        valueListenable: musicPlayerRevision,
+        builder: (context, _, __) => Icon(
+          isProfileSongPlaying(url)
+              ? Icons.pause_rounded
+              : Icons.play_arrow_rounded,
+          color: colorScheme.primary,
+        ),
+      ),
+      onTap: url.isEmpty
+          ? null
+          : () => playProfileSong(
+              url: url,
+              title: title,
+              artist: artist,
+              durationMs: durationMs,
+              artwork: artwork,
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -2406,72 +3049,57 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Row(
-          children: [
-            _buildAvatar(),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        title: Semantics(
+          button: true,
+          label: 'Open chat profile',
+          child: InkWell(
+            onTap: _openChatProfile,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        _chatName.isNotEmpty ? _chatName : 'Chat',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                  _buildAvatar(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _chatName.isNotEmpty ? _chatName : 'Chat',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                  if (widget.contactId != null)
-                    Text(
-                      _isOnline ? 'online' : 'offline',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _isOnline
-                            ? const Color(0xFF22C55E)
-                            : Colors.white54,
-                      ),
+                        if (widget.contactId != null)
+                          Text(
+                            _isOnline ? 'online' : 'offline',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _isOnline
+                                  ? const Color(0xFF22C55E)
+                                  : Colors.white54,
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.phone),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CallScreen(
-                  contactId: widget.contactId ?? '',
-                  contactName: _chatName,
-                  callType: CallType.voice,
-                  useSFU: widget.isGroup,
-                  roomId: widget.chatId,
-                ),
-              ),
-            ),
+            onPressed: () => _startCall(CallType.voice),
           ),
           IconButton(
             icon: const Icon(Icons.videocam),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CallScreen(
-                  contactId: widget.contactId ?? '',
-                  contactName: _chatName,
-                  callType: CallType.video,
-                  useSFU: widget.isGroup,
-                  roomId: widget.chatId,
-                ),
-              ),
-            ),
+            onPressed: () => _startCall(CallType.video),
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -2552,11 +3180,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 SafeArea(
                   top: !_isSearchingInChat,
                   bottom: false,
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _messages.isEmpty
-                      ? _buildEmptyMessages(cs)
-                      : _buildMessageList(),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: _loading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _messages.isEmpty
+                            ? _buildEmptyMessages(cs)
+                            : _buildMessageList(),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          ignoring: _profileSheetOpen,
+                          child: AnimatedSlide(
+                            offset: _profileSheetOpen
+                                ? const Offset(0, -0.35)
+                                : Offset.zero,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                            child: AnimatedOpacity(
+                              opacity: _profileSheetOpen ? 0 : 1,
+                              duration: const Duration(milliseconds: 260),
+                              curve: Curves.easeOut,
+                              child: const GlobalMusicMiniPlayer(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -2570,7 +3225,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar({double size = 36, bool showOnline = true}) {
     final avatarUrl = _chatAvatarUrl;
     final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
     Widget? avatarImage;
@@ -2589,8 +3244,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               child: Image.memory(
                 bytes,
                 key: ValueKey(avatarUrl),
-                width: 36,
-                height: 36,
+                width: size,
+                height: size,
                 fit: BoxFit.cover,
                 gaplessPlayback: true,
               ),
@@ -2602,8 +3257,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           child: Image.network(
             avatarUrl,
             key: ValueKey(avatarUrl),
-            width: 36,
-            height: 36,
+            width: size,
+            height: size,
             fit: BoxFit.cover,
             gaplessPlayback: true,
             errorBuilder: (_, _, _) => const SizedBox.shrink(),
@@ -2615,8 +3270,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     return Stack(
       children: [
         Container(
-          width: 36,
-          height: 36,
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: avatarImage != null ? Colors.transparent : Colors.white24,
@@ -2627,21 +3282,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               Center(
                 child: Text(
                   _chatName.isNotEmpty ? _chatName[0].toUpperCase() : '?',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: size * 0.42,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
         ),
-        if (_isOnline)
+        if (showOnline && _isOnline)
           Positioned(
             right: 0,
             bottom: 0,
             child: Container(
-              width: 10,
-              height: 10,
+              width: size * 0.28,
+              height: size * 0.28,
               decoration: BoxDecoration(
                 color: const Color(0xFF22C55E),
                 shape: BoxShape.circle,
@@ -2668,9 +3323,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: PremiumMessageCard(
+              messageId: message.id,
               premiumInfo: message.premiumInfo!,
               content: message.content,
-              onUnlock: () {},
+              onUnlocked: (content) {
+                if (!mounted) return;
+                setState(() {
+                  final i = _messages.indexWhere((m) => m.id == message.id);
+                  if (i >= 0) {
+                    _messages[i] = _messages[i].copyWith(
+                      content: content,
+                      premiumInfo: message.premiumInfo!.copyWith(
+                        isUnlocked: true,
+                      ),
+                    );
+                  }
+                });
+              },
             ),
           );
         }
@@ -3486,4 +4155,90 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       ],
     );
   }
+}
+
+class _ProfileAction extends StatelessWidget {
+  const _ProfileAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: cs.onPrimaryContainer),
+            ),
+            const SizedBox(height: 6),
+            Text(label, style: Theme.of(context).textTheme.labelMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Map<String, dynamic> _readAudioMetadataInIsolate(String path) {
+  final metadata = readMetadata(File(path), getImage: true);
+  final result = <String, dynamic>{};
+
+  void putText(String key, String? value) {
+    final normalized = value?.trim();
+    if (normalized != null && normalized.isNotEmpty) result[key] = normalized;
+  }
+
+  putText('title', metadata.title);
+  putText('artist', metadata.artist);
+  putText('album', metadata.album);
+  putText('album_artist', metadata.albumArtist);
+  if (metadata.duration != null) {
+    result['duration_ms'] = metadata.duration!.inMilliseconds;
+  }
+  if (metadata.year != null) result['year'] = metadata.year!.year;
+  if (metadata.trackNumber != null) {
+    result['track_number'] = metadata.trackNumber;
+  }
+  if (metadata.trackTotal != null) result['track_total'] = metadata.trackTotal;
+  if (metadata.bitrate != null) result['bitrate'] = metadata.bitrate;
+  if (metadata.sampleRate != null) result['sample_rate'] = metadata.sampleRate;
+
+  if (metadata.pictures.isNotEmpty) {
+    final cover = metadata.pictures.firstWhere(
+      (picture) => picture.pictureType == PictureType.coverFront,
+      orElse: () => metadata.pictures.first,
+    );
+    // Store a small UI thumbnail, not a multi-megabyte embedded cover scan.
+    final decoded = img.decodeImage(cover.bytes);
+    if (decoded != null) {
+      final thumbnail = img.copyResize(
+        decoded,
+        width: 256,
+        height: 256,
+        interpolation: img.Interpolation.average,
+      );
+      final encoded = img.encodeJpg(thumbnail, quality: 82);
+      result['art_base64'] = base64Encode(encoded);
+      result['art_mime'] = 'image/jpeg';
+    }
+  }
+  return result;
 }

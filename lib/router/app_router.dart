@@ -21,7 +21,6 @@ import '../screens/profile/privacy_screen.dart';
 import '../screens/profile/notifications_screen.dart';
 import '../screens/profile/appearance_screen.dart';
 import '../screens/profile/folders_screen.dart';
-import '../screens/premium/premium_unlock_screen.dart';
 import '../screens/profile/lock_settings_screen.dart';
 import '../screens/profile/nfc_transfer_screen.dart';
 import '../screens/bots/bot_manager_screen.dart';
@@ -233,11 +232,6 @@ class AppRouter {
             ],
           ),
         ],
-      ),
-      GoRoute(
-        path: '/premium-unlock',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PremiumUnlockScreen(),
       ),
       GoRoute(
         path: '/story/create',
