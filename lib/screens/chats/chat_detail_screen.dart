@@ -333,8 +333,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       final result = await ApiService.sendCallback(messageId, callbackData);
       if (kDebugMode) debugPrint('[Callback] result=$result');
       if (!result && mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Callback failed')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Callback failed')));
       }
     } catch (e) {
       if (kDebugMode) debugPrint('[Callback] error=$e');
@@ -1024,7 +1025,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           {
             'id': '${widget.chatId}-welcome',
             'sender_id': isTeam ? 'demo-bob' : widget.chatId,
-            'content': isTeam ? 'This is a demo group chat.' : 'This is a demo message. Use this chat to explore the interface.',
+            'content': isTeam
+                ? 'This is a demo group chat.'
+                : 'This is a demo message. Use this chat to explore the interface.',
             'type': 'text',
             'timestamp': now
                 .subtract(const Duration(minutes: 5))
@@ -1054,7 +1057,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             message['content'] = switch (message['content']) {
               'Это тестовая групповая переписка.' =>
                 'This is a demo group chat.',
-              'Это тестовое сообщение. Здесь можно проверить интерфейс чата.' => 'This is a demo message. Use this chat to explore the interface.',
+              'Это тестовое сообщение. Здесь можно проверить интерфейс чата.' =>
+                'This is a demo message. Use this chat to explore the interface.',
               'Сообщение отправлено из демо-аккаунта.' =>
                 'Message sent from the demo account.',
               final content => content,
@@ -1698,8 +1702,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     } catch (error) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to send file: $error')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send file: $error')));
     }
   }
 
@@ -1954,8 +1959,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final amount = double.tryParse(result['amount'] as String? ?? '');
     final coin = (result['currency'] as String?) ?? 'SOL';
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
       return;
     }
 
@@ -2120,8 +2126,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     final amount = double.tryParse(result['amount'] as String? ?? '');
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
       return;
     }
 
@@ -2137,8 +2144,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final state = AppState.instance;
     if (state.wallet == null) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(const SnackBar(content: Text('Wallet not connected')));
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(const SnackBar(content: Text('Wallet not connected')));
       return;
     }
 
@@ -2172,8 +2180,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(SnackBar(content: Text('Failed to create check: $e')));
+      ScaffoldMessenger.maybeOf(
+        context,
+      )?.showSnackBar(SnackBar(content: Text('Failed to create check: $e')));
       return;
     }
 
@@ -2927,8 +2936,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'About',
-                  style: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -2943,8 +2953,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Music',
-                  style: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
