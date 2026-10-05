@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/auth_state.dart';
 
@@ -16,377 +16,312 @@ class NfcTransferScreen extends StatefulWidget {
 }
 
 class _NfcTransferScreenState extends State<NfcTransferScreen> {
-  static const _bleChannel = MethodChannel('com.naji.najimessenger/bluetooth');
-  static const _bleEventChannel = EventChannel(
-    'com.naji.najimessenger/bluetooth_events',
-  );
+  static const _nfcChannel = MethodChannel('com.naji.najimessenger/nfc');
+  static const _badgeTextPreferenceKey = 'nbadge_custom_text';
 
-  BleDevice? _connectedDevice;
-  bool _transferring = false;
-  bool _scanning = false;
-  List<Map<String, dynamic>> _results = [];
+  final _badgeTextController = TextEditingController();
+
+  bool _busy = false;
+  bool _ready = false;
   String? _statusMessage;
   bool _isError = false;
-  bool _done = false;
-  bool _disposed = false;
-  StreamSubscription<dynamic>? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
-    _eventSubscription = _bleEventChannel.receiveBroadcastStream().listen((
-      dynamic event,
-    ) {
-      if (_disposed) return;
-      final map = event is Map ? Map<String, dynamic>.from(event as Map) : null;
-      if (map == null) return;
-      switch (map['type'] ?? '') {
-        case 'onDeviceFound':
-          setState(() => _results.add(map));
-          break;
-        case 'onConnectionStateChanged':
-          final connected = map['connected'] ?? false;
-          if (!connected && _connectedDevice?.remoteId == map['deviceId']) {
-            setState(() {
-              _connectedDevice = null;
-              _statusMessage = 'Disconnected';
-              _isError = false;
-            });
-          }
-          break;
-        case 'onDataReceived':
-          setState(() {
-            _statusMessage = 'Received: ${map['data']}';
-            _isError = false;
-          });
-          break;
-        case 'onBluetoothError':
-          setState(() {
-            _statusMessage = map['error'] ?? 'BLE error';
-            _isError = true;
-          });
-          break;
+    _loadBadgeText();
+  }
+
+  Future<void> _loadBadgeText() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    _badgeTextController.text =
+        preferences.getString(_badgeTextPreferenceKey) ?? '';
+  }
+
+  Future<void> _prepareTransfer() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _ready = false;
+      _statusMessage = 'Preparing your profile for NFC...';
+      _isError = false;
+    });
+
+    try {
+      final available =
+          await _nfcChannel.invokeMethod<bool>('isNfcAvailable') ?? false;
+      if (!available) {
+        throw StateError('This device does not support NFC.');
       }
-    });
-  }
 
-  Future<void> _startScan() async {
-    if (_scanning) return;
-    setState(() {
-      _scanning = true;
-      _results = [];
-      _statusMessage = 'Scanning...';
-      _isError = false;
-      _done = false;
-    });
-    try {
-      await _bleChannel.invokeMethod('startScan', {'services': []});
-      if (!_disposed) setState(() => _scanning = false);
-    } catch (e) {
-      if (!_disposed)
-        setState(() {
-          _scanning = false;
-          _statusMessage = 'Scan failed: $e';
-          _isError = true;
-        });
-    }
-  }
+      final enabled =
+          await _nfcChannel.invokeMethod<bool>('isNfcEnabled') ?? false;
+      if (!enabled) {
+        throw StateError('Turn on NFC in your phone settings, then try again.');
+      }
 
-  Future<void> _connectToDevice(String address) async {
-    if (_transferring) return;
-    setState(() {
-      _transferring = true;
-      _statusMessage = 'Connecting...';
-      _isError = false;
-    });
-    try {
-      await _bleChannel.invokeMethod('connect', {'deviceId': address});
-      if (!_disposed)
-        setState(() {
-          _connectedDevice = BleDevice._(address);
-          _transferring = false;
-          _statusMessage = 'Connected! Tap "Send Profile".';
-          _done = false;
-        });
-    } catch (e) {
-      if (!_disposed)
-        setState(() {
-          _transferring = false;
-          _statusMessage = 'Error: ${e.toString()}';
-          _isError = true;
-        });
-    }
-  }
+      final hceAvailable =
+          await _nfcChannel.invokeMethod<bool>('isHceAvailable') ?? false;
+      if (!hceAvailable) {
+        throw StateError('This device does not support NFC card emulation.');
+      }
 
-  Future<void> _sendProfile() async {
-    if (_transferring || _connectedDevice == null) return;
-    final payload = await _buildPayload();
-    final json = utf8.decode(payload);
-    setState(() {
-      _transferring = true;
-      _statusMessage = 'Sending...';
-      _isError = false;
-      _done = false;
-    });
-    try {
-      await _bleChannel.invokeMethod('sendRaw', {
-        'deviceId': _connectedDevice!.remoteId,
-        'data': json,
-      });
+      final payload = await _buildPayload();
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        _badgeTextPreferenceKey,
+        _badgeTextController.text.trim(),
+      );
+      await _nfcChannel.invokeMethod<bool>('setBadgeData', {'data': payload});
       if (!mounted) return;
       setState(() {
-        _transferring = false;
-        _statusMessage = 'Profile sent! Check the badge screen.';
+        _ready = true;
+        _statusMessage =
+            'Ready. Keep this screen open and hold the back of your phone near NBadge.';
         _isError = false;
-        _done = true;
       });
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
       setState(() {
-        _transferring = false;
-        _statusMessage = 'Error: ${e.toString()}';
+        _ready = false;
+        _statusMessage = error is PlatformException
+            ? (error.message ?? error.code)
+            : error.toString().replaceFirst('Bad state: ', '');
         _isError = true;
       });
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _stopTransfer() async {
+    try {
+      await _nfcChannel.invokeMethod<void>('clearBadgeData');
+    } on PlatformException catch (error) {
+      debugPrint('[NBadge HCE] Failed to clear badge data: ${error.message}');
+    }
+    if (!mounted) return;
+    setState(() {
+      _ready = false;
+      _statusMessage = 'NFC sharing stopped.';
+      _isError = false;
+    });
   }
 
   Future<Uint8List> _buildPayload() async {
-    final a = AuthState.instance;
-    final nickname = a.username ?? '';
-    final displayName = a.displayName ?? '';
-    final parts = displayName.split(' ');
-    final firstName = parts.first;
-    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-    final avatarUrl = a.avatarUrl ?? '';
-    String avatarBase64 = '';
-    if (avatarUrl.isNotEmpty) {
-      debugPrint('[BLE] avatarUrl: $avatarUrl');
-      try {
-        if (avatarUrl.startsWith('data:')) {
-          final base64Data = avatarUrl.split(',').last;
-          final bytes = base64Decode(base64Data);
-          final decoded = img.decodeImage(bytes);
-          if (decoded != null) {
-            final resized = img.copyResize(decoded, width: 100, height: 100);
-            final jpgBytes = img.encodeJpg(resized, quality: 80);
-            avatarBase64 = base64Encode(jpgBytes);
-            debugPrint('[BLE] avatar base64 len: ${avatarBase64.length}');
-          }
-        } else {
-          final client = HttpClient()
-            ..connectionTimeout = const Duration(seconds: 5);
-          final request = await client.getUrl(Uri.parse(avatarUrl));
-          final response = await request.close();
-          debugPrint('[BLE] avatar HTTP status: ${response.statusCode}');
-          if (response.statusCode == 200) {
-            final byteList = <int>[];
-            await for (final chunk in response) {
-              byteList.addAll(chunk);
-            }
-            final bytes = Uint8List.fromList(byteList);
-            debugPrint('[BLE] avatar bytes: ${bytes.length}');
-            if (bytes.isNotEmpty) {
-              final decoded = img.decodeImage(bytes);
-              debugPrint('[BLE] avatar decoded: ${decoded != null}');
-              if (decoded != null) {
-                final resized = img.copyResize(decoded, width: 32, height: 32);
-                final jpgBytes = img.encodeJpg(resized, quality: 80);
-                avatarBase64 = base64Encode(jpgBytes);
-                debugPrint('[BLE] avatar base64 len: ${avatarBase64.length}');
-              }
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint('[BLE] avatar fetch failed: $e');
-      }
-    } else {
-      debugPrint('[BLE] avatarUrl is empty');
-    }
+    final auth = AuthState.instance;
+    final displayName = auth.displayName ?? '';
+    final nameParts = displayName.trim().split(RegExp(r'\s+'));
+    final firstName = nameParts.first;
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+    final avatarBase64 = await _loadAvatar(auth.avatarUrl ?? '');
+
+    // Keep the same payload schema as the existing NBadge firmware protocol.
     final json = jsonEncode({
-      'nick': nickname,
+      'nick': auth.username ?? '',
       'first': firstName,
       'last': lastName,
+      'text': _badgeTextController.text.trim(),
       'avatar': avatarBase64,
     });
-    return Uint8List.fromList(json.codeUnits);
+    return Uint8List.fromList(utf8.encode(json));
   }
 
-  void _disconnect() {
-    _bleChannel.invokeMethod('disconnect', {});
-    if (!_disposed) {
-      setState(() {
-        _connectedDevice = null;
-        _statusMessage = null;
-        _isError = false;
-      });
+  Future<String> _loadAvatar(String avatarUrl) async {
+    if (avatarUrl.isEmpty) return '';
+    try {
+      late final Uint8List bytes;
+      if (avatarUrl.startsWith('data:')) {
+        bytes = base64Decode(avatarUrl.split(',').last);
+      } else {
+        final client = HttpClient()
+          ..connectionTimeout = const Duration(seconds: 5);
+        try {
+          final request = await client.getUrl(Uri.parse(avatarUrl));
+          final response = await request.close().timeout(
+            const Duration(seconds: 8),
+          );
+          if (response.statusCode != HttpStatus.ok) return '';
+          final byteList = <int>[];
+          await for (final chunk in response.timeout(
+            const Duration(seconds: 8),
+          )) {
+            byteList.addAll(chunk);
+          }
+          bytes = Uint8List.fromList(byteList);
+        } finally {
+          client.close(force: true);
+        }
+      }
+
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) return '';
+      // NBadge always receives an exact 256x256 JPEG. Crop from the centre
+      // first so portrait and landscape avatars are not stretched.
+      final resized = img.copyResizeCropSquare(decoded, size: 256);
+
+      // NFC throughput is limited by APDU round trips. Keep the avatar at the
+      // requested 256x256 resolution, but cap its Base64 representation so a
+      // badge does not need hundreds of additional READ BINARY commands.
+      for (final quality in const [65, 55, 45, 35, 25]) {
+        final encoded = base64Encode(img.encodeJpg(resized, quality: quality));
+        if (encoded.length <= 12000 || quality == 25) return encoded;
+      }
+      return '';
+    } catch (error) {
+      debugPrint('[NBadge HCE] Avatar could not be prepared: $error');
+      return '';
     }
   }
 
   @override
   void dispose() {
-    _disposed = true;
-    _eventSubscription?.cancel();
-    _disconnect();
+    _nfcChannel.invokeMethod<void>('clearBadgeData').catchError((Object error) {
+      debugPrint('[NBadge HCE] Failed to clear badge data: $error');
+    });
+    _badgeTextController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('NBadge BLE')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          children: [
-            if (_connectedDevice == null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  onPressed: _transferring ? null : _startScan,
-                  icon: const Icon(Icons.search),
-                  label: const Text(
-                    'Scan for NBadge',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+      appBar: AppBar(title: const Text('NBadge via NFC')),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          const SizedBox(height: 12),
+          Icon(Icons.contactless, size: 72, color: colors.primary),
+          const SizedBox(height: 20),
+          Text(
+            'Share your profile with NBadge',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Your phone emulates an NFC badge. Prepare your profile, then hold the back of your phone against NBadge.',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _badgeTextController,
+            enabled: !_busy,
+            maxLength: 23,
+            maxLines: 1,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: 'Badge text',
+              hintText: 'Your custom text',
+              helperText: 'Displayed between your name and username',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (_statusMessage != null)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _isError
+                    ? colors.errorContainer
+                    : _ready
+                    ? Colors.green.withValues(alpha: 0.12)
+                    : colors.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
               ),
-              if (_scanning)
-                const SizedBox(height: 52, child: CircularProgressIndicator()),
-              if (_results.isNotEmpty) ...[
-                Text(
-                  'Found ${_results.length} device(s)',
-                  style: const TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                ..._results.map((r) {
-                  final name = r['name'] ?? '';
-                  final address = r['address'] ?? '';
-                  final isConnecting =
-                      _connectedDevice?.remoteId == address && _transferring;
-                  return ListTile(
-                    title: Text(name),
-                    subtitle: Text(address),
-                    trailing: _connectedDevice?.remoteId == address
-                        ? const Icon(
-                            Icons.bluetooth_connected,
-                            color: Colors.green,
-                          )
-                        : ElevatedButton(
-                            onPressed: isConnecting
-                                ? null
-                                : () => _connectToDevice(address),
-                            child: const Text('Connect'),
-                          ),
-                  );
-                }),
-                const SizedBox(height: 16),
-              ],
-            ],
-            if (_connectedDevice != null && !_done) ...[
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  onPressed: _transferring ? null : _sendProfile,
-                  icon: _transferring
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.bluetooth),
-                  label: Text(
-                    _transferring ? 'Sending...' : 'Send Profile',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+              child: Row(
+                children: [
+                  Icon(
+                    _isError
+                        ? Icons.error_outline
+                        : _ready
+                        ? Icons.check_circle_outline
+                        : Icons.info_outline,
+                    color: _isError
+                        ? colors.error
+                        : _ready
+                        ? Colors.green
+                        : colors.primary,
                   ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.primary,
-                    disabledBackgroundColor: cs.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: _disconnect,
-                  icon: const Icon(Icons.bluetooth_disabled),
-                  label: const Text('Disconnect'),
-                ),
-              ),
-            ],
-            if (_statusMessage != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _isError
-                      ? cs.errorContainer
-                      : _done
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _isError
-                          ? Icons.error_outline
-                          : _done
-                          ? Icons.check_circle_outline
-                          : Icons.info_outline,
-                      color: _isError
-                          ? cs.error
-                          : _done
-                          ? Colors.green
-                          : cs.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _statusMessage!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _isError
-                              ? cs.onErrorContainer
-                              : _done
-                              ? Colors.green.shade800
-                              : cs.onPrimaryContainer,
-                        ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _statusMessage!,
+                      style: TextStyle(
+                        color: _isError
+                            ? colors.onErrorContainer
+                            : _ready
+                            ? Colors.green.shade800
+                            : colors.onPrimaryContainer,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: _busy ? null : _prepareTransfer,
+              icon: _busy
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(_ready ? Icons.refresh : Icons.nfc),
+              label: Text(
+                _busy
+                    ? 'Preparing...'
+                    : _ready
+                    ? 'Refresh profile'
+                    : 'Prepare for NBadge',
+              ),
+            ),
+          ),
+          if (_ready) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: _busy ? null : _stopTransfer,
+                icon: const Icon(Icons.stop_circle_outlined),
+                label: const Text('Stop NFC sharing'),
+              ),
+            ),
           ],
-        ),
+          const SizedBox(height: 24),
+          _infoCard(
+            colors,
+            icon: Icons.nfc,
+            title: 'No Bluetooth pairing',
+            subtitle:
+                'NBadge reads your profile directly over NFC card emulation.',
+          ),
+          const SizedBox(height: 12),
+          _infoCard(
+            colors,
+            icon: Icons.lock_outline,
+            title: 'Only while this screen is open',
+            subtitle:
+                'The badge data is cleared when you leave this screen or stop sharing.',
+          ),
+        ],
       ),
     );
   }
 
   Widget _infoCard(
-    ColorScheme cs, {
+    ColorScheme colors, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -394,12 +329,12 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        color: colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          Icon(icon, color: cs.onSurfaceVariant, size: 28),
+          Icon(icon, color: colors.onSurfaceVariant, size: 26),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -407,15 +342,15 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -424,9 +359,4 @@ class _NfcTransferScreenState extends State<NfcTransferScreen> {
       ),
     );
   }
-}
-
-class BleDevice {
-  final String remoteId;
-  BleDevice._(this.remoteId);
 }
